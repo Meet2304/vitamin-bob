@@ -1,11 +1,11 @@
 # Rural Clinic Explorer
 
-**Why do rural clinics stall?** A two-minute data story and a focused country explorer. It covers health workforce, connectivity, staff absence, paperwork and facility data for about 195 countries, with India, Indonesia and Mongolia in focus.
+**Why do rural clinics stall?** A two-minute data story and a focused country explorer. It covers health workforce, connectivity, staff absence, paperwork and facility data for about 195 countries, with Indonesia and India in focus, and a feasibility case for starting in Indonesia.
 
-Built for the Hack-Nation × World Bank *Small AI for Development* hackathon (Health track), October 2026.
+Built by Egshi, Meet, Rizaldy and Yusril for the Hack-Nation × World Bank *Small AI for Development* hackathon (Health track), October 2026.
 
-- **The story:** five numbers that lead to the problem statement. Press ↓ / ↑ to present.
-- **Explore countries:** a world map on an Esri Light Gray basemap. Colour it by health workers, rural share, internet use, service coverage or TB incidence, then pick any country to see its numbers, rank and trend.
+- **The story:** six numbers that lead to the problem statement, including why Indonesia is ready (power, internet, mobile and mandatory e-records are in place; health workers are not). Press ↓ / ↑ to present.
+- **Explore countries:** a world map on an Esri Light Gray basemap. Colour it by health workers, rural share, internet use, mobile, electricity, service coverage, TB incidence or feasibility, then pick any country to see its numbers, rank and trend.
 - **Data & method:** sources, licenses, evidence labels, and what the data does not show.
 
 ## Run locally
@@ -30,7 +30,8 @@ Then open http://localhost:8000. The page fetches `world.json`, so opening the f
 | Source | Used for | License |
 |---|---|---|
 | WHO Global Health Observatory: HWF_0001, HWF_0006, UHC_INDEX_REPORTED | Workforce density, service coverage | WHO terms of use |
-| World Bank WDI: SP.RUR.TOTL.ZS, IT.NET.USER.ZS, SH.TBS.INCD | Rural share, internet use, TB incidence | CC BY 4.0 |
+| World Bank WDI: SP.RUR.TOTL.ZS, IT.NET.USER.ZS, IT.CEL.SETS.P2, EG.ELC.ACCS.ZS, SH.TBS.INCD | Rural share, internet, mobile, electricity, TB incidence | CC BY 4.0 |
+| Permenkes 24/2022; Kemenkes SATUSEHAT and SITB; Sahabat-AI model card | Indonesia's digital-health rails | cited |
 | healthsites.io / OpenStreetMap via HDX | Indonesia facility map, record completeness | ODbL |
 | Chaudhury et al. (2004 draft; *J. Econ. Perspectives* 2006) | Provider absence | cited |
 | Siyam et al. (2021), *BMC Health Serv Res* 21(Suppl 1):691 | Recording share of consultations | cited |
@@ -46,4 +47,4 @@ Then open http://localhost:8000. The page fetches `world.json`, so opening the f
 - Measured waiting times.
 - Recent absence data.
 - Causation.
-- Mongolia's distance problem, which national averages hide.
+- Clinic-level connectivity (feasibility uses national averages).

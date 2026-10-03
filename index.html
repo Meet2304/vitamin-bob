@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rural Clinic Explorer</title>
-<meta name="description" content="Why rural primary clinics stall: health workforce, connectivity, absence, paperwork and facility data for about 195 countries, with India, Indonesia and Mongolia in focus.">
+<meta name="description" content="Why rural primary clinics stall: health workforce, connectivity, absence, paperwork and facility data for about 195 countries, with Indonesia and India in focus.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
     --rule: #e3e6ea; --axis: #c5cbd3; --series: #2a78d6; --series-deep: #184f95;
     --lantern: #e09a00; --nodata: #eef0f3; --good: #1b7f4e; --bad: #b3261e;
     --ramp-1: #cde2fb; --ramp-2: #9ec5f4; --ramp-3: #6da7ec; --ramp-4: #3987e5; --ramp-5: #256abf; --ramp-6: #184f95; --ramp-7: #0d366b;
-    --india: #e09a00; --indonesia: #b3261e; --mongolia: #6a4c93;
+    --india: #e09a00; --indonesia: #0f766e;
     --font: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
@@ -71,6 +71,11 @@
   .ps .ev div { border-top: 2px solid var(--ink); padding-top: 10px; font-size: 13.5px; color: var(--ink-2); }
   .ps .ev b { display: block; font-stretch: 72%; font-weight: 800; font-size: 34px; color: var(--ink); line-height: 1.1; }
 
+  .rails { list-style: none; padding: 0; margin: 12px 0 4px; font-size: 13.5px; color: var(--ink-2); max-width: 46ch; }
+  .rails li { padding: 5px 0 5px 22px; border-top: 1px solid var(--rule); position: relative; }
+  .rails li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 10px; height: 6px; border-left: 2px solid var(--indonesia); border-bottom: 2px solid var(--indonesia); transform: rotate(-45deg); }
+  .ps .feasible { margin: 24px 0 0; font-size: 15px; color: var(--ink); max-width: 70ch; padding-left: 12px; border-left: 3px solid var(--indonesia); }
+
   /* explore */
   #explore { padding: 16px 22px 40px; }
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -122,10 +127,10 @@
   <div>
     <div class="brand">
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="20" height="20" rx="4" fill="none" stroke="#1e2a36" stroke-width="1.6"/><path d="M11 5v12M5 11h12" stroke="#e09a00" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <span><b>Hack-Nation × World Bank · Small AI for Development</b> · Health track · by Rizaldy and team</span>
+      <span><b>Hack-Nation × World Bank · Small AI for Development</b> · Health track · by Egshi, Meet, Rizaldy and Yusril</span>
     </div>
     <h1>Why do rural clinics stall?</h1>
-    <p class="dek">Too few health workers, too little signal, staff who are not there and forms that eat the visit. Open data for about 195 countries, with India, Indonesia and Mongolia in focus.</p>
+    <p class="dek">Too few health workers, too little signal, staff who are not there and forms that eat the visit. Open data for about 195 countries, with Indonesia and India in focus.</p>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button role="tab" data-view="story" aria-selected="true">The story</button>
@@ -138,7 +143,7 @@
   <!-- STORY -->
   <div class="view" id="story" role="tabpanel">
     <div class="intro">
-      <p>Noor lives two hours from the nearest clinic. When she gets there, she joins one queue for everyone. Here is why that queue moves so slowly, in five numbers.</p>
+      <p>Noor lives two hours from the nearest clinic. When she gets there, she joins one queue for everyone. Here is why that queue moves so slowly, and why a country like Indonesia is ready to fix it, in six numbers.</p>
       <p class="keys">Presenting? Use <kbd>↓</kbd> <kbd>↑</kbd> to move between steps.</p>
     </div>
 
@@ -186,9 +191,26 @@
       <div class="fig" id="f-hours"></div>
     </section>
 
+    <section class="step" id="st4b">
+      <div>
+        <p class="kicker">5 · The rails exist, the staff time does not</p>
+        <div class="big" id="n-sweet">26</div>
+        <h2>countries already have power and internet but are still short of health workers. Indonesia and India are both among them.</h2>
+        <p id="st5-compare"></p>
+        <ul class="rails">
+          <li><b>Electronic records are mandatory</b> in every facility, puskesmas included, since the end of 2023</li>
+          <li><b>SATUSEHAT</b>, a national platform, links health records between facilities</li>
+          <li><b>SITB</b>, an online TB system, has run since 2020</li>
+          <li><b>Local-language AI</b> is being built in-country: open models for Indonesian, Javanese and Sundanese</li>
+        </ul>
+        <p class="src"><span class="tag data">Data</span>World Bank WDI electricity, internet, mobile; WHO GHO workforce. <span class="tag lit">Literature</span>Indonesia only: Permenkes 24/2022, Kemenkes SATUSEHAT and SITB, Sahabat-AI. National averages, not every clinic.</p>
+      </div>
+      <div class="fig" id="f-feasibility"></div>
+    </section>
+
     <section class="step" id="st5">
       <div>
-        <p class="kicker">5 · Nobody can see capacity</p>
+        <p class="kicker">6 · Nobody can see capacity</p>
         <div class="big" id="n-hours">6.9%</div>
         <h2 id="st5-h">of Indonesia's 17,862 mapped health facilities list opening hours. Almost none list beds or staff.</h2>
         <p>Median record completeness is 12.5%. Without hours or capacity, nobody can send a patient to a clinic that is open and staffed.</p>
@@ -202,13 +224,14 @@
 
     <section class="ps" id="st6">
       <p class="kicker">So the problem is</p>
-      <blockquote>Because of <span class="slot">this tool</span>, a nurse in an understaffed rural clinic will see each patient and finish their record in the same visit, that morning, instead of working through one first-come queue and back-filling registers at the end of the day; we know because:</blockquote>
+      <blockquote>Because of <span class="slot">this tool</span>, a nurse in an understaffed rural clinic, starting with Indonesia's puskesmas, will see each patient and finish their record in the same visit, that morning, instead of working through one first-come queue and back-filling registers at the end of the day; we know because:</blockquote>
       <div class="ev">
         <div><b id="ps-below">44%</b>of countries lack the WHO minimum health workforce</div>
         <div><b>35 to 40%</b>of health-centre staff absent on a given day</div>
         <div><b>26 to 53%</b>of each consultation spent writing</div>
       </div>
-      <p class="src" style="margin-top:22px">Draft problem statement in the hackathon template. The tool is deliberately unnamed here.</p>
+      <p class="feasible">Why start in Indonesia: <b>73% online</b>, <b>99.9% electricity</b>, <b>123 mobile lines per 100 people</b>, and electronic records already mandatory in every puskesmas. The infrastructure is there; the staff time is not.</p>
+      <p class="src" style="margin-top:14px">Draft problem statement in the hackathon template. The tool is deliberately unnamed here.</p>
     </section>
   </div>
 
@@ -248,7 +271,9 @@
       <thead><tr><th>Source</th><th>Used for</th><th>License</th></tr></thead>
       <tbody>
         <tr><td>WHO Global Health Observatory (HWF_0001, HWF_0006, UHC_INDEX_REPORTED)</td><td>Health workforce density, service coverage</td><td>WHO terms of use</td></tr>
-        <tr><td>World Bank World Development Indicators</td><td>Rural population, internet users, TB incidence</td><td>CC BY 4.0</td></tr>
+        <tr><td>World Bank World Development Indicators</td><td>Rural population, internet users, mobile subscriptions, electricity access, TB incidence</td><td>CC BY 4.0</td></tr>
+        <tr><td>Permenkes 24/2022 on Medical Records; Kemenkes (SATUSEHAT, SITB)</td><td>Indonesia's digital-health rails</td><td>Cited</td></tr>
+        <tr><td>Sahabat-AI model card (GoTo, Indosat)</td><td>Local-language models for Indonesian, Javanese, Sundanese</td><td>Cited</td></tr>
         <tr><td>healthsites.io / OpenStreetMap via HDX</td><td>Indonesia facility map and record completeness</td><td>ODbL</td></tr>
         <tr><td>Chaudhury, Hammer, Kremer, Muralidharan, Rogers (2004 draft; JEP 2006)</td><td>Provider absence on unannounced visits</td><td>Cited</td></tr>
         <tr><td>Siyam et al. (2021), BMC Health Services Research 21(Suppl 1):691</td><td>Recording share of consultation time, registers</td><td>Cited</td></tr>
@@ -262,7 +287,8 @@
       <li>Waiting times are not measured; the queue is a textbook model.</li>
       <li>Absence data is from the early 2000s and covers five countries; recording data covers five other countries.</li>
       <li>Correlation is not causation: income drives both workforce and coverage.</li>
-      <li>Mongolia looks well staffed and connected nationally; its access problem is distance, which none of these indicators measure.</li>
+      <li>National infrastructure averages are not clinic-level connectivity. The feasibility view shows where a tool <em>could</em> run, not that every clinic is connected.</li>
+      <li>Feasibility rule: electricity at least 95% and internet at least 60% count as "digital rails"; fewer than 44.5 health workers per 10,000 counts as "short of staff". The thresholds are ours and adjustable.</li>
     </ul>
     <h2>Method</h2>
     <p>Each country's latest value since 2015 is used; years appear next to every number. The full analysis, with code, is the EDA notebook in the project repository.</p>
