@@ -76,6 +76,9 @@
   .rails li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 10px; height: 6px; border-left: 2px solid var(--indonesia); border-bottom: 2px solid var(--indonesia); transform: rotate(-45deg); }
   .ps .feasible { margin: 24px 0 0; font-size: 15px; color: var(--ink); max-width: 70ch; padding-left: 12px; border-left: 3px solid var(--indonesia); }
 
+  .pareto-ctl { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+  .pareto-ctl .pill { font-size: 13px; padding: 4px 11px; }
+
   /* explore */
   #explore { padding: 16px 22px 40px; }
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -143,7 +146,7 @@
   <!-- STORY -->
   <div class="view" id="story" role="tabpanel">
     <div class="intro">
-      <p>Noor lives two hours from the nearest clinic. When she gets there, she joins one queue for everyone. Here is why that queue moves so slowly, and why a country like Indonesia is ready to fix it, in six numbers.</p>
+      <p>Noor lives two hours from the nearest clinic. When she gets there, she joins one queue for everyone. Here is why that queue moves so slowly, why Indonesia is ready to fix it, and why Indonesia and India are worth it, in seven numbers.</p>
       <p class="keys">Presenting? Use <kbd>↓</kbd> <kbd>↑</kbd> to move between steps.</p>
     </div>
 
@@ -208,9 +211,22 @@
       <div class="fig" id="f-feasibility"></div>
     </section>
 
+    <section class="step" id="st4c">
+      <div>
+        <p class="kicker">6 · Two countries, most of the need</p>
+        <div class="big" id="n-pareto">74%</div>
+        <h2 id="h-pareto">of the people in the 26 countries that are online and powered but short of staff live in Indonesia and India.</h2>
+        <div class="pareto-ctl" role="group" aria-label="Pareto measure" id="pareto-metric"></div>
+        <div class="pareto-ctl" role="group" aria-label="Pareto country group" id="pareto-universe"></div>
+        <p id="p-pareto"></p>
+        <p class="src"><span class="tag data">Data</span>World Bank WDI population, rural population, TB incidence; WHO GHO workforce. Missing health workers = (44.5 − density) × population / 10,000. A headcount view: it shows where one tool reaches the most people, not where need per person is highest.</p>
+      </div>
+      <div class="fig" id="f-pareto"></div>
+    </section>
+
     <section class="step" id="st5">
       <div>
-        <p class="kicker">6 · Nobody can see capacity</p>
+        <p class="kicker">7 · Nobody can see capacity</p>
         <div class="big" id="n-hours">6.9%</div>
         <h2 id="st5-h">of Indonesia's 17,862 mapped health facilities list opening hours. Almost none list beds or staff.</h2>
         <p>Median record completeness is 12.5%. Without hours or capacity, nobody can send a patient to a clinic that is open and staffed.</p>
@@ -230,7 +246,7 @@
         <div><b>35 to 40%</b>of health-centre staff absent on a given day</div>
         <div><b>26 to 53%</b>of each consultation spent writing</div>
       </div>
-      <p class="feasible">Why start in Indonesia: <b>73% online</b>, <b>99.9% electricity</b>, <b>123 mobile lines per 100 people</b>, and electronic records already mandatory in every puskesmas. The infrastructure is there; the staff time is not.</p>
+      <p class="feasible">Why start in Indonesia: <b>73% online</b>, <b>99.9% electricity</b>, <b>123 mobile lines per 100 people</b>, and electronic records already mandatory in every puskesmas. The infrastructure is there; the staff time is not. Why India next: together the two hold <b id="ps-pareto">74%</b> of the people in countries that are ready but short-staffed.</p>
       <p class="src" style="margin-top:14px">Draft problem statement in the hackathon template. The tool is deliberately unnamed here.</p>
     </section>
   </div>
@@ -271,7 +287,7 @@
       <thead><tr><th>Source</th><th>Used for</th><th>License</th></tr></thead>
       <tbody>
         <tr><td>WHO Global Health Observatory (HWF_0001, HWF_0006, UHC_INDEX_REPORTED)</td><td>Health workforce density, service coverage</td><td>WHO terms of use</td></tr>
-        <tr><td>World Bank World Development Indicators</td><td>Rural population, internet users, mobile subscriptions, electricity access, TB incidence</td><td>CC BY 4.0</td></tr>
+        <tr><td>World Bank World Development Indicators</td><td>Population, rural population and share, internet users, mobile subscriptions, electricity access, TB incidence</td><td>CC BY 4.0</td></tr>
         <tr><td>Permenkes 24/2022 on Medical Records; Kemenkes (SATUSEHAT, SITB)</td><td>Indonesia's digital-health rails</td><td>Cited</td></tr>
         <tr><td>Sahabat-AI model card (GoTo, Indosat)</td><td>Local-language models for Indonesian, Javanese, Sundanese</td><td>Cited</td></tr>
         <tr><td>healthsites.io / OpenStreetMap via HDX</td><td>Indonesia facility map and record completeness</td><td>ODbL</td></tr>
@@ -287,6 +303,7 @@
       <li>Waiting times are not measured; the queue is a textbook model.</li>
       <li>Absence data is from the early 2000s and covers five countries; recording data covers five other countries.</li>
       <li>Correlation is not causation: income drives both workforce and coverage.</li>
+      <li>The Pareto ranks absolute headcounts, so large countries dominate. India's weight is mostly population; Indonesia ranks 11th of 85 understaffed countries for missing health workers but 2nd for people and TB cases. Per-person need is highest in sub-Saharan Africa.</li>
       <li>National infrastructure averages are not clinic-level connectivity. The feasibility view shows where a tool <em>could</em> run, not that every clinic is connected.</li>
       <li>Feasibility rule: electricity at least 95% and internet at least 60% count as "digital rails"; fewer than 44.5 health workers per 10,000 counts as "short of staff". The thresholds are ours and adjustable.</li>
     </ul>

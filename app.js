@@ -164,6 +164,66 @@ const story = {
       ],
     }));
   },
+  pareto(el) {
+    const PM = {
+      people: { label: "People", noun: "people", value: iso => D.pop[iso]?.[0] },
+      rural: { label: "Rural people", noun: "rural people", value: iso => D.pop[iso]?.[1] },
+      tb: { label: "TB cases", noun: "TB cases", value: iso => { const t = latest("tb", iso), p = D.pop[iso]; return t && p ? t.value * p[0] / 1e5 : null; } },
+      gap: { label: "Missing health workers", noun: "missing health workers", value: iso => { const w = latest("workforce", iso), p = D.pop[iso]; return w && p ? Math.max(0, WHO_MIN - w.value) * p[0] / 1e4 : null; } },
+    };
+    const PU = {
+      sweet: { label: "Online and powered, short of staff", test: iso => segment(iso) === "sweet" },
+      all: { label: "All understaffed countries", test: iso => { const w = latest("workforce", iso); return w && w.value < WHO_MIN; } },
+    };
+    const st = story.paretoState || (story.paretoState = { metric: "people", universe: "sweet" });
+    const pills = (id, defs, keyName) => {
+      const box = document.getElementById(id);
+      box.replaceChildren(...Object.entries(defs).map(([k, d]) => {
+        const b = document.createElement("button");
+        b.className = "pill"; b.textContent = d.label; b.setAttribute("aria-pressed", st[keyName] === k);
+        b.onclick = () => { st[keyName] = k; story.pareto(el); };
+        return b;
+      }));
+    };
+    pills("pareto-metric", PM, "metric"); pills("pareto-universe", PU, "universe");
+
+    const rows = Object.keys(D.names).filter(PU[st.universe].test)
+      .map(iso => ({ iso, name: D.names[iso], v: PM[st.metric].value(iso) })).filter(d => d.v != null && d.v > 0)
+      .sort((a, b) => b.v - a.v);
+    const total = d3.sum(rows, d => d.v);
+    let cum = 0;
+    rows.forEach((d, i) => { d.share = 100 * d.v / total; cum += d.share; d.cum = cum; d.rank = i + 1; });
+    const two = d3.sum(rows.filter(d => FOCUS[d.iso]), d => d.share);
+    const MAX = 15;
+    const shown = rows.slice(0, MAX);
+    if (rows.length > MAX) shown.push({ iso: "OTHER", name: `Other ${rows.length - MAX}`, share: 100 - rows[MAX - 1].cum, cum: 100, rank: MAX + 1 });
+    const nUni = rows.length;
+    document.getElementById("n-pareto").textContent = Math.round(two) + "%";
+    if (st.metric === "people" && st.universe === "sweet") document.getElementById("ps-pareto").textContent = Math.round(two) + "%";
+    document.getElementById("h-pareto").textContent = st.universe === "sweet"
+      ? `of the ${PM[st.metric].noun} in the ${nUni} countries that are online and powered but short of staff are in Indonesia and India.`
+      : `of the ${PM[st.metric].noun} across all ${nUni} understaffed countries are in Indonesia and India.`;
+    const rk = iso => rows.find(d => d.iso === iso)?.rank;
+    document.getElementById("p-pareto").innerHTML =
+      `Two countries out of ${nUni}. <b style="color:${FOCUS.IND.color}">India</b> ranks ${ordinal(rk("IND"))} and <b style="color:${FOCUS.IDN.color}">Indonesia</b> ${ordinal(rk("IDN"))}. ` +
+      (st.metric === "gap" && st.universe === "all" ? "Indonesia is close to the threshold, so its gap is smaller; its weight shows in people and TB cases." : "India brings scale; Indonesia brings readiness.");
+    el.replaceChildren(Plot.plot({
+      width: el.clientWidth, height: 380, marginLeft: 44, marginBottom: 78, marginTop: 24, style: PS,
+      x: { label: null, domain: shown.map(d => d.name), tickRotate: -45, padding: 0.18 },
+      y: { label: "% of total (bars) · cumulative % (line)", domain: [0, 100], grid: true },
+      marks: [
+        Plot.ruleY([80], { stroke: C.ink, strokeDasharray: "2,3" }),
+        Plot.text([80], { x: shown[shown.length - 1].name, y: d => d, text: () => "80%", dy: -7, textAnchor: "end", fill: C.ink2 }),
+        Plot.barY(shown, { x: "name", y: "share", fill: d => FOCUS[d.iso] ? FOCUS[d.iso].color : OTHER,
+          title: d => `${d.name}: ${d.share.toFixed(1)}% of total, cumulative ${d.cum.toFixed(0)}%`, tip: true }),
+        // tall bars get the label inside (the cumulative line starts at the first bar's top)
+        Plot.text(shown.filter(d => FOCUS[d.iso] && d.share >= 15), { x: "name", y: "share", text: d => d.share.toFixed(0) + "%", dy: 14, fill: d => d.iso === "IND" ? C.ink : "#fff", fontWeight: 700, fontSize: 11 }),
+        Plot.text(shown.filter(d => FOCUS[d.iso] && d.share < 15), { x: "name", y: "share", text: d => d.share.toFixed(0) + "%", dy: -8, fill: d => FOCUS[d.iso].color, fontWeight: 700 }),
+        Plot.line(shown, { x: "name", y: "cum", stroke: C.ink2, strokeWidth: 1.8 }),
+        Plot.dot(shown, { x: "name", y: "cum", r: 3, fill: C.ink2 }),
+      ],
+    }));
+  },
 };
 
 let factMap;
@@ -185,6 +245,7 @@ function drawStory() {
   story.queue(document.getElementById("f-queue"));
   story.hours(document.getElementById("f-hours"));
   story.feasibility(document.getElementById("f-feasibility"));
+  story.pareto(document.getElementById("f-pareto"));
   initFactMap();
 }
 

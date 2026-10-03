@@ -4,7 +4,7 @@
 
 Built by Egshi, Meet, Rizaldy and Yusril for the Hack-Nation × World Bank *Small AI for Development* hackathon (Health track), October 2026.
 
-- **The story:** six numbers that lead to the problem statement, including why Indonesia is ready (power, internet, mobile and mandatory e-records are in place; health workers are not). Press ↓ / ↑ to present.
+- **The story:** seven numbers that lead to the problem statement. They include why Indonesia is ready (power, internet, mobile and mandatory e-records are in place; health workers are not) and a Pareto of why Indonesia and India are worth it: 74% of the people in countries that are ready but short-staffed. Press ↓ / ↑ to present.
 - **Explore countries:** a world map on an Esri Light Gray basemap. Colour it by health workers, rural share, internet use, mobile, electricity, service coverage, TB incidence or feasibility, then pick any country to see its numbers, rank and trend.
 - **Data & method:** sources, licenses, evidence labels, and what the data does not show.
 
@@ -30,7 +30,7 @@ Then open http://localhost:8000. The page fetches `world.json`, so opening the f
 | Source | Used for | License |
 |---|---|---|
 | WHO Global Health Observatory: HWF_0001, HWF_0006, UHC_INDEX_REPORTED | Workforce density, service coverage | WHO terms of use |
-| World Bank WDI: SP.RUR.TOTL.ZS, IT.NET.USER.ZS, IT.CEL.SETS.P2, EG.ELC.ACCS.ZS, SH.TBS.INCD | Rural share, internet, mobile, electricity, TB incidence | CC BY 4.0 |
+| World Bank WDI: SP.POP.TOTL, SP.RUR.TOTL, SP.RUR.TOTL.ZS, IT.NET.USER.ZS, IT.CEL.SETS.P2, EG.ELC.ACCS.ZS, SH.TBS.INCD | Rural share, internet, mobile, electricity, TB incidence | CC BY 4.0 |
 | Permenkes 24/2022; Kemenkes SATUSEHAT and SITB; Sahabat-AI model card | Indonesia's digital-health rails | cited |
 | healthsites.io / OpenStreetMap via HDX | Indonesia facility map, record completeness | ODbL |
 | Chaudhury et al. (2004 draft; *J. Econ. Perspectives* 2006) | Provider absence | cited |
