@@ -1,0 +1,31 @@
+{
+ "at": "2026-10-04 02:13",
+ "summaries": [
+  {
+   "set": "keyword / hi / text",
+   "n": 43,
+   "missed_urgent": 0,
+   "emerg_to_clinic": 0,
+   "accuracy": 0.93,
+   "uncertain_rate": 0.14,
+   "avg_questions": 6.65,
+   "misreads": 6,
+   "avg_understand_s": 0.0,
+   "mode": "keyword",
+   "lang": "hi"
+  },
+  {
+   "set": "keyword / gu / text",
+   "n": 21,
+   "missed_urgent": 0,
+   "emerg_to_clinic": 0,
+   "accuracy": 0.952,
+   "uncertain_rate": 0.095,
+   "avg_questions": 5.71,
+   "misreads": 2,
+   "avg_understand_s": 0.0,
+   "mode": "keyword",
+   "lang": "gu"
+  }
+ ]
+}

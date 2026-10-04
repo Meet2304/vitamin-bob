@@ -1,5 +1,5 @@
-"""One call, start to finish. The CLI, the eval harness and (later) the Gradio demo all drive
-this same state machine, so what you evaluate is exactly what you demo.
+"""One call, start to finish. The CLI, the eval harness and the contract conversation
+(conversation.py) all drive this same state machine, so what you evaluate is exactly what you demo.
 
 Flow: age (keypad) -> free description (speech -> text -> extractor)
       -> only the follow-up questions still needed (keypad) -> tier -> messages.
@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from .protocol import (
     AGE_GROUPS,
+    HIGH_DURATION_DAYS,
     AGE_LABEL_EN,
     OUTCOME_HI,
     PATIENT_SMS_HI,
@@ -41,7 +42,8 @@ class CallSession:
         self.extractor = extractor
         self.phone = phone
         self.case = Case()
-        self.code = secrets.token_hex(2).upper()
+        # Digits only, so it can be read back from pre-recorded digit clips and typed on any keypad.
+        self.code = f"{secrets.randbelow(10000):04d}"
         self.asked: set[str] = set()
         self.log: list[tuple[str, str]] = []  # (speaker, text) for the demo's Bob log
         self.extraction: dict | None = None
@@ -59,14 +61,29 @@ class CallSession:
 
     # -- step 2 ------------------------------------------------------------
     def describe(self, transcript: str) -> dict:
+        return self.apply(transcript, self.extractor(transcript))
+
+    def apply(self, transcript: str, result: dict) -> dict:
+        """Merge an extraction (from any extractor, including Gemma on audio) into the case."""
         self.case.transcript = transcript
         self.log.append(("patient", transcript))
-        result = self.extractor(transcript)
         self.extraction = result
+        confirm_days = []
         for s in SYMPTOMS:
             if result["symptoms"][s]["present"] != UNKNOWN:
                 self.case.symptoms[s] = dict(result["symptoms"][s])
                 self.case.source[s] = "description"
+                days = self.case.symptoms[s]["days"]
+                # Guardrail: a duration heard in the description may RAISE urgency (long enough
+                # to be HIGH on its own) but never silently lower it. "17 days" misheard as
+                # "7 days" would turn HIGH into MEDIUM, so shorter durations are confirmed on the keypad.
+                if days is not None and days < HIGH_DURATION_DAYS[s]:
+                    self.case.symptoms[s]["days"] = None
+                    confirm_days.append(f"{s} {days}d")
+                elif days is not None:
+                    self.case.source[f"{s}_days"] = "description"
+        if confirm_days:
+            self.log.append(("bob", f"[will confirm duration on keypad] {', '.join(confirm_days)}"))
         confirm = []
         for f in RED_FLAGS:
             value = result["flags"][f]
@@ -177,3 +194,24 @@ def clinician_sms(session: CallSession, result: Classification) -> str:
         tail = f" | Call {session.phone}"
         sms = sms[: 160 - len(tail) - 1] + "~" + tail
     return sms
+
+
+def session_to_dict(s: CallSession) -> dict:
+    """Everything needed to resume a call between contract events."""
+    c = s.case
+    return {
+        "phone": s.phone, "code": s.code, "asked": sorted(s.asked), "log": s.log,
+        "extraction": s.extraction,
+        "case": {"age_group": c.age_group, "symptoms": c.symptoms, "flags": c.flags,
+                 "transcript": c.transcript, "source": c.source},
+    }
+
+
+def session_from_dict(d: dict, extractor=None) -> CallSession:
+    s = CallSession(extractor, phone=d["phone"])
+    s.code, s.asked, s.extraction = d["code"], set(d["asked"]), d["extraction"]
+    s.log = [tuple(x) for x in d["log"]]
+    c = d["case"]
+    s.case = Case(age_group=c["age_group"], symptoms=c["symptoms"], flags=c["flags"],
+                  transcript=c["transcript"], source=c["source"])
+    return s

@@ -160,32 +160,42 @@ def validate(raw: dict, transcript: str) -> dict:
 # Keyword baseline
 # ---------------------------------------------------------------------------
 KEYWORDS = {
-    "fever": ["बुखार", "बुख़ार", "ज्वर", "bukhar", "fever", "तपना", "तप रहा", "तप रही"],
-    "cough": ["खांसी", "खाँसी", "khansi", "cough"],
-    "diarrhea": ["दस्त", "पतले दस्त", "loose motion", "dast", "पेट चल"],
-    "convulsions": ["दौरा", "दौरे", "झटके", "झटका", "मिर्गी"],
-    "altered_consciousness": ["बेहोश", "होश नहीं", "सुस्त", "उलझन"],
-    "severe_breathing_difficulty": ["साँस लेने में तकलीफ", "सांस लेने में तकलीफ", "साँस नहीं", "सांस नहीं", "दम घुट", "हाँफ"],
-    "unable_to_drink": ["पी नहीं पा", "पानी नहीं पी", "दूध नहीं पी"],
-    "vomits_everything": ["सब उल्टी", "सब कुछ उल्टी", "हर चीज़ उल्टी", "उल्टी कर देता", "उल्टी कर देती"],
-    "stiff_neck": ["गर्दन अकड़", "गर्दन जकड़", "गर्दन में अकड़न"],
-    "fast_breathing": ["तेज़ साँस", "तेज साँस", "तेज़ सांस", "तेज सांस", "जल्दी जल्दी साँस", "जल्दी जल्दी सांस"],
-    "blood_in_stool": ["खून", "ख़ून", "blood"],
-    "dehydration_signs": ["आँखें धँस", "आंखें धंस", "पेशाब कम", "पेशाब नहीं"],
+    # Hindi, then Gujarati, then romanised/English as callers mix languages.
+    "fever": ["बुखार", "बुख़ार", "ज्वर", "तपना", "तप रहा", "तप रही",
+              "તાવ", "bukhar", "fever"],
+    "cough": ["खांसी", "खाँसी", "ઉધરસ", "ખાંસી", "khansi", "cough"],
+    "diarrhea": ["दस्त", "पतले दस्त", "पेट चल", "ઝાડા", "ઝાડો", "પાતળા ઝાડા",
+                 "loose motion", "dast"],
+    "convulsions": ["दौरा", "दौरे", "झटके", "झटका", "मिर्गी", "આંચકી", "ખેંચ", "તાણ આવ"],
+    "altered_consciousness": ["बेहोश", "होश नहीं", "सुस्त", "उलझन", "બેભાન", "સુસ્ત", "ભાન નથી"],
+    "severe_breathing_difficulty": ["साँस लेने में तकलीफ", "सांस लेने में तकलीफ", "साँस नहीं", "सांस नहीं",
+                                    "दम घुट", "हाँफ", "શ્વાસ લેવામાં તકલીફ", "શ્વાસ નથી", "હાંફ"],
+    "unable_to_drink": ["पी नहीं पा", "पानी नहीं पी", "दूध नहीं पी", "પી શકતો નથી", "પી શકતી નથી",
+                        "પી શકતું નથી", "દૂધ નથી પીતું", "પાણી નથી પીતો"],
+    "vomits_everything": ["सब उल्टी", "सब कुछ उल्टी", "हर चीज़ उल्टी", "उल्टी कर देता", "उल्टी कर देती",
+                          "બધું ઊલટી", "બધી ઊલટી", "ઊલટી કરી નાખે", "ઉલટી કરી નાખે"],
+    "stiff_neck": ["गर्दन अकड़", "गर्दन जकड़", "गर्दन में अकड़न", "ગરદન અકડ", "ગરદન જકડ"],
+    "fast_breathing": ["तेज़ साँस", "तेज साँस", "तेज़ सांस", "तेज सांस", "जल्दी जल्दी साँस", "जल्दी जल्दी सांस",
+                       "ઝડપી શ્વાસ", "શ્વાસ ઝડપી", "જલ્દી જલ્દી શ્વાસ"],
+    "blood_in_stool": ["खून", "ख़ून", "લોહી", "blood"],
+    "dehydration_signs": ["आँखें धँस", "आंखें धंस", "पेशाब कम", "पेशाब नहीं", "આંખો ઊંડી", "પેશાબ ઓછો",
+                          "પેશાબ નથી"],
 }
-NEGATIONS = ["नहीं", "नही", "ना ", "nahi", "no "]
+NEGATIONS = ["नहीं", "नही", "ना ", "nahi", "no ", "નથી", "ના ", "નહીં"]
 HINDI_NUMBERS = {
     "एक": 1, "दो": 2, "तीन": 3, "चार": 4, "पांच": 5, "पाँच": 5, "छह": 6, "छः": 6,
     "सात": 7, "आठ": 8, "नौ": 9, "दस": 10, "पंद्रह": 15, "बीस": 20,
+    "બે": 2, "ત્રણ": 3, "ચાર": 4, "પાંચ": 5, "છ": 6, "સાત": 7, "આઠ": 8, "નવ": 9, "દસ": 10,
+    "પંદર": 15, "વીસ": 20,
 }
 
 
 def _days_near(text: str, start: int) -> int | None:
     window = text[max(0, start - 40): start + 60]
-    m = re.search(r"(\d+)\s*(दिन|din|day)", window)
+    m = re.search(r"(\d+)\s*(दिन|din|day|દિવસ)", window)
     if m:
         return int(m.group(1))
-    week = r"\s*(हफ़्ते|हफ्ते|हफ़्ता|हफ्ता|सप्ताह)"
+    week = r"\s*(हफ़्ते|हफ्ते|हफ़्ता|हफ्ता|सप्ताह|અઠવાડિય)"
     m = re.search(r"(\d+)" + week, window)
     if m:
         return int(m.group(1)) * 7
@@ -193,7 +203,7 @@ def _days_near(text: str, start: int) -> int | None:
         if re.search(r"(?<!\w)" + word + week, window):
             return n * 7
     for word, n in HINDI_NUMBERS.items():
-        if re.search(r"(?<!\w)" + word + r"\s*(दिन|din)", window):
+        if re.search(r"(?<!\w)" + word + r"\s*(दिन|din|દિવસ)", window):
             return n
     if re.search(week, window):
         return 7
@@ -211,7 +221,9 @@ class KeywordExtractor:
                 i = text.find(w.lower())
                 if i < 0:
                     continue
-                after = text[i + len(w): i + len(w) + 15]
+                # Negation must be in the same clause: stop at sentence ends and "and"/"but",
+                # so "fits came. no cough" does not read as "no fits".
+                after = re.split(r"[।.,!?;]| और | लेकिन | પણ | અને | but | and ", text[i + len(w): i + len(w) + 15])[0]
                 value = NO if any(n in after for n in NEGATIONS) else YES
                 if item in SYMPTOMS:
                     out["symptoms"][item]["present"] = value

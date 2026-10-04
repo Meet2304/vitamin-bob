@@ -1,0 +1,43 @@
+{
+  "_note": "Scripted calls for the fake Stuart. 'vignette' names a case in eval/vignettes*.jsonl: its transcript is what the patient says and its ground truth is how the patient answers keypad questions. 'menu' lists the keys pressed at each language menu (null = no key, timeout). 'keys' overrides answers per clip key, consumed in order. 'expect' is checked from the outcome clips Bob plays and the SMS Bob asks Stuart to send.",
+  "scenarios": [
+    {"name": "hi_emergency", "phone": "+919811000001", "menu": ["1"], "vignette": "v04",
+     "expect": {"outcome": "emergency", "alert_sms_to": "+919000000001"}},
+    {"name": "hi_high", "phone": "+919811000002", "menu": ["1"], "vignette": "v03",
+     "expect": {"outcome": "high", "clinic": "rampur"}},
+    {"name": "gu_medium", "phone": "+919811000003", "menu": ["2"], "vignette": "g01",
+     "expect": {"outcome": "appointment", "clinic": "rampur"}},
+    {"name": "gu_emergency", "phone": "+919811000004", "menu": ["2"], "vignette": "g04",
+     "expect": {"outcome": "emergency"}},
+    {"name": "gu_out_of_scope", "phone": "+919811000005", "menu": ["2"], "vignette": "g15",
+     "expect": {"outcome": "uncertain"}},
+    {"name": "menu_repeats_until_key", "phone": "+919811000006", "menu": [null, "9", null, "1"], "vignette": "v02",
+     "expect": {"outcome": "appointment"}},
+    {"name": "invalid_and_missing_keys", "phone": "+919811000007", "menu": ["1"], "vignette": "v01",
+     "keys": {"who_is_sick": ["8", null, "3"], "q_flag_convulsions": ["5", "2"]},
+     "expect": {"outcome": "appointment"}},
+    {"name": "hangs_up_mid_call", "phone": "+919811000008", "menu": ["1"], "vignette": "v01", "hangup_after_questions": 1,
+     "expect": {"outcome": null, "alert_sms_to": "+919000000001"}},
+    {"name": "silent_description", "phone": "+919811000009", "menu": ["2"], "vignette": "g02", "silent": true,
+     "expect": {"outcome": "appointment"}},
+    {"name": "duplicate_events", "phone": "+919811000010", "menu": ["1"], "vignette": "v02", "duplicate": true,
+     "expect": {"outcome": "appointment"}},
+    {"name": "clinician_checkin_missed_call", "phone": "+919000000002", "kind": "missed_call_only",
+     "expect": {"callback": false, "sms_to": "+919000000002"}},
+    {"name": "failover_clinic_a_closed", "kind": "steps", "steps": [
+      {"sms": {"from": "+919000000001", "text": "CLOSED"}, "expect_sms_to": "+919000000001"},
+      {"call": {"phone": "+919811000011", "menu": ["1"], "vignette": "v03"},
+       "expect": {"outcome": "high", "clinic": "devgaon"}},
+      {"sms": {"from": "+919000000001", "text": "open"}, "expect_sms_to": "+919000000001"},
+      {"call": {"phone": "+919811000012", "menu": ["1"], "vignette": "v03"},
+       "expect": {"outcome": "high", "clinic": "rampur"}}
+    ]},
+    {"name": "ack_by_sms_and_stranger_ignored", "kind": "steps", "steps": [
+      {"call": {"phone": "+919811000013", "menu": ["1"], "vignette": "v04"}, "expect": {"outcome": "emergency"}},
+      {"sms": {"from": "+919000000001", "text": "ACK {last_code}"}, "expect_sms_to": "+919000000001"},
+      {"sms": {"from": "+919811999999", "text": "CLOSED"}, "expect_no_sms_to": "+919811999999"}
+    ]},
+    {"name": "callback_failed_alerts_a_person", "phone": "+919811000014", "kind": "callback_failed",
+     "expect": {"alert_sms_to": "+919000000001"}}
+  ]
+}

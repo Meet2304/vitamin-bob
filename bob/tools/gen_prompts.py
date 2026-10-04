@@ -173,6 +173,16 @@ def main() -> int:
             made += 1
             print(f"  {mkey:32} {len(samples) / audio.RATE:5.1f}s  {text[:50]}")
 
+    if not args.dry_run and not args.only and not args.lang:
+        # Remove clips whose key no longer exists (e.g. a renamed clinic), so Bob can't play stale audio.
+        for lang in all_langs:
+            keys = set(catalog(lang["code"]))
+            for p in (prompts_dir() / lang["code"]).glob("*.wav"):
+                if p.stem not in keys:
+                    p.unlink()
+                    manifest.pop(f"{lang['code']}/{p.stem}", None)
+                    print(f"  removed stale {lang['code']}/{p.stem}")
+
     if not args.dry_run:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
