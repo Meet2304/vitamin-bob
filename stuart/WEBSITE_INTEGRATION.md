@@ -1,5 +1,7 @@
 # Website integration handoff
 
+For the proposed phone-number setup screen and SMS-summary work, follow [DEMO_SETUP_HANDOFF.md](DEMO_SETUP_HANDOFF.md). That document specifies remaining implementation work; those settings APIs and patient summaries are not part of the current working demo.
+
 The working demo is launched by `Start-IntegratedDemo.ps1 -Mode phone`. It serves Bob and the live call dashboard on **http://127.0.0.1:8100**, Stuart on **8200**, and local Gemma on **8300**. A real missed-call callback completed with manual Phone Link audio transfer on October 4, 2026.
 
 ## Put the live demo inside the website
