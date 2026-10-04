@@ -2,7 +2,7 @@
 
 **Primary care triage over a free missed call.** A patient with any phone gives a missed call; the district machine calls back, listens in Hindi or Gujarati with an on-device Gemma 4 model, asks only the keypad questions it still needs, and routes the patient to the nearest open clinic or to 108. No app, no internet, no cost to the patient.
 
-Built by Egshi, Meet, Rizaldy and Yusril for the Hack-Nation × World Bank *Small AI for Development* hackathon (Health track), October 2026.
+Built by Egshiglen, Meet, Rizaldy and Yusril for the Hack-Nation × World Bank *Small AI for Development* hackathon (Health track), October 2026.
 
 **Live site:** https://rzrizaldy.github.io/vitamin-bob/
 
