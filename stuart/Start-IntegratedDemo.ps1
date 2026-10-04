@@ -58,7 +58,7 @@ try {
         if ($vbProcess.HasExited) { throw "Demo exited. Read $($vbProfile.runtime_dir)\integrated.stderr.log and model.log." }
         try {
             $vbState = Invoke-RestMethod http://127.0.0.1:8200/demo/state -TimeoutSec 1
-            if ($vbState.model_ready) { Write-Output 'Dashboard ready: http://127.0.0.1:8100/dashboard'; return }
+            if ($vbState.model_ready) { Write-Output 'Dashboard ready: http://127.0.0.1:8100/dashboard'; Write-Output 'Demo setup: http://127.0.0.1:8100/dashboard/setup'; Write-Output 'Website: http://127.0.0.1:8100/website/'; return }
         } catch { }
         Start-Sleep -Seconds 1
     }

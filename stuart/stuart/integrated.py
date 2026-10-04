@@ -22,6 +22,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 
 from .contracts import Missed, safe_wav
+from .demo_settings import add_settings_routes, apply_pending, disable_workers, finish_apply
 from .lines import SimulatorLine
 from .runtime import InstanceLock, load_profile
 
@@ -155,6 +156,8 @@ def add_demo_routes(app, board, scenarios, line, mode, servers):
 
 
 async def serve(args, profile):
+    # Demo setup: apply a saved pending revision to this launcher's profile before any worker exists.
+    profile, settings_state = apply_pending(args.config, profile)
     # All runtime components get one explicit environment before importing Bob.
     env = profile.environment()
     env.update(VB_BOB_DB=str(profile.data_dir / 'bob.db'),
@@ -167,6 +170,11 @@ async def serve(args, profile):
     os.environ.update(env)
     sys.path.insert(0, str(BOB))
     from vitamin_bob.server import app as bob_app
+    # Register the configured clinician in Bob (idempotent, history kept). If the revision cannot be
+    # applied consistently, keep calls and outgoing SMS off for this run; the setup screen shows why.
+    settings_state = finish_apply(profile, settings_state)
+    if settings_state.get('error'):
+        profile = disable_workers(profile)
     from .service import Switchboard, make_app
     scenarios = load_scenarios(profile.data_dir)
     line = RecordedPatientLine(profile.runtime_dir, scenarios) if args.mode == 'recorded' else None
@@ -186,6 +194,7 @@ async def serve(args, profile):
         board.callbacks_paused=body['paused']
         board.store.execute("INSERT OR REPLACE INTO meta VALUES('callbacks_paused',?)",('1' if body['paused'] else '0',))
         return {'paused':board.callbacks_paused}
+    add_settings_routes(bob_app, profile, profile)
     servers = [uvicorn.Server(uvicorn.Config(application, host='127.0.0.1', port=port,
                 log_level='warning', access_log=False)) for application, port in ((bob_app, 8100), (app, 8200))]
     add_demo_routes(app, board, scenarios, line, args.mode, servers)
