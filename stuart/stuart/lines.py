@@ -1,6 +1,7 @@
 import asyncio
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import time
@@ -108,7 +109,10 @@ class Adb:
         self.executable, self.serial = str(executable), serial
 
     def run(self, *args, timeout=8):
-        command = [self.executable] + (["-s", self.serial] if self.serial else []) + list(args)
+        # adb joins shell arguments into a remote shell command. Quote there as well
+        # as using a local argv list, so SQL > comparisons are not redirections.
+        remote = ["shell", shlex.join(args[1:])] if args and args[0] == "shell" else list(args)
+        command = [self.executable] + (["-s", self.serial] if self.serial else []) + remote
         flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
         result = subprocess.run(command, capture_output=True, text=True, timeout=timeout,
                                 creationflags=flags, encoding="utf-8", errors="replace")

@@ -4,14 +4,14 @@ Contract 0.2. Windows service for local call actions, callback queues, SMS and e
 
 ## Current evidence
 
-Latest local verification: 18 automated tests passed; eight completed simulated calls, one simulated outbound SMS and three acknowledged Central records over loopback. No pending callback decisions, unacknowledged events or transport errors remained in the live check. Details are in ignored `runtime/verification.json` and the console screenshot. This is transport evidence; the real phone and real Bob remain unverified.
+Latest local verification: 19 automated tests passed; eight completed simulated calls, one simulated outbound SMS and three acknowledged Central records over loopback. No pending callback decisions, unacknowledged events or transport errors remained in the live check. Details are in ignored `runtime/verification.json` and the console screenshot. This is transport evidence; the real phone and real Bob remain unverified.
 
 - Scripted missed-call → Bob callback decision → play → keypad → record → hangup works against fake Bob.
 - Callback queue, duplicate-number merging, event IDs and HTTP acknowledgements persist in SQLite.
 - Multiple simulated lines execute through the same action executor.
 - SMS ordering, encoding-aware segment caps and status events are tested on simulated transport.
 - Encrypted SMS-sized frames, authenticated ACKs, fragment restart recovery and one Central record per ID are tested under drop, duplicate and tamper faults.
-- Android control and SMSGate adapters are provided but require device/audio capability tests. Phone Link PC calling is user-confirmed. Windows sees the Samsung USB composite/MTP device and its drivers are healthy, but no ADB interface is exposed and ADB lists no phone. The phone debugging setting still needs checking. No real call or SMS has been placed by this service.
+- Android control and SMSGate adapters are provided but require device/audio capability tests. Phone Link PC calling is user-confirmed. ADB now detects and authorizes the S24 Plus (SM-S926B, Android 16), and empty call-log/SMS provider queries succeed. Two S24 Bluetooth audio endpoints accept 16 kHz settings, but their actual call-audio behavior is still unverified. No real call or SMS has been placed by this service.
 - Fake Bob uses tones, not bilingual clinical prompts. Hindi/Gujarati content and the real routing dashboard are Bob's responsibility.
 
 ## Quick demo (no phone required)
@@ -57,7 +57,7 @@ Every `/v1/*` request requires `X-VB-Contract: 0.2`. Run `GET /v1/health`, `GET 
 
 1. Enable Developer options and USB debugging on the S24 Plus. Connect with a data-capable cable, unlock it, select File transfer and accept the debugging authorization. If Windows cannot identify the Android debugging interface, check the phone debugging setting. Samsung Auto Blocker can block USB commands; report a blocked setting before changing protection. Install the official Samsung Android USB driver if Windows reports a driver problem, then reconnect.
 2. Pair Phone Link's Calls feature and verify a manual call from the PC. This confirms manual calling only; we still need to prove audio routing and ADB-initiated call behavior.
-3. Configure independent PC audio transmit/receive routes. `VB_AUDIO_OUTPUT` must send a WAV into the remote caller's audio; `VB_AUDIO_INPUT` must capture the remote caller. The laptop mic and speaker are not proof of an isolated phone route. A virtual cable/mixer or suitable wired headset interface is needed for the main path. Do not assume one virtual cable can provide both independent directions.
+3. Configure independent PC audio transmit/receive routes. `VB_AUDIO_OUTPUT` must send a WAV into the remote caller's audio; `VB_AUDIO_INPUT` must capture the remote caller. The laptop mic and speaker are not proof of an isolated phone route. First test the exposed S24 Bluetooth input/output endpoints. If they cannot carry both directions while Phone Link is active, a virtual cable/mixer or suitable wired headset interface will be needed. Do not assume one virtual cable can provide both independent directions.
 4. List devices with `python -m stuart devices`, then set the verified indices/names. Test prompt playback, caller recording, keypad tones and hangup with a second phone. Repeat with internet and mobile data off while retaining cellular calls and Bluetooth.
 5. Set the default calling SIM manually to avoid an unattended SIM picker. Disable voicemail/diversions for the demonstration if they would answer the incoming missed call. Check actual patient/carrier charges instead of treating “never pays” as universal.
 

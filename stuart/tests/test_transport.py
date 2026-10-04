@@ -11,9 +11,26 @@ from pydantic import ValidationError
 from stuart.audio import detect_dtmf
 from stuart.contracts import Actions, Missed, Record, Sms, Sync, safe_wav
 from stuart.fake_bob import make_fake
-from stuart.lines import SimulatorLine
+from stuart.lines import Adb, SimulatorLine
 from stuart.service import Switchboard, make_app, segments
 from stuart.sync_link import Codec, Receiver
+
+
+def test_adb_sql_filter_stays_one_remote_argument(monkeypatch):
+    import shlex
+    import subprocess
+    captured=[]
+    def run(command, **kwargs):
+        captured.append(command)
+        return subprocess.CompletedProcess(command,0,'No result found.','')
+    monkeypatch.setattr(subprocess,'run',run)
+    adb=Adb('adb.exe','demo-device')
+    query='date>9999999999999'
+    adb.run('shell','content','query','--where',query)
+    assert shlex.split(captured[0][-1])==['content','query','--where',query]
+    assert "'date>9999999999999'" in captured[0][-1]
+    adb.run('devices','-l')
+    assert captured[1]==['adb.exe','-s','demo-device','devices','-l']
 
 
 def test_contract_rejects_invalid_action_order():
