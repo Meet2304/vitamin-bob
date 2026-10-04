@@ -1,6 +1,6 @@
 # Integrated Vitamin Bob demonstration
 
-Combines merged Bob with Stuart and local Gemma. The primary live-phone dashboard is **http://127.0.0.1:8100/dashboard**. The older detailed operations view is available at `/dashboard/details`.
+Combines merged Bob with Stuart and local Gemma. The primary live-phone dashboard is **http://127.0.0.1:8100/dashboard**. The detailed operations view is available at `/dashboard/details`, and the original operations dashboard at `/dashboard/classic`.
 
 For adding this view to the website branch, see [WEBSITE_INTEGRATION.md](WEBSITE_INTEGRATION.md). The stable embed URL is `/dashboard/live`.
 

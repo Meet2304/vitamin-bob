@@ -150,6 +150,11 @@ def dashboard():
     return FileResponse(DASHBOARD, media_type="text/html")
 
 
+@app.get("/dashboard/classic")
+def dashboard_classic():
+    return FileResponse(DASHBOARD.with_name('dashboard-classic.html'), media_type="text/html")
+
+
 @app.get("/dashboard/details")
 def dashboard_details():
     return FileResponse(DASHBOARD.with_name('dashboard-details.html'), media_type="text/html")

@@ -12,7 +12,7 @@
 <section class="columns"><article class="panel"><h2>The conversation</h2><div id="conversation" class="dialogue"><p class="empty">Once connected, what you say and what Bob asks will appear here.</p></div></article><article class="panel"><h2>What happens next</h2><div id="result"><p class="empty">Your result appears after Bob understands your answers.</p></div></article></section>
 <details><summary>Earlier calls <span id="historyCount"></span></summary><div id="history" class="history"></div><button id="follow" class="secondary small">Follow the newest call</button></details>
 <details><summary>Clinic availability</summary><p class="muted small">Change availability to demonstrate how the next caller is routed.</p><div id="clinics"></div></details>
-<details><summary>Delivery &amp; system details</summary><div id="technical"></div><p><a href="/dashboard/details" target="_blank" rel="noopener">Open detailed operations dashboard ↗</a></p></details>
+<details><summary>Delivery &amp; system details</summary><div id="technical"></div><p><a href="/dashboard/details" target="_blank" rel="noopener">Open detailed operations dashboard ↗</a> · <a href="/dashboard/classic" target="_blank" rel="noopener">Open classic dashboard ↗</a></p></details>
 <p class="legend">Demo district · Clinical rules have not yet been clinician reviewed. The dashboard updates automatically.</p>
 </main><script>
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const tm=s=>s?new Date(s).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';let S=null,L=null,selected=null,refreshing=false;

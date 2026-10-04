@@ -47,6 +47,7 @@ Run these from the `bob\` folder with the virtualenv's Python (`.venv\Scripts\py
 | `vitamin_bob/sync.py`, `stuart_client.py` | What goes to Central; durable outboxes to Stuart | No |
 | `vitamin_bob/prompts.py`, `prompts/*.json` | Every sentence Bob says, as a list of pre-recorded clips | No |
 | `vitamin_bob/dashboard.html` | One offline page polling `/api/state` every second | No |
+| `vitamin_bob/dashboard-classic.html` | The original operations dashboard, at `/dashboard/classic` | No |
 | `fake_stuart/` | Drives Bob through 17 scripted calls and checks every message against the contract | No |
 | `eval/` | 54 synthetic vignettes + 10 real recordings, per-language evaluation | — |
 
