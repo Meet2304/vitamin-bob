@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vitamin Bob Data Slides</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1e2a36; --ink2:#4a5563; --muted:#7b8594; --rule:#e3e6ea; --wash:#f4f6f8; --deep:#184f95; --idn:#0f766e; --ind:#e09a00; --bad:#b3261e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9ecef; font-family: Archivo, system-ui, sans-serif; color: var(--ink); }
+  .page { width: 1920px; height: 1080px; background: #fff; margin: 0 auto 40px; padding: 72px 96px 0; position: relative; overflow: hidden;
+          display: flex; flex-direction: column; }
+  .kicker { font-size: 26px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  h1 { font-stretch: 72%; font-weight: 800; font-size: 84px; line-height: .98; letter-spacing: -.01em; margin: 0 0 40px; max-width: 1500px; }
+  .body { flex: 1; display: flex; gap: 72px; min-height: 0; }
+  .two > .stats, .two > .side { width: 560px; flex: none; }
+  .two > .chart { flex: 1; min-width: 0; }
+  .cap { font-size: 24px; color: var(--ink2); margin: 0 0 12px; }
+  .stat { border-top: 3px solid var(--ink); padding: 16px 0 22px; }
+  .stat b { display: block; font-stretch: 72%; font-weight: 800; font-size: 104px; line-height: .95; }
+  .stat span { display: block; font-size: 28px; line-height: 1.25; margin: 6px 0 8px; }
+  .tag { font-style: normal; font-size: 18px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+  .tag.data { color: #1b7f4e; }
+  .tag.lit { color: var(--deep); }
+  .side .huge { display: block; font-stretch: 72%; font-weight: 800; font-size: 210px; line-height: .9; margin-top: 10px; }
+  .huge.deep { color: var(--deep); }
+  .side p { font-size: 32px; line-height: 1.3; margin: 18px 0 0; }
+  .side p.small { font-size: 22px; color: var(--muted); margin-top: 28px; }
+  .idn { color: var(--idn); } .ind { color: var(--ind); }
+  .legend { list-style: none; padding: 0; margin: 34px 0 0; font-size: 24px; color: var(--ink2); }
+  .legend li { margin: 0 0 10px; }
+  .legend i { display: inline-block; width: 18px; height: 18px; border-radius: 50%; margin-right: 12px; vertical-align: -2px; }
+  .rows { margin-top: 30px; }
+  .rows div { display: flex; align-items: baseline; gap: 18px; border-top: 2px solid var(--rule); padding: 12px 0; }
+  .rows b { font-stretch: 72%; font-weight: 800; font-size: 64px; width: 150px; }
+  .rows span { font-size: 28px; color: var(--ink2); }
+  .cards { gap: 48px; align-items: flex-start; flex: none; }
+  .close { margin: auto 0 28px; font-stretch: 85%; font-weight: 700; font-size: 40px; line-height: 1.25; border-top: 6px solid var(--ink); padding: 18px 0 0; max-width: 1600px; }
+  .card { flex: 1; background: var(--wash); border-radius: 8px; padding: 40px 48px; border-top: 10px solid; }
+  .idn-card { border-color: var(--idn); } .ind-card { border-color: var(--ind); }
+  .who { font-stretch: 72%; font-weight: 800; font-size: 56px; margin: 0 0 24px; }
+  .idn-card .who span { color: var(--idn); } .ind-card .who span { color: var(--ind); }
+  .facts { display: flex; gap: 28px; margin-bottom: 26px; }
+  .facts div { flex: 1; border-top: 2px solid var(--ink); padding-top: 10px; }
+  .facts b { display: block; font-stretch: 72%; font-weight: 800; font-size: 76px; line-height: 1; }
+  .facts span { display: block; font-size: 24px; color: var(--ink2); margin-top: 6px; }
+  .card ul { margin: 0; padding-left: 28px; font-size: 28px; line-height: 1.35; }
+  .card li { margin-bottom: 10px; }
+  footer span:last-child { white-space: nowrap; }
+  footer { height: 64px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--rule); font-size: 18px; color: var(--muted); margin-top: 16px; gap: 40px; }
+</style>
+</head>
+<body>
+<section class="page" data-document-role="page" data-label="Data 1: the global problem" data-speaker-notes="Around the world, rural clinics run short of hands. 44% of countries are below the WHO minimum of health workers. On any given day about a third of staff are absent, and a quarter to half of every visit goes to paperwork.">
+  <p class="kicker">The global problem</p>
+  <h1>Rural clinics run on one queue and too few hands</h1>
+  <div class="body two">
+    <div class="stats">
+      <div class="stat"><b>44%</b><span>of countries fall below the WHO minimum of 44.5 health workers per 10,000 people</span><em class="tag data">Data · WHO GHO</em></div>
+      <div class="stat"><b>35%</b><span>of health-centre staff were absent on surprise visits (5 countries; 40% in India and Indonesia)</span><em class="tag lit">Literature · Chaudhury et al.</em></div>
+      <div class="stat"><b>26–53%</b><span>of every consultation goes to writing in registers</span><em class="tag lit">Literature · Siyam et al. 2021</em></div>
+    </div>
+    <div class="chart"><p class="cap">Health workers per 10,000 people, 193 countries, sorted</p><div id="c-workforce"></div></div>
+  </div>
+  <footer><span>Sources: WHO Global Health Observatory; World Bank WDI; Chaudhury et al. (J Econ Perspect 2006); Siyam et al. (BMC Health Serv Res 2021); Permenkes 24/2022. National averages.</span><span>Vitamin Bob · rzrizaldy.github.io/vitamin-bob</span></footer>
+</section>
+<section class="page" data-document-role="page" data-label="Data 2: feasibility quadrant" data-speaker-notes="So where can a tool that saves staff time actually run? It needs power and some connectivity, not more doctors. 26 countries already have the rails but not the staff. India and Indonesia are both in that box.">
+  <p class="kicker">Where a fix can run today</p>
+  <h1>26 countries have power and internet, but not enough health workers</h1>
+  <div class="body two rev">
+    <div class="chart"><p class="cap">Internet use vs health workers per 10,000 (log scale), 189 countries</p><div id="c-quadrant"></div></div>
+    <div class="side">
+      <b class="huge deep">26</b>
+      <p>countries are <strong>online</strong> (at least 60%) and <strong>powered</strong> (at least 95% electricity) but below the WHO workforce minimum.</p>
+      <p><strong class="idn">Indonesia</strong> and <strong class="ind">India</strong> are both in this box.</p>
+      <ul class="legend">
+        <li><i style="background:#184f95"></i>Online and powered, short of staff</li>
+        <li><i style="background:#e8a0a9"></i>Short of rails and staff</li>
+        <li><i style="background:#cfd8dc"></i>Online and powered, staffed</li>
+        <li><i style="background:#f5d39b"></i>Staffed, rails not ready</li>
+      </ul>
+    </div>
+  </div>
+  <footer><span>Sources: WHO Global Health Observatory; World Bank WDI; Chaudhury et al. (J Econ Perspect 2006); Siyam et al. (BMC Health Serv Res 2021); Permenkes 24/2022. National averages.</span><span>Vitamin Bob · rzrizaldy.github.io/vitamin-bob</span></footer>
+</section>
+<section class="page" data-document-role="page" data-label="Data 3: Pareto" data-speaker-notes="And within those 26, the need is concentrated. India and Indonesia alone hold 74% of the people, 81% of the rural people and 87% of TB cases. Two countries, most of the need.">
+  <p class="kicker">Why Indonesia and India</p>
+  <h1>Two countries hold three-quarters of the need we can reach</h1>
+  <div class="body two rev">
+    <div class="chart"><p class="cap">Share of people in the 26 feasible countries (bars) and cumulative share (line)</p><div id="c-pareto"></div></div>
+    <div class="side">
+      <b class="huge">74%</b>
+      <p>of the people in those 26 countries live in <strong class="idn">Indonesia</strong> or <strong class="ind">India</strong>.</p>
+      <div class="rows">
+        <div><b>81%</b><span>of rural people</span></div>
+        <div><b>87%</b><span>of TB cases a year</span></div>
+        <div><b>65%</b><span>of missing health workers</span></div>
+      </div>
+      <p class="small">Headcount view: India's weight is mostly population. Per-person need is highest in sub-Saharan Africa.</p>
+    </div>
+  </div>
+  <footer><span>Sources: WHO Global Health Observatory; World Bank WDI; Chaudhury et al. (J Econ Perspect 2006); Siyam et al. (BMC Health Serv Res 2021); Permenkes 24/2022. National averages.</span><span>Vitamin Bob · rzrizaldy.github.io/vitamin-bob</span></footer>
+</section>
+<section class="page" data-document-role="page" data-label="Data 4: start in Indonesia, scale to India" data-speaker-notes="Indonesia brings readiness: online, electrified, and electronic records are already mandatory in every puskesmas. India brings scale: nearly a billion rural people. The bottleneck isn't infrastructure, it's staff time. We start in Indonesia and scale to India.">
+  <p class="kicker">Start in Indonesia, scale to India</p>
+  <h1>The bottleneck is staff time, not infrastructure</h1>
+  <div class="body cards">
+    <div class="card idn-card">
+      <p class="who">Indonesia · <span>readiness</span></p>
+      <div class="facts">
+        <div><b>73%</b><span>online</span></div>
+        <div><b>99.9%</b><span>electricity</span></div>
+        <div><b>123</b><span>mobile lines per 100 people</span></div>
+      </div>
+      <ul>
+        <li>Electronic records mandatory in every puskesmas (Permenkes 24/2022)</li>
+        <li>SATUSEHAT national record exchange; SITB online TB system</li>
+        <li>Still only <strong>38.6</strong> health workers per 10,000, below 44.5</li>
+      </ul>
+    </div>
+    <div class="card ind-card">
+      <p class="who">India · <span>scale</span></p>
+      <div class="facts">
+        <div><b>938M</b><span>rural people</span></div>
+        <div><b>2.7M</b><span>TB cases a year</span></div>
+        <div><b>1.1M</b><span>health workers short of the WHO minimum</span></div>
+      </div>
+      <ul>
+        <li>65% online, 99.9% electricity: the rails reach most villages</li>
+        <li>72% of the rural population in the 26 feasible countries</li>
+        <li><strong>36.7</strong> health workers per 10,000, below 44.5</li>
+      </ul>
+    </div>
+  </div>
+  <p class="close">Same shortage of staff, different starting points: pilot where the rails already exist, then scale where the people are.</p>
+  <footer><span>Sources: WHO Global Health Observatory; World Bank WDI; Chaudhury et al. (J Econ Perspect 2006); Siyam et al. (BMC Health Serv Res 2021); Permenkes 24/2022. National averages.</span><span>Vitamin Bob · rzrizaldy.github.io/vitamin-bob</span></footer>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+<script>
+const D = {"workforce":[["GIN","Guinea",3.1],["MDG","Madagascar",3.7],["SOM","Somalia, Fed. Rep.",3.8],["DJI","Djibouti",4.0],["TZA","Tanzania",4.3],["TCD","Chad",4.4],["NER","Niger",4.6],["TGO","Togo",4.7],["CAF","Central African Republic",5.4],["SEN","Senegal",5.6],["MWI","Malawi",6.6],["MLI","Mali",6.6],["YEM","Yemen, Rep.",7.1],["CMR","Cameroon",7.5],["GMB","Gambia, The",7.5],["BEN","Benin",8.3],["MOZ","Mozambique",8.5],["SSD","South Sudan",8.6],["PNG","Papua New Guinea",8.6],["AFG","Afghanistan",8.7],["BDI","Burundi",8.8],["BFA","Burkina Faso",9.3],["MMR","Myanmar",9.6],["LBR","Liberia",10.1],["HTI","Haiti",10.2],["GNB","Guinea-Bissau",11.8],["KHM","Cambodia",12.2],["ETH","Ethiopia",12.4],["CIV","Cote d'Ivoire",12.5],["SLE","Sierra Leone",13.0],["SDN","Sudan",13.3],["COD","Congo, Dem. Rep.",13.8],["BGD","Bangladesh",13.9],["RWA","Rwanda",14.6],["KEN","Kenya",14.7],["MAR","Morocco",15.1],["GNQ","Equatorial Guinea",15.3],["NGA","Nigeria",15.7],["AGO","Angola",15.9],["ERI","Eritrea",16.1],["VUT","Vanuatu",16.2],["ZWE","Zimbabwe",16.5],["LAO","Lao PDR",17.4],["PAK","Pakistan",18.1],["COG","Congo, Rep.",18.3],["ZMB","Zambia",18.4],["MRT","Mauritania",18.7],["COM","Comoros",20.7],["TLS","Timor-Leste",22.9],["SLB","Solomon Islands",24.2],["CPV","Cabo Verde",25.3],["UGA","Uganda",25.3],["VNM","Viet Nam",25.4],["NIC","Nicaragua",26.1],["BTN","Bhutan",26.1],["STP","Sao Tome and Principe",26.3],["HND","Honduras",26.4],["FJI","Fiji",28.8],["GAB","Gabon",28.9],["BOL","Bolivia",29.1],["SYR","Syrian Arab Republic",30.6],["JAM","Jamaica",31.2],["EGY","Egypt, Arab Rep.",31.3],["SUR","Suriname",31.5],["TUN","Tunisia",31.5],["FSM","Micronesia, Fed. Sts.",31.9],["BHR","Bahrain",33.9],["LKA","Sri Lanka",33.9],["BLZ","Belize",34.0],["BWA","Botswana",34.5],["LSO","Lesotho",35.8],["WSM","Samoa",36.2],["IRQ","Iraq",36.4],["VEN","Venezuela, RB",36.7],["IND","India",36.7],["SLV","El Salvador",38.0],["IDN","Indonesia",38.6],["DOM","Dominican Republic",38.8],["GTM","Guatemala",39.0],["COL","Colombia",41.1],["THA","Thailand",41.6],["DZA","Algeria",41.7],["NAM","Namibia",43.6],["KIR","Kiribati",43.7],["PER","Peru",44.3],["GHA","Ghana",44.6],["LBN","Lebanon",46.0],["IRN","Iran, Islamic Rep.",46.9],["SWZ","Eswatini",48.2],["ZAF","South Africa",49.2],["ECU","Ecuador",49.4],["PAN","Panama",49.7],["TON","Tonga",52.1],["NPL","Nepal",52.5],["TKM","Turkmenistan",53.7],["KGZ","Kyrgyz Republic",55.7],["CRI","Costa Rica",57.6],["MEX","Mexico",58.0],["TUR","Turkiye",58.7],["TUV","Tuvalu",59.4],["MHL","Marshall Islands",59.4],["GRD","Grenada",59.6],["GUY","Guyana",60.9],["BHS","Bahamas, The",61.2],["PHL","Philippines",61.6],["MYS","Malaysia",63.0],["MUS","Mauritius",65.2],["BRB","Barbados",65.3],["JOR","Jordan",66.0],["OMN","Oman",67.2],["CHN","China",67.8],["PRK","Korea, Dem. People's Rep.",75.5],["ALB","Albania",77.0],["LVA","Latvia",77.1],["CYP","Cyprus",77.9],["SYC","Seychelles",78.3],["DMA","Dominica",79.2],["ARM","Armenia",81.1],["CHL","Chile",82.1],["MDV","Maldives",82.6],["TTO","Trinidad and Tobago",82.7],["TJK","Tajikistan",83.2],["BRA","Brazil",83.3],["PLW","Palau",84.2],["LBY","Libya",84.2],["MKD","North Macedonia",84.6],["NRU","Naoero",85.8],["BRN","Brunei Darussalam",86.7],["MNE","Montenegro",87.5],["AZE","Azerbaijan",87.6],["BGR","Bulgaria",90.8],["ARE","United Arab Emirates",91.5],["MNG","Mongolia",92.9],["HUN","Hungary",93.1],["BIH","Bosnia and Herzegovina",93.1],["ATG","Antigua and Barbuda",93.9],["LCA","St. Lucia",95.8],["UKR","Ukraine",96.1],["KAZ","Kazakhstan",96.6],["KNA","St. Kitts and Nevis",96.7],["KWT","Kuwait",96.8],["SVK","Slovak Republic",97.3],["SGP","Singapore",97.6],["VCT","St. Vincent and the Grenadines",99.2],["POL","Poland",99.6],["SAU","Saudi Arabia",99.6],["AND","Andorra",100.6],["ISR","Israel",101.4],["SRB","Serbia",102.3],["MDA","Moldova",102.4],["EST","Estonia",105.3],["NIU","NIU",105.5],["ESP","Spain",106.5],["GRC","Greece",108.4],["GEO","Georgia",113.3],["ARG","Argentina",115.8],["QAT","Qatar",117.4],["COK","COK",117.5],["HRV","Croatia",120.2],["ROU","Romania",120.5],["RUS","Russian Federation",121.5],["URY","Uruguay",121.8],["ITA","Italy",124.0],["LTU","Lithuania",124.3],["KOR","Korea, Rep.",124.7],["GBR","United Kingdom",129.1],["MLT","Malta",129.8],["UZB","Uzbekistan",130.2],["PRY","Paraguay",133.0],["FRA","France",134.3],["CZE","Czechia",136.6],["PRT","Portugal",140.3],["SMR","San Marino",141.1],["SVN","Slovenia",141.9],["CAN","Canada",144.7],["USA","United States",150.5],["JPN","Japan",150.9],["NLD","Netherlands",151.0],["DNK","Denmark",154.6],["BLR","Belarus",155.5],["BEL","Belgium",156.8],["CUB","Cuba",157.0],["FIN","Finland",158.9],["SWE","Sweden",162.2],["AUT","Austria",166.1],["LUX","Luxembourg",167.1],["NZL","New Zealand",169.0],["DEU","Germany",169.9],["AUS","Australia",186.6],["IRL","Ireland",193.9],["ISL","Iceland",206.6],["NOR","Norway",210.2],["CHE","Switzerland",237.6]],"scatter":[["VUT","Vanuatu",22.4,16.2,"Short of rails and staff"],["TKM","Turkmenistan",18.0,53.7,"Staffed, rails not ready"],["TUV","Tuvalu",35.2,59.4,"Staffed, rails not ready"],["SDN","Sudan",18.6,13.3,"Short of rails and staff"],["SYR","Syrian Arab Republic",33.8,30.6,"Short of rails and staff"],["YEM","Yemen, Rep.",17.5,7.1,"Short of rails and staff"],["SSD","South Sudan",6.7,8.6,"Short of rails and staff"],["ERI","Eritrea",14.3,16.1,"Short of rails and staff"],["MMR","Myanmar",45.4,9.6,"Short of rails and staff"],["TLS","Timor-Leste",35.0,22.9,"Short of rails and staff"],["SUR","Suriname",87.4,31.5,"Rails ready, short of staff"],["GRD","Grenada",70.2,59.6,"Rails ready, staffed"],["CRI","Costa Rica",87.2,57.6,"Rails ready, staffed"],["HUN","Hungary",93.8,93.1,"Rails ready, staffed"],["COD","Congo, Dem. Rep.",19.7,13.8,"Short of rails and staff"],["IDN","Indonesia",72.8,38.6,"Rails ready, short of staff"],["TZA","Tanzania",31.2,4.3,"Short of rails and staff"],["COL","Colombia",79.3,41.1,"Rails ready, short of staff"],["CPV","Cabo Verde",74.7,25.3,"Rails ready, short of staff"],["GUY","Guyana",83.0,60.9,"Staffed, rails not ready"],["CIV","Cote d'Ivoire",41.4,12.5,"Short of rails and staff"],["HRV","Croatia",83.6,120.2,"Rails ready, staffed"],["UGA","Uganda",8.9,25.3,"Short of rails and staff"],["BRN","Brunei Darussalam",96.3,86.7,"Rails ready, staffed"],["ZMB","Zambia",17.1,18.4,"Short of rails and staff"],["COG","Congo, Rep.",47.3,18.3,"Short of rails and staff"],["COM","Comoros",32.5,20.7,"Short of rails and staff"],["HND","Honduras",58.6,26.4,"Short of rails and staff"],["GTM","Guatemala",60.2,39.0,"Short of rails and staff"],["HTI","Haiti",47.9,10.2,"Short of rails and staff"],["CHE","Switzerland",97.3,237.6,"Rails ready, staffed"],["BTN","Bhutan",91.3,26.1,"Rails ready, short of staff"],["GAB","Gabon",68.7,28.9,"Rails ready, short of staff"],["VNM","Viet Nam",84.2,25.4,"Rails ready, short of staff"],["FSM","Micronesia, Fed. Sts.",39.5,31.9,"Short of rails and staff"],["DNK","Denmark",99.8,154.6,"Rails ready, staffed"],["CHL","Chile",95.6,82.1,"Rails ready, staffed"],["FRA","France",88.7,134.3,"Rails ready, staffed"],["UZB","Uzbekistan",89.5,130.2,"Rails ready, staffed"],["FJI","Fiji",74.7,28.8,"Rails ready, short of staff"],["CAF","Central African Republic",13.8,5.4,"Short of rails and staff"],["DOM","Dominican Republic",91.0,38.8,"Rails ready, short of staff"],["FIN","Finland",93.7,158.9,"Rails ready, staffed"],["ETH","Ethiopia",21.9,12.4,"Short of rails and staff"],["ECU","Ecuador",77.2,49.4,"Rails ready, staffed"],["VEN","Venezuela, RB",76.7,36.7,"Rails ready, short of staff"],["EST","Estonia",92.2,105.3,"Rails ready, staffed"],["VCT","St. Vincent and the Grenadines",76.2,99.2,"Rails ready, staffed"],["ESP","Spain",95.8,106.5,"Rails ready, staffed"],["EGY","Egypt, Arab Rep.",74.6,31.3,"Rails ready, short of staff"],["DZA","Algeria",77.4,41.7,"Rails ready, short of staff"],["UKR","Ukraine",82.5,96.1,"Rails ready, staffed"],["AFG","Afghanistan",16.1,8.7,"Short of rails and staff"],["DMA","Dominica",82.0,79.2,"Rails ready, staffed"],["CUB","Cuba",70.5,157.0,"Rails ready, staffed"],["GRC","Greece",86.3,108.4,"Rails ready, staffed"],["GNQ","Equatorial Guinea",63.3,15.3,"Short of rails and staff"],["ZAF","South Africa",78.4,49.2,"Staffed, rails not ready"],["CYP","Cyprus",89.6,77.9,"Rails ready, staffed"],["CHN","China",92.0,67.8,"Rails ready, staffed"],["GNB","Guinea-Bissau",29.8,11.8,"Short of rails and staff"],["GMB","Gambia, The",49.5,7.5,"Short of rails and staff"],["GBR","United Kingdom",95.5,129.1,"Rails ready, staffed"],["CZE","Czechia",87.7,136.6,"Rails ready, staffed"],["BWA","Botswana",57.5,34.5,"Short of rails and staff"],["AGO","Angola",40.7,15.9,"Short of rails and staff"],["GIN","Guinea",33.3,3.1,"Short of rails and staff"],["DEU","Germany",93.5,169.9,"Rails ready, staffed"],["GHA","Ghana",72.2,44.6,"Staffed, rails not ready"],["GEO","Georgia",83.8,113.3,"Rails ready, staffed"],["DJI","Djibouti",65.3,4.0,"Short of rails and staff"],["USA","United States",94.7,150.5,"Rails ready, staffed"],["URY","Uruguay",92.0,121.8,"Rails ready, staffed"],["CAN","Canada",94.4,144.7,"Rails ready, staffed"],["AND","Andorra",94.4,100.6,"Rails ready, staffed"],["IND","India",64.9,36.7,"Rails ready, short of staff"],["NZL","New Zealand",93.5,169.0,"Rails ready, staffed"],["BEL","Belgium",95.8,156.8,"Rails ready, staffed"],["NRU","Naoero",83.0,85.8,"Rails ready, staffed"],["NPL","Nepal",46.3,52.5,"Staffed, rails not ready"],["NOR","Norway",99.0,210.2,"Rails ready, staffed"],["NLD","Netherlands",97.0,151.0,"Rails ready, staffed"],["NIC","Nicaragua",61.4,26.1,"Short of rails and staff"],["SVK","Slovak Republic",89.8,97.3,"Rails ready, staffed"],["BEN","Benin",34.0,8.3,"Short of rails and staff"],["NGA","Nigeria",41.2,15.7,"Short of rails and staff"],["NER","Niger",15.6,4.6,"Short of rails and staff"],["NAM","Namibia",64.9,43.6,"Short of rails and staff"],["MYS","Malaysia",98.0,63.0,"Rails ready, staffed"],["SVN","Slovenia",90.8,141.9,"Rails ready, staffed"],["MWI","Malawi",19.0,6.6,"Short of rails and staff"],["BFA","Burkina Faso",28.3,9.3,"Short of rails and staff"],["MUS","Mauritius",73.3,65.2,"Rails ready, staffed"],["MRT","Mauritania",45.8,18.7,"Short of rails and staff"],["SWE","Sweden",95.5,162.2,"Rails ready, staffed"],["MOZ","Mozambique",20.5,8.5,"Short of rails and staff"],["ARG","Argentina",89.7,115.8,"Rails ready, staffed"],["MNG","Mongolia",85.1,92.9,"Rails ready, staffed"],["BGD","Bangladesh",53.4,13.9,"Short of rails and staff"],["MNE","Montenegro",88.9,87.5,"Rails ready, staffed"],["SWZ","Eswatini",63.4,48.2,"Staffed, rails not ready"],["ARM","Armenia",81.3,81.1,"Rails ready, staffed"],["MLT","Malta",93.9,129.8,"Rails ready, staffed"],["STP","Sao Tome and Principe",59.1,26.3,"Short of rails and staff"],["PAK","Pakistan",57.3,18.1,"Short of rails and staff"],["SLB","Solomon Islands",29.0,24.2,"Short of rails and staff"],["SGP","Singapore",94.4,97.6,"Rails ready, staffed"],["SEN","Senegal",60.1,5.6,"Short of rails and staff"],["AUS","Australia",96.1,186.6,"Rails ready, staffed"],["SLV","El Salvador",66.5,38.0,"Rails ready, short of staff"],["ATG","Antigua and Barbuda",72.7,93.9,"Rails ready, staffed"],["SAU","Saudi Arabia",100.0,99.6,"Rails ready, staffed"],["RWA","Rwanda",31.7,14.6,"Short of rails and staff"],["RUS","Russian Federation",94.4,121.5,"Rails ready, staffed"],["SMR","San Marino",97.4,141.1,"Rails ready, staffed"],["AUT","Austria",94.9,166.1,"Rails ready, staffed"],["ROU","Romania",91.3,120.5,"Rails ready, staffed"],["QAT","Qatar",98.1,117.4,"Rails ready, staffed"],["SOM","Somalia, Fed. Rep.",27.9,3.8,"Short of rails and staff"],["PRY","Paraguay",81.6,133.0,"Rails ready, staffed"],["PRT","Portugal",88.5,140.3,"Rails ready, staffed"],["AZE","Azerbaijan",90.4,87.6,"Rails ready, staffed"],["POL","Poland",88.6,99.6,"Rails ready, staffed"],["PNG","Papua New Guinea",18.8,8.6,"Short of rails and staff"],["SRB","Serbia",87.7,102.3,"Rails ready, staffed"],["PLW","Palau",83.9,84.2,"Rails ready, staffed"],["PHL","Philippines",67.3,61.6,"Staffed, rails not ready"],["BDI","Burundi",8.6,8.8,"Short of rails and staff"],["PER","Peru",82.0,44.3,"Rails ready, short of staff"],["PAN","Panama",72.8,49.7,"Rails ready, staffed"],["OMN","Oman",95.3,67.2,"Rails ready, staffed"],["MLI","Mali",36.8,6.6,"Short of rails and staff"],["MKD","North Macedonia",93.6,84.6,"Rails ready, staffed"],["BGR","Bulgaria",82.4,90.8,"Rails ready, staffed"],["KOR","Korea, Rep.",97.9,124.7,"Rails ready, staffed"],["KNA","St. Kitts and Nevis",76.9,96.7,"Rails ready, staffed"],["SLE","Sierra Leone",25.1,13.0,"Short of rails and staff"],["KIR","Kiribati",89.4,43.7,"Rails ready, short of staff"],["KHM","Cambodia",68.5,12.2,"Rails ready, short of staff"],["TON","Tonga",67.4,52.1,"Rails ready, staffed"],["BLZ","Belize",80.0,34.0,"Rails ready, short of staff"],["KGZ","Kyrgyz Republic",92.0,55.7,"Rails ready, staffed"],["KEN","Kenya",35.0,14.7,"Short of rails and staff"],["KAZ","Kazakhstan",93.4,96.6,"Rails ready, staffed"],["JPN","Japan",85.5,150.9,"Rails ready, staffed"],["TTO","Trinidad and Tobago",82.2,82.7,"Rails ready, staffed"],["BOL","Bolivia",79.7,29.1,"Rails ready, short of staff"],["JOR","Jordan",95.6,66.0,"Rails ready, staffed"],["JAM","Jamaica",90.1,31.2,"Rails ready, short of staff"],["ITA","Italy",89.2,124.0,"Rails ready, staffed"],["TUN","Tunisia",76.5,31.5,"Rails ready, short of staff"],["ISR","Israel",88.2,101.4,"Rails ready, staffed"],["ISL","Iceland",98.2,206.6,"Rails ready, staffed"],["BRA","Brazil",84.5,83.3,"Rails ready, staffed"],["IRQ","Iraq",81.5,36.4,"Rails ready, short of staff"],["TUR","Turkiye",87.3,58.7,"Rails ready, staffed"],["IRN","Iran, Islamic Rep.",85.3,46.9,"Rails ready, staffed"],["IRL","Ireland",97.2,193.9,"Rails ready, staffed"],["ALB","Albania",85.9,77.0,"Rails ready, staffed"],["KWT","Kuwait",99.7,96.8,"Rails ready, staffed"],["BLR","Belarus",94.3,155.5,"Rails ready, staffed"],["LAO","Lao PDR",65.6,17.4,"Rails ready, short of staff"],["TJK","Tajikistan",55.8,83.2,"Staffed, rails not ready"],["MHL","Marshall Islands",65.9,59.4,"Rails ready, staffed"],["SYC","Seychelles",87.8,78.3,"Rails ready, staffed"],["MEX","Mexico",83.1,58.0,"Rails ready, staffed"],["MDV","Maldives",85.2,82.6,"Rails ready, staffed"],["MDG","Madagascar",18.7,3.7,"Short of rails and staff"],["CMR","Cameroon",46.3,7.5,"Short of rails and staff"],["BHR","Bahrain",100.0,33.9,"Rails ready, short of staff"],["MDA","Moldova",77.4,102.4,"Rails ready, staffed"],["TCD","Chad",12.6,4.4,"Short of rails and staff"],["MAR","Morocco",91.2,15.1,"Rails ready, short of staff"],["BRB","Barbados",70.4,65.3,"Rails ready, staffed"],["LVA","Latvia",92.7,77.1,"Rails ready, staffed"],["TGO","Togo",39.5,4.7,"Short of rails and staff"],["ARE","United Arab Emirates",100.0,91.5,"Rails ready, staffed"],["LUX","Luxembourg",98.8,167.1,"Rails ready, staffed"],["LTU","Lithuania",89.2,124.3,"Rails ready, staffed"],["LSO","Lesotho",51.8,35.8,"Short of rails and staff"],["LKA","Sri Lanka",54.6,33.9,"Short of rails and staff"],["THA","Thailand",90.9,41.6,"Rails ready, short of staff"],["BIH","Bosnia and Herzegovina",86.1,93.1,"Rails ready, staffed"],["LCA","St. Lucia",68.2,95.8,"Rails ready, staffed"],["LBY","Libya",82.0,84.2,"Staffed, rails not ready"],["LBR","Liberia",32.2,10.1,"Short of rails and staff"],["LBN","Lebanon",80.6,46.0,"Rails ready, staffed"],["BHS","Bahamas, The",92.5,61.2,"Rails ready, staffed"],["ZWE","Zimbabwe",41.6,16.5,"Short of rails and staff"]],"segments":{"Rails ready, staffed":95,"Short of rails and staff":58,"Rails ready, short of staff":26,"Staffed, rails not ready":10},"pareto":[{"name":"India","iso":"IND","share":61.8,"cum":61.8},{"name":"Indonesia","iso":"IDN","share":12.1,"cum":73.9},{"name":"Egypt","iso":"EGY","share":5.0,"cum":78.8},{"name":"Viet Nam","iso":"VNM","share":4.3,"cum":83.1},{"name":"Thailand","iso":"THA","share":3.1,"cum":86.2},{"name":"Colombia","iso":"COL","share":2.3,"cum":88.4},{"name":"Algeria","iso":"DZA","share":2.0,"cum":90.4},{"name":"Iraq","iso":"IRQ","share":2.0,"cum":92.4},{"name":"Other 18","iso":"OTHER","share":7.6,"cum":100.0}],"shares":{"Health workers missing":65.0,"People":74.0,"Rural people":81.0,"TB cases per year":87.0}};
+const F = { IND: ["India", "#e09a00"], IDN: ["Indonesia", "#0f766e"] };
+const S = { fontFamily: "Archivo, system-ui, sans-serif", fontSize: "22px", color: "#4a5563", overflow: "visible", background: "transparent" };
+const SEG = { "Rails ready, short of staff": "#184f95", "Short of rails and staff": "#e8a0a9", "Rails ready, staffed": "#cfd8dc", "Staffed, rails not ready": "#f5d39b" };
+
+// 1. barcode of workforce density
+(() => {
+  const d = D.workforce.map(([iso, name, v], i) => ({ iso, name, v, i }));
+  const f = iso => d.filter(x => x.iso === iso);
+  document.getElementById("c-workforce").append(Plot.plot({
+    width: 1100, height: 640, marginLeft: 70, marginTop: 70, marginBottom: 20, style: S,
+    x: { type: "band", axis: null, padding: 0.12 }, y: { label: null, grid: true, domain: [0, 160], clamp: true },
+    marks: [
+      Plot.barY(d, { x: "i", y: x => Math.min(x.v, 160), fill: x => F[x.iso] ? F[x.iso][1] : x.v < 44.5 ? "#6da7ec" : "#d5dbe1" }),
+      Plot.ruleY([44.5], { stroke: "#1e2a36", strokeWidth: 2, strokeDasharray: "8,6" }),
+      Plot.text([44.5], { x: d[d.length - 2].i, y: v => v, text: () => "WHO minimum 44.5", dy: -16, textAnchor: "end", fill: "#1e2a36", fontWeight: 700, fontSize: 26 }),
+      Plot.text([0], { x: d[30].i, y: () => 110, text: () => "blue: below the minimum", fill: "#2a78d6", fontWeight: 700, fontSize: 26 }),
+      Plot.text(f("IND"), { x: "i", y: "v", text: x => `India ${x.v}`, dy: -64, dx: -6, textAnchor: "end", fill: F.IND[1], fontWeight: 800, fontSize: 30 }),
+      Plot.text(f("IDN"), { x: "i", y: "v", text: x => `Indonesia ${x.v}`, dy: -40, dx: 6, textAnchor: "start", fill: F.IDN[1], fontWeight: 800, fontSize: 30 }),
+    ],
+  }));
+})();
+
+// 2. feasibility quadrant
+(() => {
+  const d = D.scatter.map(([iso, name, net, wf, seg]) => ({ iso, name, net, wf, seg }));
+  const n = D.segments;
+  const lab = (x, y, t, anchor, fill) => Plot.text([0], { x: () => x, y: () => y, text: () => t, textAnchor: anchor, fill, fontWeight: 800, fontSize: 26 });
+  document.getElementById("c-quadrant").append(Plot.plot({
+    width: 1110, height: 660, marginLeft: 70, marginBottom: 56, style: S,
+    x: { label: "Internet users (%)", domain: [0, 100], grid: true, labelAnchor: "center" },
+    y: { label: null, type: "log", domain: [2, 250], grid: true, tickFormat: d3.format("~s") },
+    marks: [
+      Plot.rect([0], { x1: 60, x2: 100, y1: 2, y2: 44.5, fill: "#184f95", fillOpacity: 0.08 }),
+      Plot.ruleY([44.5], { stroke: "#1e2a36", strokeWidth: 2, strokeDasharray: "8,6" }),
+      Plot.ruleX([60], { stroke: "#1e2a36", strokeWidth: 2, strokeDasharray: "4,6" }),
+      lab(2, 220, `Staffed, rails not ready · ${n["Staffed, rails not ready"]}`, "start", "#b07d12"),
+      lab(98, 220, `Online and staffed · ${n["Rails ready, staffed"]}`, "end", "#7b8594"),
+      lab(2, 2.4, `Short of rails and staff · ${n["Short of rails and staff"]}`, "start", "#b3261e"),
+      lab(98, 2.4, `Online, powered, short of staff · ${n["Rails ready, short of staff"]}`, "end", "#184f95"),
+      Plot.dot(d.filter(x => !F[x.iso]), { x: "net", y: "wf", r: 8, fill: x => SEG[x.seg], fillOpacity: 0.9 }),
+      Plot.dot(d.filter(x => F[x.iso]), { x: "net", y: "wf", r: 15, fill: x => F[x.iso][1], stroke: "#fff", strokeWidth: 3 }),
+      Plot.text(d.filter(x => x.iso === "IDN"), { x: "net", y: "wf", text: () => "Indonesia", dy: -28, fill: F.IDN[1], fontWeight: 800, fontSize: 30 }),
+      Plot.text(d.filter(x => x.iso === "IND"), { x: "net", y: "wf", text: () => "India", dy: 32, fill: F.IND[1], fontWeight: 800, fontSize: 30 }),
+      Plot.text([0], { x: () => 0, y: () => 44.5, text: () => "WHO minimum 44.5", dy: -14, textAnchor: "start", fill: "#1e2a36", fontWeight: 700, fontSize: 22 }),
+    ],
+  }));
+})();
+
+// 3. Pareto
+(() => {
+  const d = D.pareto;
+  document.getElementById("c-pareto").append(Plot.plot({
+    width: 1110, height: 660, marginLeft: 70, marginBottom: 110, marginTop: 30, style: S,
+    x: { label: null, domain: d.map(x => x.name), padding: 0.2, tickRotate: -35 },
+    y: { label: null, domain: [0, 100], grid: true, tickFormat: v => v + "%" },
+    marks: [
+      Plot.ruleY([80], { stroke: "#7b8594", strokeWidth: 2, strokeDasharray: "4,6" }),
+      Plot.text([80], { x: d[d.length - 1].name, y: v => v, text: () => "80%", dy: -16, fill: "#4a5563", fontWeight: 700 }),
+      Plot.barY(d, { x: "name", y: "share", fill: x => F[x.iso] ? F[x.iso][1] : "#d5dbe1" }),
+      Plot.text(d.filter(x => x.iso === "IND"), { x: "name", y: "share", text: x => x.share.toFixed(0) + "%", dy: 30, fill: "#1e2a36", fontWeight: 800, fontSize: 30 }),
+      Plot.text(d.filter(x => x.iso !== "IND"), { x: "name", y: "share", text: x => x.share.toFixed(0) + "%", dy: -18, fill: x => F[x.iso] ? F[x.iso][1] : "#7b8594", fontWeight: 800, fontSize: x => 24 }),
+      Plot.line(d, { x: "name", y: "cum", stroke: "#1e2a36", strokeWidth: 3 }),
+      Plot.dot(d, { x: "name", y: "cum", r: 7, fill: "#1e2a36" }),
+      Plot.text(d.filter(x => x.iso === "IDN"), { x: "name", y: "cum", text: x => `India + Indonesia = ${x.cum.toFixed(0)}%`, dx: 22, dy: 46, textAnchor: "start", fill: "#1e2a36", fontWeight: 800, fontSize: 28 }),
+    ],
+  }));
+})();
+</script>
+</body>
+</html>
