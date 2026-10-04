@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 
 from fastapi import Body, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from . import alerts, clinics, config, contract, conversation, db, sms_commands, stuart_client, sync, understand
@@ -43,6 +44,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Vitamin Bob", lifespan=lifespan)
+_HERE = Path(__file__).parent
+app.mount("/static", StaticFiles(directory=_HERE / "static"), name="static")
+# The story website (a static export of vitamin-bob-site, built with basePath /website), served by the same
+# backend so its "Live call" screen can embed /dashboard/live from the same origin.
+WEBSITE = _HERE / "website"
+if WEBSITE.is_dir():
+    app.mount("/website", StaticFiles(directory=WEBSITE, html=True), name="website")
 
 
 def _lock_for(key: str) -> threading.Lock:
@@ -133,7 +141,7 @@ DASHBOARD = Path(__file__).with_name("dashboard.html")
 
 @app.get("/")
 def root():
-    return RedirectResponse("/dashboard")
+    return RedirectResponse("/website/" if WEBSITE.is_dir() else "/dashboard")
 
 
 @app.get("/dashboard/live")
@@ -206,12 +214,40 @@ def _costs(stuart: dict) -> dict:
             "patient_pays": 0}
 
 
+def _stats() -> dict:
+    """Today's count at every stage of the pipeline, for the details dashboard's funnel."""
+    day = db.now().strftime("%Y-%m-%d") + "%"
+    n = lambda sql, *a: db.one(sql, *a)["n"]  # noqa: E731
+    tiers = {r["tier"]: r["n"] for r in db.q("SELECT tier, COUNT(*) AS n FROM triages WHERE created_at LIKE ? GROUP BY tier", day)}
+    triaged = sum(tiers.values())
+    agg = db.one("SELECT AVG(questions) AS q, AVG(understand_ms) AS ms FROM triages WHERE created_at LIKE ?", day)
+    return {
+        "missed": n("SELECT COUNT(*) AS n FROM missed_calls WHERE at LIKE ? AND callback=1", day),
+        "checkins": n("SELECT COUNT(*) AS n FROM missed_calls WHERE at LIKE ? AND callback=0", day),
+        "called": n("SELECT COUNT(*) AS n FROM sessions WHERE started_at LIKE ?", day),
+        "live": n("SELECT COUNT(*) AS n FROM sessions WHERE ended_at IS NULL"),
+        "understood": n("SELECT COUNT(DISTINCT call_id) AS n FROM turns WHERE kind='description' AND at LIKE ?", day),
+        "triaged": triaged,
+        "tiers": tiers,
+        "routed": n("SELECT COUNT(*) AS n FROM triages WHERE created_at LIKE ? AND routed_clinic_id IS NOT NULL", day),
+        "alerts": n("SELECT COUNT(*) AS n FROM alerts WHERE created_at LIKE ?", day),
+        "alerts_open": n("SELECT COUNT(*) AS n FROM alerts WHERE acked_at IS NULL"),
+        "alerts_acked": n("SELECT COUNT(*) AS n FROM alerts WHERE created_at LIKE ? AND acked_at IS NOT NULL", day),
+        "synced": n("SELECT COUNT(*) AS n FROM sync_outbox WHERE created_at LIKE ? AND status='acked'", day),
+        "sync_total": n("SELECT COUNT(*) AS n FROM sync_outbox WHERE created_at LIKE ?", day),
+        "uncertain_rate": round(tiers.get("UNCERTAIN", 0) / triaged, 3) if triaged else None,
+        "avg_questions": round(agg["q"], 1) if agg["q"] is not None else None,
+        "avg_understand_s": round(agg["ms"] / 1000, 1) if agg["ms"] else None,
+    }
+
+
 @app.get("/api/state")
 def state():
     stuart = _masked_stuart()
     eval_path = Path(__file__).resolve().parents[1] / "eval" / "results_summary.json"
     return {
         "now": db.iso(), "hub": db.hub() | {"contact_phone": mask(db.hub()["contact_phone"])},
+        "stats": _stats(),
         "contract": contract.VERSION, "bob_url": config.BOB_URL, "stuart_url": config.STUART_URL,
         "model": {"mode": config.UNDERSTAND, "name": config.MODEL_NAME,
                   "available": config.UNDERSTAND != "keyword" and _model_available(),
