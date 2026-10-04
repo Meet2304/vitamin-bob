@@ -102,10 +102,33 @@ def test_outbox_survives_stuart_down():
     check("SMS stays pending (not lost) while Stuart is down", row["status"] == "pending", str(row))
 
 
+def test_outbox_preserves_fast_acknowledgements():
+    """Stuart can send its receipt before the enqueue HTTP response reaches Bob."""
+    original = stuart_client._post
+    mid = stuart_client.queue_sms("+919000000001", "receipt race", "normal", "test")
+    rid = stuart_client.queue_sync("daily_summary", {"h": "test", "n": 1})
+    def fast_receipt(path, body):
+        if path == "/v1/sms":
+            db.ex("UPDATE sms_outbox SET status='delivered' WHERE message_id=?", body["message_id"])
+        else:
+            for record in body["records"]:
+                db.ex("UPDATE sync_outbox SET status='acked', acked_at=? WHERE record_id=?", db.iso(), record["record_id"])
+        return {"queued": True}
+    try:
+        stuart_client._post = fast_receipt
+        stuart_client.flush_sms()
+        stuart_client.flush_sync()
+    finally:
+        stuart_client._post = original
+    check("fast delivered receipt survives enqueue return", db.one("SELECT status FROM sms_outbox WHERE message_id=?", mid)["status"] == "delivered")
+    check("fast Central ACK survives enqueue return", db.one("SELECT status FROM sync_outbox WHERE record_id=?", rid)["status"] == "acked")
+
+
 if __name__ == "__main__":
     db.conn()
     for t in (test_escalation, test_back_command_and_freshness, test_unregistered_and_unknown_commands,
-              test_sync_privacy, test_evidence_is_asymmetric, test_outbox_survives_stuart_down):
+              test_sync_privacy, test_evidence_is_asymmetric, test_outbox_survives_stuart_down,
+              test_outbox_preserves_fast_acknowledgements):
         print(t.__name__)
         t()
     print(f"\n{'ALL PASSED' if not failures else 'FAILED: ' + ', '.join(failures)}")

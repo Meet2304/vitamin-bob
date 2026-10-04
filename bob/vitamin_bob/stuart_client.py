@@ -51,7 +51,7 @@ def flush_sms() -> None:
             status = "queued" if ok else "pending"
         except Exception:  # noqa: BLE001 - Stuart down: retry on the next tick
             status = "pending"
-        db.ex("UPDATE sms_outbox SET status=?, attempts=attempts+1, updated_at=? WHERE message_id=?",
+        db.ex("UPDATE sms_outbox SET status=CASE WHEN status='pending' THEN ? ELSE status END, attempts=attempts+1, updated_at=? WHERE message_id=?",
               status, db.iso(), m["message_id"])
         if status == "pending":
             return
@@ -68,7 +68,7 @@ def flush_sync() -> None:
     except Exception:  # noqa: BLE001
         ok = False
     for r in rows:
-        db.ex("UPDATE sync_outbox SET status=?, attempts=attempts+1, updated_at=? WHERE record_id=?",
+        db.ex("UPDATE sync_outbox SET status=CASE WHEN status='pending' THEN ? ELSE status END, attempts=attempts+1, updated_at=? WHERE record_id=?",
               "queued" if ok else "pending", db.iso(), r["record_id"])
 
 
