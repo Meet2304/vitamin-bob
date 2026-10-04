@@ -7,7 +7,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from .audio import detect_dtmf, duration, play_blocking, record_blocking, tone
+from .audio import check_capture_device, detect_dtmf, duration, input_chunks, play_blocking, record_blocking, tone
 
 
 class DialFailed(Exception):
@@ -143,7 +143,7 @@ class AndroidLine(SimulatorLine):
             raise DialFailed("Set verified VB_AUDIO_INPUT and VB_AUDIO_OUTPUT before phone callbacks")
         import sounddevice as sd
         try:
-            sd.check_input_settings(device=self.input_device,channels=1,dtype='int16',samplerate=16000)
+            check_capture_device(self.input_device)
             sd.check_output_settings(device=self.output_device,channels=1,dtype='int16',samplerate=16000)
         except Exception as exc:
             raise DialFailed('Configured audio endpoints cannot carry PCM16 at 16 kHz') from exc
@@ -173,12 +173,13 @@ class AndroidLine(SimulatorLine):
 
     async def keypad(self, action):
         def collect():
-            import sounddevice as sd
             digits, previous, stable, released = "", None, 0, True
             deadline = time.monotonic() + action.timeout_ms/1000
-            with sd.InputStream(samplerate=16000, channels=1, dtype="float32", device=self.input_device, blocksize=640) as stream:
+            with input_chunks(self.input_device,dtype="float32",blocksize=640) as read:
                 while time.monotonic() < deadline and not self.disconnected:
-                    chunk, _ = stream.read(640)
+                    chunk = read(min(0.1,max(0.001,deadline-time.monotonic())))
+                    if chunk is None:
+                        continue
                     key = detect_dtmf(chunk)
                     stable = stable+1 if key and key == previous else 1
                     if key is None:

@@ -5,4 +5,5 @@ pydantic>=2.11,<3
 cryptography>=46,<52
 numpy>=2,<3
 sounddevice>=0.5,<1
+SoundCard==0.4.6; sys_platform == "win32"
 pytest>=8,<10

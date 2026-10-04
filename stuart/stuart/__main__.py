@@ -31,6 +31,12 @@ def main():
     elif args.command=="devices":
         import sounddevice as sd
         print(sd.query_devices())
+        if os.name == 'nt':
+            import soundcard as sc
+            print('\nWASAPI speaker loopback inputs:')
+            for mic in sc.all_microphones(include_loopback=True):
+                if mic.isloopback and mic.channels >= 2:
+                    print('loopback:'+mic.name)
     elif args.command=="check-phone":
         from .lines import Adb
         runtime=Path(__file__).resolve().parents[1]/"runtime"

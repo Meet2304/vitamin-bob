@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from pydantic import ValidationError
 
-from stuart.audio import detect_dtmf
+from stuart.audio import detect_dtmf, input_chunks, play_blocking, tone
 from stuart.contracts import Actions, Missed, Record, Sms, Sync, safe_wav
 from stuart.fake_bob import make_fake
 from stuart.lines import Adb, SimulatorLine
@@ -31,6 +31,85 @@ def test_adb_sql_filter_stays_one_remote_argument(monkeypatch):
     assert "'date>9999999999999'" in captured[0][-1]
     adb.run('devices','-l')
     assert captured[1]==['adb.exe','-s','demo-device','devices','-l']
+
+
+def test_callback_playback_preserves_pcm_and_pads_last_buffer(tmp_path,monkeypatch):
+    import sounddevice as sd
+    import wave
+    played=[]
+    class Output:
+        def __init__(self,callback,finished_callback,**kwargs):
+            self.callback,self.finished=callback,finished_callback
+        def __enter__(self):
+            # Variable host buffer sizes, including a partial last buffer.
+            for frames in [357,901,513,127]:
+                buffer=np.empty((frames,1),dtype='int16')
+                try:
+                    self.callback(buffer,frames,None,None)
+                except sd.CallbackStop:
+                    played.append(buffer.copy())
+                    self.finished()
+                    break
+                played.append(buffer.copy())
+            return self
+        def __exit__(self,*args):
+            pass
+    monkeypatch.setattr(sd,'OutputStream',Output)
+    path=tone(tmp_path/'prompt.wav',0.1)
+    play_blocking(path)
+    with wave.open(str(path),'rb') as wav:
+        expected=np.frombuffer(wav.readframes(wav.getnframes()),dtype='<i2')
+    actual=np.concatenate(played).reshape(-1)
+    assert np.array_equal(actual[:len(expected)],expected)
+    assert np.all(actual[len(expected):]==0)
+
+
+def test_capture_callback_reports_driver_overflow(monkeypatch):
+    import sounddevice as sd
+    class Input:
+        active=True
+        def __init__(self,callback,**kwargs):
+            self.callback=callback
+        def __enter__(self):
+            flags=sd.CallbackFlags()
+            flags.input_overflow=True
+            with pytest.raises(sd.CallbackAbort):
+                self.callback(np.zeros((800,1),dtype='int16'),800,None,flags)
+            self.active=False
+            return self
+        def __exit__(self,*args):
+            pass
+    monkeypatch.setattr(sd,'InputStream',Input)
+    with input_chunks() as read:
+        with pytest.raises(OSError,match='overflow'):
+            read()
+
+
+def test_loopback_captures_stereo_then_downmixes_to_contract_pcm(monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    requests=[]
+    class Recorder:
+        def __enter__(self):
+            return self
+        def __exit__(self,*args):
+            pass
+        def record(self,numframes):
+            return np.array([[0.5,0.25],[-0.5,-0.25],[2,2]],dtype='float32')
+    class Mic:
+        name,id,isloopback,channels='Test speakers','test',True,2
+        def recorder(self,**kwargs):
+            requests.append(kwargs)
+            return Recorder()
+    monkeypatch.setitem(sys.modules,'soundcard',SimpleNamespace(all_microphones=lambda **kwargs:[Mic()]))
+    with input_chunks('loopback:Test speakers') as read:
+        pcm=read()
+    assert requests[0]['channels']==2 and requests[0]['samplerate']==16000
+    assert pcm.dtype==np.int16 and pcm.shape==(3,1)
+    assert pcm[:,0].tolist()==[12288,-12288,32767]
+    with pytest.raises(ValueError,match='exact speaker'):
+        with input_chunks('loopback:unknown'):
+            pass
 
 
 def test_contract_rejects_invalid_action_order():
