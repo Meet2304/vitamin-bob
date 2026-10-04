@@ -1,6 +1,6 @@
 # Stuart proof-of-concept evidence
 
-The automated suite passes 62 tests. Evidence is scoped to what was observed on this Windows laptop and S24 Plus. Test phone numbers, credentials, recordings, and detailed reports stay in ignored `runtime/`.
+The automated suite passes 65 tests. Evidence is scoped to what was observed on this Windows laptop and S24 Plus. Test phone numbers, credentials, recordings, and detailed reports stay in ignored `runtime/`.
 
 | Capability | Result | Evidence |
 |---|---|---|

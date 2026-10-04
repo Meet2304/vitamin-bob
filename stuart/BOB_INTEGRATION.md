@@ -1,5 +1,7 @@
 # Bob integration evidence and handoff
 
+**Update, 2026-10-04:** merged `origin/main` at `58d2341` into the Stuart integration branch. The outbox fix below is now applied to that integrated checkout, with regression coverage. Real Gemma WAV scenarios, Clinic A failover, SMS receipts, and Central ACKs passed together. See [DEMO_GUIDE.md](DEMO_GUIDE.md). The older candidate-only evidence below is retained as history; the separate Bob worktree remains unchanged.
+
 The smoke check runs current Bob and Stuart over localhost HTTP, with fresh shared data, dummy seed phones, scripted calls, keyword understanding, simulated SMS and encrypted loopback Central transport. It never enables Android or sends real SMS. Bob's source and existing database are inputs, not modified by this check.
 
 ```powershell

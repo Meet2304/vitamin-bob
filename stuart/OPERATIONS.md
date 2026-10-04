@@ -1,5 +1,7 @@
 # Running Stuart on Kevin
 
+For the combined Bob/Gemma/Stuart presentation, use [DEMO_GUIDE.md](DEMO_GUIDE.md). The commands below manage standalone Stuart profiles.
+
 Stuart now has a managed Windows runtime in addition to the standalone simulator. Run it in the signed-in Windows session used by Phone Link so that the verified audio devices are available. It is a foreground-user process supervisor launched in a hidden window; it is not an installed Windows service or an automatic logon task.
 
 ## What the runtime owns
@@ -90,4 +92,4 @@ Restore checks integrity and refuses to overwrite existing databases or keys. It
 
 ## Remaining integration work
 
-See `POC_EVIDENCE.md` for passed checks and remaining hardware evidence. Bob's two-line outbox status fix is prepared in `tools/Bob-Outbox-Status-Fix.patch`; its owner/Meet must apply it at integration. No Bob source is changed by these runtime tools. Gemma and Bob startup remain Bob's responsibility. Resolve the plain clinic-SMS versus encrypted-SMS requirement before enabling patient-bearing alerts.
+See `POC_EVIDENCE.md` for transport evidence and `DEMO_GUIDE.md` for the integrated result. Bob's two-line outbox fix is applied in the integrated checkout, and the integrated launcher owns Gemma/Bob startup. Standalone Stuart scripts do not start Bob. Resolve the plain clinic-SMS versus encrypted-SMS requirement before enabling patient-bearing alerts.
