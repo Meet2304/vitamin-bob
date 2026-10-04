@@ -54,6 +54,9 @@ class Switchboard:
         allowed=os.getenv('VB_PHONE_ALLOWLIST')
         self.allowed_phones=set(json.loads(allowed)) if allowed is not None else None
         self.calls_enabled=os.getenv('VB_ANDROID_CALLS_ENABLED','1')=='1'
+        self.callback_delay=float(os.getenv('VB_CALLBACK_QUEUE_SECONDS','0'))
+        paused=self.store.one("SELECT value FROM meta WHERE key='callbacks_paused'")
+        self.callbacks_paused=bool(paused and paused['value']=='1')
         self.sms_send_enabled=os.getenv('VB_SMS_SEND_ENABLED','1')=='1'
         self.bridge=None
         self.client = httpx.AsyncClient(timeout=self.event_timeout,trust_env=False)
@@ -170,12 +173,13 @@ class Switchboard:
             if prior:
                 return prior["id"]
         cutoff=(datetime.now(timezone.utc)-timedelta(minutes=10)).isoformat()
-        prior=self.store.one("SELECT * FROM missed WHERE phone=? AND received_at>? ORDER BY received_at DESC LIMIT 1",(request.phone,cutoff))
+        prior=self.store.one("SELECT * FROM missed WHERE phone=? AND received_at>? AND status IN ('pending','queued','calling') ORDER BY received_at DESC LIMIT 1",(request.phone,cutoff))
         if prior:
             return prior["id"]
         missed_id,event_id=uid(),uid()
         self.store.execute("INSERT INTO missed(id,source_id,phone,line_id,received_at,status,event_id) VALUES(?,?,?,?,?,'pending',?)",
                            (missed_id,request.source_id,request.phone,request.line_id,now(),event_id))
+        self.progress(missed_id,'missed')
         await self.decide(missed_id)
         return missed_id
 
@@ -186,7 +190,8 @@ class Switchboard:
         row=self.store.one("SELECT * FROM missed WHERE id=?",(missed_id,))
         try:
             response=await self.event("missed_call",event_id=row["event_id"],missed_call_id=missed_id,phone=row["phone"],line_id=row["line_id"])
-            self.store.execute("UPDATE missed SET status=?,decision=? WHERE id=?",("queued" if response["callback"] else "done",int(response["callback"]),missed_id))
+            self.store.execute("UPDATE missed SET status=?,decision=?,next_at=? WHERE id=?",("queued" if response["callback"] else "done",int(response["callback"]),time.time()+self.callback_delay,missed_id))
+            self.progress(missed_id,'queued' if response['callback'] else 'no_callback')
         except OSError:
             self.errors["bob"]="Missed call stored; awaiting Bob's callback decision. Retry exhausted; operator recovery required."
         finally:
@@ -202,6 +207,9 @@ class Switchboard:
 
     async def dispatch(self):
         while True:
+            if self.callbacks_paused:
+                await asyncio.sleep(.1)
+                continue
             for line in self.lines.values():
                 if isinstance(line,AndroidLine) and not self.calls_enabled:
                     continue
@@ -242,17 +250,24 @@ class Switchboard:
     async def call(self,row,line):
         call_id=uid()
         self.store.execute("INSERT INTO calls(id,missed_id,phone,line_id,started_at,current_action) VALUES(?,?,?,?,?,'waiting_for_bob')",(call_id,row["id"],row["phone"],line.line_id,now()))
+        def phase(stage):
+            self.store.execute('UPDATE calls SET current_action=? WHERE id=?',(stage,call_id))
+            self.progress(row['id'],stage)
+        line.on_phase=phase
+        phase('dialing')
         reason="failed"
         actions=None
         final_sent=False
         try:
             await line.place(row["phone"])
+            phase('connected')
             actions=await self.waiting(line,"call_started",call_id=call_id,missed_call_id=row["id"],phone=row["phone"],line_id=line.line_id)
             for _ in range(100):
                 final_sent=False
                 final=None
                 for action in actions.actions:
                     self.store.execute("UPDATE calls SET current_action=? WHERE id=?",(action.type,call_id))
+                    self.progress(row['id'],{'play':'speaking','listen':'listening','keypad':'keypad','hangup':'ending'}[action.type])
                     prior=self.store.one("SELECT * FROM actions WHERE call_id=? AND action_id=?",(call_id,action.action_id))
                     if prior:
                         if prior["status"]!="done" or prior["type"]!=action.type:
@@ -278,6 +293,7 @@ class Switchboard:
                 if actions.actions[-1].type=="hangup":
                     break
                 self.store.execute("UPDATE calls SET current_action='waiting_for_bob' WHERE id=?",(call_id,))
+                self.progress(row['id'],'processing' if actions.actions[-1].type=='listen' else 'conversation')
                 final_sent=True
                 actions=await self.waiting(line,"action_result",call_id=call_id,action_id=actions.actions[-1].action_id,**final)
             else:
@@ -321,11 +337,14 @@ class Switchboard:
             except Exception:
                 line.state="offline"
             self.store.execute("UPDATE calls SET ended_at=?,reason=?,current_action=NULL WHERE id=?",(now(),reason,call_id))
+            self.progress(row['id'],'completed' if reason=='completed' else reason)
+            line.on_phase=lambda stage: None
             missed=self.store.one('SELECT status FROM missed WHERE id=?',(row['id'],))
             if missed and missed['status']!='queued':
                 self.store.execute("UPDATE missed SET status=? WHERE id=?",("done" if reason=="completed" else "failed",row["id"]))
             try:
                 await self.event("call_ended",call_id=call_id,reason=reason)
+                self.progress(row['id'],'data_received' if reason=='completed' else 'ended_with_result')
             except OSError:
                 pass
 
@@ -563,7 +582,7 @@ class Switchboard:
                         allowed_ring=normalize_phone(caller[1],os.getenv('VB_COUNTRY_CODE','+91')) in self.allowed_phones
                     except ValueError:
                         pass
-                if "mCallState=1" in state and line.state=="idle" and allowed_ring:
+                if "mCallState=1" in state and line.state=="idle" and allowed_ring and os.getenv('VB_ANDROID_AUTO_REJECT','1')=='1':
                     line.state="ringing"
                     await asyncio.to_thread(line.adb.run,"shell","input","keyevent","6")
                     line.state="idle"
@@ -583,6 +602,25 @@ class Switchboard:
             except Exception as exc:
                 self.errors["android"]=type(exc).__name__+": check USB authorization and call-log permissions"
             await asyncio.sleep(0.7)
+
+    def progress(self,missed_id,stage):
+        previous=self.store.one('SELECT stage FROM call_progress WHERE missed_id=? ORDER BY id DESC LIMIT 1',(missed_id,))
+        if not previous or previous['stage']!=stage:
+            self.store.execute('INSERT INTO call_progress(missed_id,stage,at) VALUES(?,?,?)',(missed_id,stage,now()))
+
+    def live_state(self):
+        rows=self.store.rows('SELECT * FROM missed ORDER BY received_at DESC LIMIT 12')
+        calls=[]
+        for row in rows:
+            latest=self.store.one('SELECT * FROM calls WHERE missed_id=? ORDER BY started_at DESC LIMIT 1',(row['id'],))
+            timeline=self.store.rows('SELECT stage,at FROM call_progress WHERE missed_id=? ORDER BY id',(row['id'],))
+            calls.append({'missed_id':row['id'],'caller':'•••• '+row['phone'][-4:],
+                'received_at':row['received_at'],'status':row['status'],'call_id':latest['id'] if latest else None,
+                'stage':timeline[-1]['stage'] if timeline else row['status'],
+                'timeline':timeline,'callback_in':max(0,round(row['next_at']-time.time())) if row['status']=='queued' else None})
+        return {'calls':calls,'paused':self.callbacks_paused,'line_phone':os.getenv('VB_LINE_PHONE',''),
+            'phone_connected':any(isinstance(line,AndroidLine) and line.state!='offline' for line in self.lines.values()),
+            'errors':self.errors}
 
     def status(self):
         sms=self.store.rows("SELECT * FROM sms")
