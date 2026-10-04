@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+eval/results.json
+.venv/
+.env
+seed/*.local.json

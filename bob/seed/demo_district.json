@@ -1,0 +1,35 @@
+{
+  "_note": "Dummy data for the demo; every name and number here is a placeholder. For real numbers, copy this file to demo_district.local.json (git-ignored; Bob prefers it), edit that, then run: python -m vitamin_bob.db --reset. Each clinic needs a clip key clinic_<clinic_id> in every prompts/<lang>.json.",
+  "hub": {
+    "hub_id": "HUB-D1",
+    "name": "Demo District Hub 1",
+    "district_contact": {"name": "District duty officer (demo)", "phone": "+919000000099"}
+  },
+  "villages": [
+    {"village_id": "V-RAM", "name": "Rampur"},
+    {"village_id": "V-DEV", "name": "Devgaon"},
+    {"village_id": "V-LAK", "name": "Lakhpur"}
+  ],
+  "default_village_id": "V-RAM",
+  "clinics": [
+    {"clinic_id": "rampur", "label": "Clinic A", "name": "Rampur PHC", "hours": "09:00-17:00", "capacity_per_day": 40, "referral": false},
+    {"clinic_id": "devgaon", "label": "Clinic B", "name": "Devgaon PHC", "hours": "09:00-17:00", "capacity_per_day": 40, "referral": false},
+    {"clinic_id": "lakhpur", "label": "Clinic C", "name": "Lakhpur CHC", "hours": "09:00-17:00", "capacity_per_day": 60, "referral": false},
+    {"clinic_id": "district", "label": "District hospital", "name": "District Hospital", "hours": "09:00-17:00", "capacity_per_day": 200, "referral": true}
+  ],
+  "_routes_note": "Per village: clinics in order of travel time (minutes). The referral hospital is the fallback and is not listed.",
+  "routes": {
+    "V-RAM": [["rampur", 10], ["devgaon", 25], ["lakhpur", 40]],
+    "V-DEV": [["devgaon", 8], ["rampur", 25], ["lakhpur", 35]],
+    "V-LAK": [["lakhpur", 12], ["devgaon", 35], ["rampur", 40]]
+  },
+  "clinicians": [
+    {"clinic_id": "rampur", "name": "Dr. Asha (demo)", "phone": "+919000000001"},
+    {"clinic_id": "devgaon", "name": "Dr. Bhavin (demo)", "phone": "+919000000002"},
+    {"clinic_id": "lakhpur", "name": "Dr. Chetna (demo)", "phone": "+919000000003"},
+    {"clinic_id": "district", "name": "Duty doctor (demo)", "phone": "+919000000004"}
+  ],
+  "patients": [
+    {"phone": "+919800000002", "village_id": "V-DEV", "preferred_lang": null}
+  ]
+}
