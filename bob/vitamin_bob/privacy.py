@@ -9,7 +9,7 @@ from . import config
 
 
 def norm_phone(phone: str | None) -> str:
-    """'+1 412-595 4322' -> '+14125954322' (E.164, as Stuart sends it), so seeded numbers always match."""
+    """'+1 555-010 0199' -> '+15550100199' (E.164, as Stuart sends it), so seeded numbers always match."""
     return "".join(ch for ch in (phone or "") if ch.isdigit() or ch == "+")
 
 

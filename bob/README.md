@@ -128,7 +128,7 @@ Status comes from three free or cheap inputs:
   `OPEN`, `CLOSED`, `FULL`, `BACK 14:00`, `ACK <code>`, `STATUS`. Each is confirmed with a short reply.
   One phone may serve several clinics (in the demo, one phone is every clinician): a plain command applies
   to its first clinic (Clinic A), and `CLOSED B` or `OPEN devgaon` names another. Numbers in the seed may
-  be written with spaces or dashes; Bob compares them in E.164 form (`+14125954322`).
+  be written with spaces or dashes; Bob compares them in E.164 form (`+15550100199`).
   Unregistered numbers are ignored with no reply, so strangers can't change routing or run up costs.
 - **A free missed call** from a registered clinician means "on duty now" (`callback: false`).
 - **A dashboard toggle.**
