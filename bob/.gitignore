@@ -3,3 +3,4 @@ __pycache__/
 eval/results.json
 .venv/
 .env
+seed/*.local.json

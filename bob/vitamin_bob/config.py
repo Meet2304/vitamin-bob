@@ -20,7 +20,10 @@ UNDERSTAND = _env("VB_UNDERSTAND", "auto")
 MODEL_NAME = _env("VB_MODEL_NAME", "gemma-4-e2b-it-q8_0")
 UNDERSTAND_BUDGET_S = float(_env("VB_UNDERSTAND_BUDGET_S", "17"))  # contract allows 20 s after listen
 
-SEED_FILE = Path(_env("VB_SEED_FILE", str(BOB_DIR / "seed" / "demo_district.json")))
+# Real phone numbers go in seed/demo_district.local.json (git-ignored), which wins when present,
+# so personal numbers never reach the public repository. VB_SEED_FILE overrides both.
+_LOCAL_SEED = BOB_DIR / "seed" / "demo_district.local.json"
+SEED_FILE = Path(_env("VB_SEED_FILE", str(_LOCAL_SEED if _LOCAL_SEED.exists() else BOB_DIR / "seed" / "demo_district.json")))
 DB_PATH = Path(_env("VB_BOB_DB", str(data_dir() / "bob.db")))
 
 PROTOCOL_VERSION = "imci-draft-0.3"  # not yet clinician-reviewed

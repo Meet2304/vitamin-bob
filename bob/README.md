@@ -119,6 +119,9 @@ India"); Whisper is no better in Gujarati. So expect more keypad questions in Gu
 
 `seed/demo_district.json` holds the hub, villages, clinics (hours, capacity), each village's clinics
 ordered by travel time, clinicians' phones and the district contact. **All names and numbers are dummies.**
+For real numbers (e.g. your own phone as the demo clinician), copy it to `seed/demo_district.local.json`,
+edit that, and reset the database. Bob prefers the local file, and git ignores it, so personal numbers
+never reach the public repository.
 
 Status comes from three free or cheap inputs:
 - **SMS commands** from a registered clinician number, in Latin letters so any phone can type them:

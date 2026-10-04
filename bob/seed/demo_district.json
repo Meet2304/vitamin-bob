@@ -1,5 +1,5 @@
 {
-  "_note": "Dummy data for the demo; every name and number here is a placeholder. Edit, then run: python -m vitamin_bob.db --reset. Each clinic needs a clip key clinic_<clinic_id> in every prompts/<lang>.json.",
+  "_note": "Dummy data for the demo; every name and number here is a placeholder. For real numbers, copy this file to demo_district.local.json (git-ignored; Bob prefers it), edit that, then run: python -m vitamin_bob.db --reset. Each clinic needs a clip key clinic_<clinic_id> in every prompts/<lang>.json.",
   "hub": {
     "hub_id": "HUB-D1",
     "name": "Demo District Hub 1",
