@@ -73,6 +73,10 @@ and case-code digits are separate clips placed at the end of a sentence, so word
 - **The tier comes from rules, not the model.** `rules.py` is deterministic and explains every tier.
 - **The model only fills a fixed form**, and every yes/no must quote words found in the transcript.
   A claim without evidence is dropped to "unknown" (shown on the dashboard as "dropped").
+  **The bar is asymmetric:** a "yes" needs two words or a word naming the item; a "no", which could
+  skip a red-flag question, must name the item *and* contain a negation. (Found in testing: on silent
+  audio the model "transcribed" its own instruction and marked fever "no" by quoting one stray word.
+  Bob now discards transcripts that echo the instruction, and a "no" like that no longer passes.)
 - **The description may raise urgency, never silently lower it:**
   - a "no" on an emergency sign is always confirmed on the keypad;
   - **a duration heard in the description that is shorter than the HIGH threshold is confirmed on the keypad.**
@@ -130,11 +134,11 @@ Unknown callers use the hub's default village (a real deployment would map lines
 ## Sync to Central
 
 Bob decides **what** to sync; Stuart owns **how** (framing, encryption, acks, retries). Each payload is
-compact JSON ≤ 200 bytes (largest seen: 179), checked before queueing for size and phone-like digit runs.
+compact JSON ≤ 200 bytes (worst case with every flag: under 200; optional fields are dropped first if ever needed), checked before queueing for size and phone-like digit runs.
 
 | Kind | Fields |
 |---|---|
-| `triage` | `h` hub, `d` yymmdd, `tm` HHMM, `c` clinic, `r` tier E/H/U/M/L, `a` age i/c/a, `s` symptoms `["F3","C?"]`, `f` red flags `["CV"]`, `u` unknowns, `q` keypad questions, `du` call seconds, `l` language, `o` 108/now/appt, `x` 1 if the call ended early, `pv` protocol, `mv` model, `pk` patient key |
+| `triage` | `h` hub, `d` yymmdd, `tm` HHMM, `c` clinic, `r` tier E/H/U/M/L, `a` age i/c/a, `s` symptoms `"F3C?"`, `f` red flags `"CVFB"`, `u` unknowns, `q` keypad questions, `du` call seconds, `l` language, `o` 108/now/appt, `x` 1 if the call ended early, `pv` protocol, `mv` model, `pk` patient key |
 | `clinic_status` | `h`, `c`, `st` o/c/f/u, `src` s(ms)/m(issed call)/d(ashboard), `d`, `tm` |
 | `daily_summary` | `h`, `d`, `n` cases, `t` {E,H,U,M,L}, `ua` unacknowledged alerts, `q` avg questions |
 
@@ -147,7 +151,25 @@ weak (few possible numbers); a keyed one is only as strong as the secret, which 
 Gemma on the real recordings through the full audio path. The simulated patient answers keypad
 questions from ground truth. Results also appear on the dashboard.
 
-EVAL_TABLE
+| Set | Cases | Missed urgent | Emergency not to 108 | Tier accuracy | Uncertain rate | Keypad questions / call | Misreads | Understand time |
+|---|---|---|---|---|---|---|---|---|
+| keyword / hi / text | 43 | **0** | 0 | 93% | 14% | 6.65 | 6 | 0.0 s |
+| keyword / gu / text | 21 | **0** | 0 | 95% | 10% | 5.71 | 2 | 0.0 s |
+| gemma / hi / text | 43 | **0** | 0 | 93% | 7% | 5.6 | 8 | 5.8 s |
+| gemma / gu / text | 21 | **0** | 0 | 95% | 5% | 4.67 | 2 | 4.8 s |
+| audio / hi / real recordings | 5 | **0** | 0 | 100% | 0% | 5.8 | 2 | 8.4 s |
+| audio / gu / real recordings | 5 | **0** | 0 | 100% | 0% | 6.0 | 1 | 7.4 s |
+
+Run 2026-10-04 02:42 with Gemma 4 E2B Q8_0 on the demo laptop. What it shows:
+- **No missed urgent case and no emergency sent to a clinic, in any set or language.**
+- **Gemma halves the Uncertain rate** against the keyword baseline (Hindi 14% → 7%, Gujarati 10% → 5%) and
+  saves about one keypad question per call. That's the work the model does, measured rather than asserted.
+- **Gemma's misreads lean toward over-triage** (HIGH cases read as EMERGENCY), the safe direction.
+  Its duration misreads ("17 days" heard as 2, "21 days" as 7, "10 times" taken as 10 days) were
+  **caught by the duration guardrail**, so those cases still came out correctly.
+- The keyword list added red flags Gemma missed (e.g. sunken eyes, unable to drink, blood in stool).
+- The asymmetric evidence rule costs about one extra keypad question per call (correct "no"s with weak
+  evidence are confirmed on the keypad); we accept that for never letting a fabricated "no" skip a red flag.
 
 **What the data does not cover:** real patients; clinician-reviewed labels; regional dialects beyond the
 team's voices; noisy phone lines (the recordings are phone-microphone audio, not a call path); conditions
@@ -199,7 +221,8 @@ decided from the current call alone.
 
 - **Model: E2B, not E4B**, after measuring both on the demo laptop (table above).
 - **Pass 2 uses a compact grammar instead of a JSON schema**, for speed; it's just as strict.
-- **New guardrail:** short durations from the description are confirmed on the keypad.
+- **New guardrails:** short durations from the description are confirmed on the keypad; evidence for a
+  "no" must name the item and a negation; transcripts that echo the model's instruction are discarded.
 - **Keyword list as a raise-only safety net** after Gemma, in Hindi and Gujarati.
 - `callback_failed`, not each unanswered `call_ended`, raises the alert for unreachable patients
   (see `CONTRACT_NOTES.md`).

@@ -226,7 +226,12 @@ def _label(key: str) -> str:
 
 
 def case_summary(s: CallSession, unknowns: list[str]) -> str:
+    """One readable line for the clinician's SMS and the dashboard. For EMERGENCY the open questions
+    are left out: the clinician needs to act, not read what Bob did not get to ask."""
     c = s.case
+    if classify(c).tier == Tier.EMERGENCY:
+        unknowns = []
+    unknowns = [RED_FLAGS[u]["en"] if u in RED_FLAGS else u for u in unknowns]
     parts = [AGE_LABEL_EN.get(c.age_group, "Age?")]
     syms = [SYMPTOM_LABEL_EN[k] + (f" {v['days']}d" if v["days"] else "") for k, v in c.symptoms.items()
             if v["present"] == YES]

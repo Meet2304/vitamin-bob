@@ -131,6 +131,22 @@ class LLMExtractor:
         return validate(raw, transcript)
 
 
+def evidence_supports(item: str, value: str, evidence: str | None, transcript: str) -> bool:
+    """Evidence must be in the transcript, and is held to a higher bar when it would LOWER urgency.
+
+    - yes: at least two words, or a word that names the item.
+    - no:  must name the item AND contain a negation, because a false "no" can skip a red-flag
+           question. (Seen in testing: a model quoting "this" to mark fever "no" on silent audio.)
+    """
+    if not evidence_ok(evidence, transcript):
+        return False
+    ev = _norm(evidence)
+    names_item = any(_norm(w) in ev for w in KEYWORDS.get(item, []))
+    if value == NO:
+        return names_item and any(_norm(n) in f" {ev} " for n in NEGATIONS)
+    return names_item or len(ev.split()) >= 2
+
+
 def validate(raw: dict, transcript: str) -> dict:
     """Keep only answers backed by evidence found in the transcript."""
     out = empty_result()
@@ -138,7 +154,7 @@ def validate(raw: dict, transcript: str) -> dict:
         item = (raw.get("symptoms") or {}).get(s) or {}
         present = item.get("present", UNKNOWN)
         if present in (YES, NO):
-            if evidence_ok(item.get("evidence"), transcript):
+            if evidence_supports(s, present, item.get("evidence"), transcript):
                 out["symptoms"][s]["present"] = present
                 days = item.get("days")
                 if present == YES and isinstance(days, int) and 0 < days < 365:
@@ -149,7 +165,7 @@ def validate(raw: dict, transcript: str) -> dict:
         item = (raw.get("flags") or {}).get(f) or {}
         value = item.get("value", UNKNOWN)
         if value in (YES, NO):
-            if evidence_ok(item.get("evidence"), transcript):
+            if evidence_supports(f, value, item.get("evidence"), transcript):
                 out["flags"][f] = value
             else:
                 out["rejected"].append(f)

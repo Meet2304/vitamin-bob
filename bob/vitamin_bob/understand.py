@@ -176,6 +176,15 @@ class GemmaExtractor:
         return result
 
 
+_ECHO_MARKERS = ("transcrib", "ट्रांसक्राइब", "ट्रान्सक्राइब", "ટ્રાન્સક્રાઇબ", "ઓડિયો", "ऑडियो", "phone audio")
+
+
+def _echoes_instruction(transcript: str) -> bool:
+    """On silence or noise, a small model may 'transcribe' the instruction itself. Treat that as no speech."""
+    t = transcript.lower()
+    return any(m in t for m in _ECHO_MARKERS)
+
+
 def understand(wav: Path | None, lang: str, sidecar_transcript: str | None = None) -> Understanding:
     """Recording -> transcript + validated form, within the contract's time budget.
 
@@ -192,6 +201,9 @@ def understand(wav: Path | None, lang: str, sidecar_transcript: str | None = Non
             engine = f"gemma ({config.MODEL_NAME})"
         except Exception as e:  # noqa: BLE001 - any failure falls back safely
             notes.append(f"transcription failed: {type(e).__name__}: {e}"[:200])
+    if transcript and _echoes_instruction(transcript):
+        notes.append(f"model echoed the instruction instead of speech ({transcript[:40]}...); ignored")
+        transcript, engine = "", "keyword"
     if not transcript and sidecar_transcript is not None:
         transcript = sidecar_transcript
         notes.append("transcript from test sidecar (fake Stuart), not from audio")

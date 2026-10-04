@@ -3,8 +3,8 @@
 Every payload is compact JSON <= 200 bytes with short field names, and never contains a raw phone
 number, a name or free text (checked by contract.sync_payload_problems before queueing).
 
-triage        {h hub, d yymmdd, tm HHMM, c clinic, r tier E/H/U/M/L, a age i/c/a, s symptoms ["F3","C?"],
-               f flags ["CV"], u unknown count, q keypad questions, du call seconds, l lang,
+triage        {h hub, d yymmdd, tm HHMM, c clinic, r tier E/H/U/M/L, a age i/c/a, s symptoms "F3C21D?",
+               f red flags as 2-letter codes "CVFB", u unknown count, q keypad questions, du call seconds, l lang,
                o outcome 108/now/appt, x 1 if the call ended before classification,
                pv protocol, mv model, pk patient key (keyed hash)}
 clinic_status {h, c clinic, st o/c/f/u, src s(ms)/m(issed call)/d(ashboard), d, tm}
@@ -35,17 +35,23 @@ def model_code(engine: str) -> str:
 
 def triage_payload(*, case: dict, tier: Tier, clinic_id: str | None, questions: int, call_s: int,
                    lang: str | None, unknowns: int, engine: str, patient_key: str, forced: bool) -> dict:
-    syms = [SYM[s] + (str(v["days"]) if v["days"] else "?") for s, v in case["symptoms"].items()
-            if v["present"] == "yes"]
+    syms = "".join(SYM[s] + (str(v["days"]) if v["days"] else "?") for s, v in case["symptoms"].items()
+                   if v["present"] == "yes")
     payload = {
         "h": db.hub()["hub_id"], **_when(), "c": clinic_id or "-", "r": tier.name[0], "a": AGE.get(case["age_group"], "?"),
-        "s": syms, "f": [FLAG[f] for f, v in case["flags"].items() if v == "yes"],
+        "s": syms, "f": "".join(FLAG[f] for f, v in case["flags"].items() if v == "yes"),
         "u": unknowns, "q": questions, "du": call_s, "l": lang or "?",
         "o": "108" if tier == Tier.EMERGENCY else "now" if tier >= Tier.UNCERTAIN else "appt",
         "pv": config.PROTOCOL_VERSION.replace("imci-draft-", "d"), "mv": model_code(engine), "pk": patient_key,
     }
     if forced:
         payload["x"] = 1
+    # Safety valve: never exceed the contract's 200 bytes; drop the least important fields first.
+    from .contract import MAX_SYNC_PAYLOAD_BYTES, compact  # noqa: PLC0415
+    for optional in ("du", "u", "q", "pv", "l"):
+        if len(compact(payload).encode()) <= MAX_SYNC_PAYLOAD_BYTES:
+            break
+        payload.pop(optional, None)
     return payload
 
 

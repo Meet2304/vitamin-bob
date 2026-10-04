@@ -1,5 +1,5 @@
 {
- "at": "2026-10-04 02:13",
+ "at": "2026-10-04 02:42",
  "summaries": [
   {
    "set": "keyword / hi / text",
@@ -25,6 +25,58 @@
    "misreads": 2,
    "avg_understand_s": 0.0,
    "mode": "keyword",
+   "lang": "gu"
+  },
+  {
+   "set": "gemma / hi / text",
+   "n": 43,
+   "missed_urgent": 0,
+   "emerg_to_clinic": 0,
+   "accuracy": 0.93,
+   "uncertain_rate": 0.07,
+   "avg_questions": 5.6,
+   "misreads": 8,
+   "avg_understand_s": 5.8,
+   "mode": "gemma",
+   "lang": "hi"
+  },
+  {
+   "set": "gemma / gu / text",
+   "n": 21,
+   "missed_urgent": 0,
+   "emerg_to_clinic": 0,
+   "accuracy": 0.952,
+   "uncertain_rate": 0.048,
+   "avg_questions": 4.67,
+   "misreads": 2,
+   "avg_understand_s": 4.8,
+   "mode": "gemma",
+   "lang": "gu"
+  },
+  {
+   "set": "audio / hi / real recordings",
+   "n": 5,
+   "missed_urgent": 0,
+   "emerg_to_clinic": 0,
+   "accuracy": 1.0,
+   "uncertain_rate": 0.0,
+   "avg_questions": 5.8,
+   "misreads": 2,
+   "avg_understand_s": 8.4,
+   "mode": "audio",
+   "lang": "hi"
+  },
+  {
+   "set": "audio / gu / real recordings",
+   "n": 5,
+   "missed_urgent": 0,
+   "emerg_to_clinic": 0,
+   "accuracy": 1.0,
+   "uncertain_rate": 0.0,
+   "avg_questions": 6.0,
+   "misreads": 1,
+   "avg_understand_s": 7.4,
+   "mode": "audio",
    "lang": "gu"
   }
  ]
