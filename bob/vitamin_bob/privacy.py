@@ -3,6 +3,7 @@
 import base64
 import hashlib
 import hmac
+import re
 
 from . import config
 
@@ -22,3 +23,11 @@ def patient_key(phone: str) -> str:
     the number. Base32 (mostly letters), not hex, so it practically never contains a phone-like digit run."""
     digest = hmac.new(config.patient_key_secret(), phone.encode(), hashlib.sha256).digest()[:8]
     return base64.b32encode(digest).decode().rstrip("=").lower()
+
+
+_PHONE = re.compile(r"\+?\d[\d ]{8,}\d")
+
+
+def mask_text(text: str | None) -> str:
+    """Mask every phone number inside free text (e.g. an alert SMS shown on the dashboard)."""
+    return _PHONE.sub(lambda m: mask(m.group(0).replace(" ", "")), text or "")

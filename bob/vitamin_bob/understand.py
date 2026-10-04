@@ -1,7 +1,7 @@
 """Understanding the patient's description on-device with Gemma 4 (via llama-server), in two passes:
 
   1. audio -> transcript   (Gemma's audio encoder; thinking disabled; plain text out)
-  2. transcript -> form    (text only; output locked to a JSON schema; evidence guard applied)
+  2. transcript -> form    (text only; output locked by a grammar; evidence guard applied)
 
 Two passes rather than one so that (a) the transcript is not distorted by forcing JSON while
 listening, and (b) pass 2 is exactly what the text evaluation measures on the vignettes.
@@ -13,7 +13,6 @@ transcript it has: worse understanding means more keypad questions, never a skip
 """
 
 import base64
-import json
 import time
 from pathlib import Path
 
@@ -26,45 +25,58 @@ from .protocol import RED_FLAGS, SYMPTOMS
 LANG_NAMES = {"hi": "Hindi", "gu": "Gujarati"}
 ITEMS = SYMPTOMS + list(RED_FLAGS)
 
-_FORM_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "findings": {
-            "type": "array",
-            "maxItems": len(ITEMS),
-            "items": {
-                "type": "object",
-                "properties": {
-                    "item": {"type": "string", "enum": ITEMS},
-                    "value": {"type": "string", "enum": ["yes", "no"]},
-                    "days": {"type": ["integer", "null"]},
-                    "evidence": {"type": "string", "maxLength": 80},
-                },
-                "required": ["item", "value", "days", "evidence"],
-            },
-        }
-    },
-    "required": ["findings"],
+# Pass 2 output is locked by a grammar to at most 6 lines of "item|yes/no|days|evidence", then END.
+# As strict as a JSON schema (only known items and values can be written) at a fraction of the
+# tokens: ~4 s instead of ~14 s on the demo laptop, which keeps a call inside the 20 s budget.
+MAX_FINDINGS = 6
+_item_alts = " | ".join(f'"{i}"' for i in ITEMS)
+_lines = "line? " * MAX_FINDINGS
+FORM_GRAMMAR = f"""root ::= {_lines}"END"
+line ::= item "|" val "|" days "|" ev "\n"
+item ::= {_item_alts}
+val ::= "yes" | "no"
+days ::= [0-9] [0-9]? [0-9]? | "-"
+ev ::= [^|\n]+
+"""
+
+# Words callers actually use, so a small model links them to the right item (Hindi / Gujarati).
+HINTS = {
+    "fever": "बुखार, तपना / તાવ", "cough": "खाँसी / ઉધરસ, ખાંસી", "diarrhea": "दस्त, पतले दस्त, loose motion / ઝાડા",
+    "convulsions": "दौरा, झटके, मिर्गी / આંચકી, ખેંચ", "altered_consciousness": "बेहोश, सुस्त, पहचान नहीं रहा / બેભાન, સુસ્ત",
+    "severe_breathing_difficulty": "साँस लेने में बहुत तकलीफ़ / શ્વાસ લેવામાં તકલીફ",
+    "unable_to_drink": "कुछ पी नहीं पा रहा, दूध नहीं पी रहा / પી શકતું નથી",
+    "vomits_everything": "सब उल्टी कर देता / બધું ઊલટી કરી નાખે", "stiff_neck": "गर्दन अकड़ / ગરદન અકડાઈ",
+    "fast_breathing": "साँस तेज़ चल रही / શ્વાસ ઝડપી", "blood_in_stool": "दस्त में खून / ઝાડામાં લોહી",
+    "dehydration_signs": "आँखें धँसी, पेशाब कम / આંખો ઊંડી, પેશાબ ઓછો",
 }
 
 
 def _form_prompt(lang: str) -> str:
-    flags = "\n".join(f"- {name}: {f['en']}" for name, f in RED_FLAGS.items())
+    items = "\n".join(f"- {i}: {RED_FLAGS[i]['en'] if i in RED_FLAGS else i} ({HINTS[i]})" for i in ITEMS)
     name = LANG_NAMES.get(lang, "Hindi")
     return f"""You fill in a fixed form from a patient's description, transcribed from a phone call in {name}
 (possibly mixed with English, possibly with transcription errors). You do NOT diagnose or advise.
 
-Items:
-- fever, cough, diarrhea (symptoms; give days if a duration is stated, else null)
-{flags}
+Items (with words patients use):
+{items}
 
-List ONLY the items the patient clearly mentions, as findings:
-- value "yes" if they say the patient has it, "no" if they clearly say the patient does not.
-- days: for symptoms only, the number of days if stated ("three days" -> 3, "a week" -> 7,
-  "two weeks" -> 14, "since yesterday" -> 1); otherwise null.
-- evidence: the shortest exact words from the transcript that support the value, copied
-  character for character.
-Leave out anything not mentioned or unclear. When in doubt, leave it out: that is always safe."""
+Write one line for each item the patient clearly mentions (at most {MAX_FINDINGS}), then END:
+item|yes or no|days or -|evidence
+- yes if they say the patient has it; no only if they clearly say the patient does not.
+- days: for fever, cough, diarrhea only: the number of days if stated ("three days" -> 3,
+  "a week" -> 7, "two weeks" -> 14, "since yesterday" -> 1), else -.
+- evidence: the shortest exact words (2 to 6) copied character for character from the transcript.
+Do NOT write lines for items that are not mentioned. When in doubt, leave it out: that is always safe."""
+
+
+def parse_form(text: str) -> list[dict]:
+    findings = []
+    for line in text.splitlines():
+        parts = line.split("|", 3)
+        if len(parts) == 4 and parts[0] in ITEMS:
+            days = int(parts[2]) if parts[2].isdigit() else None
+            findings.append({"item": parts[0], "value": parts[1], "days": days, "evidence": parts[3].strip()})
+    return findings
 
 
 class Understanding:
@@ -74,15 +86,15 @@ class Understanding:
         self.transcript, self.extraction, self.engine, self.ms, self.notes = transcript, extraction, engine, ms, notes
 
 
-def _chat(messages: list, timeout: float, schema: dict | None = None, max_tokens: int = 300) -> str:
+def _chat(messages: list, timeout: float, grammar: str | None = None, max_tokens: int = 300) -> str:
     body = {
         "messages": messages,
         "temperature": 0,
         "max_tokens": max_tokens,
         "chat_template_kwargs": {"enable_thinking": False},  # Gemma 4 thinks by default; we can't afford it
     }
-    if schema:
-        body["response_format"] = {"type": "json_schema", "json_schema": {"name": "form", "schema": schema}}
+    if grammar:
+        body["grammar"] = grammar
     r = httpx.post(f"{config.LLM_URL}/v1/chat/completions", json=body, timeout=timeout)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"].strip()
@@ -157,9 +169,9 @@ class GemmaExtractor:
         content = _chat(
             [{"role": "system", "content": _form_prompt(self.lang)},
              {"role": "user", "content": f"Transcript:\n{transcript}"}],
-            timeout=self.timeout, schema=_FORM_SCHEMA, max_tokens=400,
+            timeout=self.timeout, grammar=FORM_GRAMMAR, max_tokens=160,
         )
-        result = validate(findings_to_raw(json.loads(content).get("findings", [])), transcript)
+        result = validate(findings_to_raw(parse_form(content)), transcript)
         result["added_by_keyword"] = merge_raise_only(result, KeywordExtractor()(transcript))
         return result
 

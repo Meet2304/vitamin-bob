@@ -10,7 +10,7 @@ Acknowledge from the dashboard or by SMS: "ACK <code>".
 import json
 
 from . import clinics, config, db, stuart_client
-from .privacy import mask
+from .privacy import mask, mask_text
 
 
 def raise_alert(*, tier: str, kind: str, code: str, clinic_id: str | None, summary: str, phone: str | None,
@@ -93,6 +93,7 @@ def snapshot(limit: int = 30) -> list[dict]:
     names["district_contact"] = "District contact"
     for r in rows:
         r["phone"] = mask(r["phone"])
+        r["summary"] = mask_text(r["summary"])
         r["escalated_to"] = [names.get(x, x) for x in json.loads(r["escalated_to"])]
         r["age_s"] = int((db.now() - db.parse(r["created_at"])).total_seconds())
     return rows

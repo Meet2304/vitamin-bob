@@ -22,7 +22,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import ValidationError
 
 from . import alerts, clinics, config, contract, conversation, db, sms_commands, stuart_client, sync, understand
-from .privacy import mask
+from .privacy import mask, mask_text
 from .prompts import SYSTEM, clip_path, prompts_dir
 
 _call_locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
@@ -188,7 +188,7 @@ def _costs(stuart: dict) -> dict:
         secs += (db.parse(r["ended_at"]) - db.parse(r["started_at"])).total_seconds()
     sms = (stuart.get("status") or {}).get("sms", {})
     segments = sms.get("segments_today")
-    if segments is None:  # Stuart unreachable: estimate from Bob's own outbox (1 segment per 70 chars, Unicode-safe)
+    if segments is None:  # Stuart unreachable: estimate from Bob's own outbox (153 chars per plain-text segment)
         segments = sum(-(-len(m["text"]) // 153) for m in db.q("SELECT text FROM sms_outbox WHERE created_at LIKE ?",
                                                                 today + "%"))
     sms_inr = segments * config.SMS_SEGMENT_INR
@@ -207,7 +207,8 @@ def state():
     return {
         "now": db.iso(), "hub": db.hub() | {"contact_phone": mask(db.hub()["contact_phone"])},
         "contract": contract.VERSION, "bob_url": config.BOB_URL, "stuart_url": config.STUART_URL,
-        "model": {"mode": config.UNDERSTAND, "name": config.MODEL_NAME, "available": _model_available(),
+        "model": {"mode": config.UNDERSTAND, "name": config.MODEL_NAME,
+                  "available": config.UNDERSTAND != "keyword" and _model_available(),
                   "url": urlparse(config.LLM_URL).netloc},
         "protocol": db.one("SELECT * FROM protocols LIMIT 1"),
         "stuart": stuart,
@@ -217,7 +218,7 @@ def state():
         "clinics": clinics.snapshot(),
         "alerts": alerts.snapshot(),
         "sync": sync.snapshot(),
-        "sms": [dict(m, to_phone=mask(m["to_phone"])) for m in
+        "sms": [dict(m, to_phone=mask(m["to_phone"]), text=mask_text(m["text"])) for m in
                 db.q("SELECT * FROM sms_outbox ORDER BY created_at DESC LIMIT 15")],
         "sms_inbox": [dict(m, phone=mask(m["phone"])) for m in
                       db.q("SELECT * FROM sms_inbox ORDER BY at DESC LIMIT 10")],
