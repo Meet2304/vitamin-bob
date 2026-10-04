@@ -37,6 +37,9 @@ def main():
             for mic in sc.all_microphones(include_loopback=True):
                 if mic.isloopback and mic.channels >= 2:
                     print('loopback:'+mic.name)
+            print('\nNative WASAPI outputs:')
+            for speaker in sc.all_speakers():
+                print('wasapi:'+speaker.name)
     elif args.command=="check-phone":
         from .lines import Adb
         runtime=Path(__file__).resolve().parents[1]/"runtime"

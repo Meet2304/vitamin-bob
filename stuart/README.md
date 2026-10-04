@@ -4,14 +4,14 @@ Contract 0.2. Windows service for local call actions, callback queues, SMS and e
 
 ## Current evidence
 
-Latest local verification: 22 automated tests passed; eight completed simulated calls, one simulated outbound SMS and three acknowledged Central records over loopback. No pending callback decisions, unacknowledged events or transport errors remained in the live check. Details are in ignored `runtime/verification.json` and the console screenshot. This is transport evidence; the real phone and real Bob remain unverified.
+Latest verification: 37 automated tests passed. A real missed call triggered an Android callback and answer detection. A later callback, transferred to the PC by the operator, carried spoken instructions, decoded `12` with `#`, recorded 3.4 seconds of speech and hung up cleanly. Evidence: ignored `runtime/hardware-callback-result.json`. The simulator previously completed eight calls, one outbound SMS and three acknowledged Central records. Actual Bob/Stuart HTTP integration completed synthetic Hindi and Gujarati conversations, but exposed a Bob outbox status race. With the prepared fix in an isolated Bob copy, three simulated SMS were delivered and four encrypted Central records remained acknowledged in Bob. No real SMS has been sent; Gemma processing over a real phone call remains unverified.
 
 - Scripted missed-call → Bob callback decision → play → keypad → record → hangup works against fake Bob.
 - Callback queue, duplicate-number merging, event IDs and HTTP acknowledgements persist in SQLite.
 - Multiple simulated lines execute through the same action executor.
 - SMS ordering, encoding-aware segment caps and status events are tested on simulated transport.
 - Encrypted SMS-sized frames, authenticated ACKs, fragment restart recovery and one Central record per ID are tested under drop, duplicate and tamper faults.
-- Android control and SMSGate adapters are provided but require device/audio capability tests. Phone Link PC calling is user-confirmed. ADB now detects and authorizes the S24 Plus (SM-S926B, Android 16), and empty call-log/SMS provider queries succeed. Two S24 Bluetooth audio endpoints accept 16 kHz settings, but direct stream tests did not carry prompt audio reliably. See `PHONE_AUDIO_SETUP.md` for the next route. Two controlled Android call attempts were made to the supplied test destination. The second has an outgoing call-log entry with 16 seconds connected. Direct Bluetooth audio stopped before prompt playback, and the test hung up. No real SMS has been sent. The proposed VB-CABLE transmit and WASAPI speaker-loopback receive route still needs a complete live-call test.
+- ADB is authorized on the S24 Plus (SM-S926B, Android 16). Call-log detection, answer state and operator-transferred callback audio passed. Direct Bluetooth playback failed. The verified route uses VB-CABLE transmit and native WASAPI Realtek loopback receive. Selecting “Transfer to PC” remains a human step. See `PHONE_AUDIO_SETUP.md`.
 - Fake Bob uses tones, not bilingual clinical prompts. Hindi/Gujarati content and the real routing dashboard are Bob's responsibility.
 
 ## Quick demo (no phone required)
@@ -56,8 +56,8 @@ Every `/v1/*` request requires `X-VB-Contract: 0.2`. Run `GET /v1/health`, `GET 
 ## Phone setup and the required human steps
 
 1. Enable Developer options and USB debugging on the S24 Plus. Connect with a data-capable cable, unlock it, select File transfer and accept the debugging authorization. If Windows cannot identify the Android debugging interface, check the phone debugging setting. Samsung Auto Blocker can block USB commands; report a blocked setting before changing protection. Install the official Samsung Android USB driver if Windows reports a driver problem, then reconnect.
-2. Pair Phone Link's Calls feature and verify a manual call from the PC. This confirms manual calling only; we still need to prove audio routing and ADB-initiated call behavior.
-3. Configure independent PC audio transmit/receive routes. `VB_AUDIO_OUTPUT` must send a WAV into the remote caller's audio; `VB_AUDIO_INPUT` must capture the remote caller. The laptop mic and speaker are not proof of an isolated phone route. The exposed S24 Bluetooth endpoints failed live playback. The next candidate is VB-CABLE for transmit and stereo WASAPI speaker-loopback capture for receive; installation and human audio-routing checks are still required. Do not assume one virtual cable can provide both independent directions.
+2. Pair Phone Link's Calls feature and verify a manual PC call. That route passed on this laptop; an Android-initiated call can still remain on the phone's earpiece.
+3. Configure independent routes. `VB_AUDIO_OUTPUT=wasapi:CABLE Input (VB-Audio Virtual Cable)` sends prompts to Phone Link's CABLE Output microphone. `VB_AUDIO_INPUT=loopback:Speaker (Realtek(R) Audio)` captures its actual speaker output. Both passed on a manual PC call. Windows communications defaults alone did not prove routing: another display was the default while Phone Link still played on Realtek. Check the actual route on each callback.
 4. List devices with `python -m stuart devices`, then set the verified indices/names. Test prompt playback, caller recording, keypad tones and hangup with a second phone. Repeat with internet and mobile data off while retaining cellular calls and Bluetooth.
 5. Set the default calling SIM manually to avoid an unattended SIM picker. Disable voicemail/diversions for the demonstration if they would answer the incoming missed call. Check actual patient/carrier charges instead of treating “never pays” as universal.
 
@@ -82,7 +82,7 @@ $env:VB_AUDIO_OUTPUT = '<verified transmitter>'
 & .\.venv\Scripts\python.exe -m stuart serve
 ```
 
-While enabled, Stuart rejects ringing incoming calls and detects new missed/rejected call-log entries. It calls back only with Bob's approval. The first menu must repeat because remote pickup cannot be reliably inferred from telephony state. ADB state monitoring is provisional: dialing/answer/no-answer distinctions need validation on this S24. A USB disconnect terminates audio processing and reports failure; it cannot guarantee a physical hangup if the USB control path is already gone.
+While enabled, Stuart rejects ringing incoming calls and detects new missed/rejected call-log entries. It calls back only with Bob's approval. Before dialing it requires an empty live Telecom call list; it waits for `ACTIVE` before requesting Bob's prompts. `VB_ANDROID_ANSWER_TIMEOUT_SECONDS` defaults to 45. Historical call states are excluded. On this S24, also set `VB_ANDROID_REQUIRED_AUDIO_ROUTE=TYPE_BLUETOOTH_SCO`: prompts wait for five consecutive Bluetooth route observations, for up to `VB_ANDROID_AUDIO_ROUTE_TIMEOUT_SECONDS` (60 by default). The operator must select “Transfer to PC” after answer. This guard verifies a route; it does not perform the transfer. Stuart ends only calls it started. USB loss cannot guarantee physical hangup.
 
 ## SMSGate local mode
 
@@ -127,7 +127,7 @@ Tests cover action validation, UTF-8 payload bounds, GSM/Unicode counting, DTMF 
 
 ## Known limitations and contract decisions
 
-See `CONTRACT_NOTES.md`. Real phone audio, remote keypad delivery, SMS permissions and real-Bob integration remain capability checks. Short VAD uses a simple RMS threshold and is not a noise-robust speech recognizer. Normal sounddevice devices must accept 16 kHz directly. The Windows `loopback:<exact speaker name>` receive path uses SoundCard/WASAPI shared-mode conversion to 16 kHz, captures stereo, then downmixes to mono. It captures all audio on that speaker endpoint; keep other app audio quiet during a controlled test. Callback streams support drivers that reject blocking read/write APIs, but format support alone does not establish a usable call route. The hold tone is half duplex, and callers should press keys after a beep because barge-in during a prompt is not captured. The fake Bob is a transport mock, not the clinical system.
+See `CONTRACT_NOTES.md`. Callback audio passes with operator transfer; unattended routing, real SMS and Gemma over the call path remain checks. VAD uses a simple RMS threshold. Normal sounddevice devices require 16 kHz support; WASAPI shared-mode conversion is enabled. Native `wasapi:<speaker name>` transmit and `loopback:<speaker name>` receive use SoundCard with per-thread COM initialization. Receive captures stereo and downmixes to mono at 16 kHz. It includes all sound on that speaker; keep other app audio quiet. The hold tone is half duplex; barge-in during prompts is not captured. Caller keys must follow the entire prompt. A readiness beep followed by a two-second pause passed the physical keypad check. Fake Bob is a transport mock.
 
 After event retry exhaustion, failures remain in the outbox for inspection. Pending missed-call decisions can be retried by `POST /operator/retry-pending` with the contract header. No phone callback is queued while its decision is unknown. Interrupted outgoing SMS are marked as an unknown failed outcome rather than automatically resent, to avoid charging for a duplicate send.
 

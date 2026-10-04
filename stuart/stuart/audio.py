@@ -1,4 +1,5 @@
 import math
+import os
 import queue
 import threading
 import time
@@ -10,6 +11,32 @@ RATE = 16000
 DTMF_LOW = [697, 770, 852, 941]
 DTMF_HIGH = [1209, 1336, 1477]
 DTMF_KEYS = ["123", "456", "789", "*0#"]
+
+
+@contextmanager
+def windows_audio_thread():
+    """COM audio objects require initialization in every executor thread."""
+    if os.name != 'nt':
+        yield
+        return
+    # SoundCard initializes only its importing thread. Import before balancing
+    # our own per-operation COM reference, including already-initialized threads.
+    import soundcard
+    import ctypes
+    ole32=ctypes.WinDLL('ole32')
+    initialize=ole32.CoInitializeEx
+    initialize.argtypes=[ctypes.c_void_p,ctypes.c_uint32]
+    initialize.restype=ctypes.c_long
+    result=initialize(None,0)
+    if result < 0 and (result & 0xffffffff) != 0x80010106:
+        raise OSError(f'Windows audio COM initialization failed: {result & 0xffffffff:#x}')
+    try:
+        yield
+    finally:
+        # S_OK and S_FALSE each acquire a reference. Changed-apartment mode does
+        # not; in that case the caller's existing apartment remains in use.
+        if result >= 0:
+            ole32.CoUninitialize()
 
 
 def tone(path, seconds=0.3, frequency=440):
@@ -53,11 +80,26 @@ def detect_dtmf(samples, rate=RATE):
     return DTMF_KEYS[lo][hi] if purity > 0.65 else None
 
 
+@windows_audio_thread()
 def play_blocking(path, device=None, stopped=None):
     import numpy as np
     import sounddevice as sd
     with wave.open(str(path), "rb") as f:
         samples = np.frombuffer(f.readframes(f.getnframes()), dtype="<i2").reshape(-1,1)
+    if isinstance(device,str) and device.startswith('wasapi:'):
+        speaker = wasapi_speaker(device)
+        # Use native shared-mode WASAPI for the virtual transmit cable. Keep
+        # stereo channel layout and let Windows convert the 16 kHz mix rate.
+        with speaker.player(samplerate=RATE,channels=speaker.channels,blocksize=1600) as player:
+            for offset in range(0,len(samples),800):
+                if stopped and stopped():
+                    return
+                data = np.repeat(samples[offset:offset+800].astype('float32')/32768,
+                                 speaker.channels,axis=1)
+                player.play(data)
+            # Queue one full silent buffer to drain the last audible samples.
+            player.play(np.zeros((player.buffersize,speaker.channels),dtype='float32'))
+        return
     finished, offset = threading.Event(), 0
     def callback(outdata, frames, timing, status):
         nonlocal offset
@@ -69,7 +111,8 @@ def play_blocking(path, device=None, stopped=None):
             raise sd.CallbackStop()
     # WDM-KS Bluetooth endpoints support callbacks but reject blocking write().
     with sd.OutputStream(samplerate=RATE, channels=1, dtype="int16", device=device,
-                         callback=callback, finished_callback=finished.set) as stream:
+                         callback=callback, finished_callback=finished.set,
+                         **stream_settings(device,'output')) as stream:
         deadline = time.monotonic()+len(samples)/RATE+5
         while not finished.wait(0.05):
             if stopped and stopped():
@@ -84,6 +127,13 @@ def play_blocking(path, device=None, stopped=None):
 
 @contextmanager
 def input_chunks(device=None, dtype="int16", blocksize=800):
+    with windows_audio_thread():
+        with _input_chunks(device,dtype,blocksize) as read:
+            yield read
+
+
+@contextmanager
+def _input_chunks(device=None, dtype="int16", blocksize=800):
     """Bounded callback capture, including callback-only Windows Bluetooth drivers."""
     if isinstance(device,str) and device.startswith("loopback:"):
         import numpy as np
@@ -110,7 +160,8 @@ def input_chunks(device=None, dtype="int16", blocksize=800):
             errors.append(OSError("Audio capture consumer fell behind"))
             raise sd.CallbackAbort()
     with sd.InputStream(samplerate=RATE, channels=1, dtype=dtype, device=device,
-                        blocksize=blocksize, callback=callback) as stream:
+                        blocksize=blocksize, callback=callback,
+                        **stream_settings(device,'input')) as stream:
         def read(timeout=0.1):
             if errors:
                 raise errors[0]
@@ -135,6 +186,17 @@ def loopback_device(device):
     return matches[0]
 
 
+def wasapi_speaker(device):
+    import soundcard as sc
+    selector = device.removeprefix('wasapi:')
+    matches = [s for s in sc.all_speakers()
+               if s.id == selector or selector.casefold() in s.name.casefold()]
+    if not selector or len(matches) != 1:
+        raise ValueError('Select one exact WASAPI speaker name from stuart devices')
+    return matches[0]
+
+
+@windows_audio_thread()
 def check_capture_device(device):
     if isinstance(device,str) and device.startswith("loopback:"):
         mic = loopback_device(device)
@@ -142,7 +204,30 @@ def check_capture_device(device):
             pass
     else:
         import sounddevice as sd
-        sd.check_input_settings(device=device,channels=1,dtype='int16',samplerate=RATE)
+        sd.check_input_settings(device=device,channels=1,dtype='int16',samplerate=RATE,
+                                **stream_settings(device,'input'))
+
+
+def stream_settings(device,direction):
+    import sounddevice as sd
+    info = sd.query_devices(device,direction)
+    if sd.query_hostapis(info['hostapi'])['name'] == 'Windows WASAPI':
+        # Windows shared-mode conversion preserves the 16 kHz WAV contract while
+        # allowing virtual cables configured with a 48 kHz mix format.
+        return {'extra_settings':sd.WasapiSettings(auto_convert=True)}
+    return {}
+
+
+@windows_audio_thread()
+def check_playback_device(device):
+    if isinstance(device,str) and device.startswith('wasapi:'):
+        speaker = wasapi_speaker(device)
+        with speaker.player(samplerate=RATE,channels=speaker.channels,blocksize=1600):
+            pass
+        return
+    import sounddevice as sd
+    sd.check_output_settings(device=device,channels=1,dtype='int16',samplerate=RATE,
+                             **stream_settings(device,'output'))
 
 
 def record_blocking(path, max_ms, silence_ms, device=None, stopped=None):

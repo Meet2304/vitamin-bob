@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from stuart.audio import detect_dtmf, input_chunks, play_blocking, tone
 from stuart.contracts import Actions, Missed, Record, Sms, Sync, safe_wav
 from stuart.fake_bob import make_fake
-from stuart.lines import Adb, SimulatorLine
+from stuart.lines import Adb, AndroidLine, CallerHungUp, DialFailed, SimulatorLine, live_telecom_audio_route, live_telecom_states
 from stuart.service import Switchboard, make_app, segments
 from stuart.sync_link import Codec, Receiver
 
@@ -33,10 +33,151 @@ def test_adb_sql_filter_stays_one_remote_argument(monkeypatch):
     assert captured[1]==['adb.exe','-s','demo-device','devices','-l']
 
 
+def test_live_call_state_excludes_history_and_other_sections():
+    text='CallsManager: \n  mCalls: \n    Call TC@1: state=ACTIVE\n  mCallAudioManager:\n    History: state=DIALING\nHistorical calls:\n  state=DISCONNECTED\n'
+    assert live_telecom_states(text)==['ACTIVE']
+    idle='CallsManager: \n  mCalls: \n  mCallAudioManager:\n    History: state=ACTIVE\n'
+    assert live_telecom_states(idle)==[]
+    assert live_telecom_states('History: state=ACTIVE') is None
+
+
+def test_current_audio_route_excludes_pending_and_history():
+    text = ('CallsManager:\n  mCallAudioManager:\n    mCallAudioRouteAdapter:\n'
+            '      SamsungCallAudioRouteController\n'
+            '      Current route: AudioRoute[Type=TYPE_EARPIECE, Address=invalid]\n'
+            '      Pending route: AudioRoute[Type=TYPE_BLUETOOTH_SCO, Address=masked]\n'
+            '    mOtherSection:\n      Current route: AudioRoute[Type=TYPE_SPEAKER, Address=invalid]\n')
+    assert live_telecom_audio_route(text) == 'TYPE_EARPIECE'
+    assert live_telecom_audio_route(text.replace('TYPE_EARPIECE', 'TYPE_BLUETOOTH_SCO')) == 'TYPE_BLUETOOTH_SCO'
+    assert live_telecom_audio_route('History: Current route: AudioRoute[Type=TYPE_BLUETOOTH_SCO, Address=masked]') is None
+
+
+@pytest.mark.parametrize('scenario', ['busy', 'unknown', 'answer', 'no_answer', 'timeout'])
+def test_android_answer_wait_and_call_ownership(tmp_path, monkeypatch, scenario):
+    import stuart.lines as lines
+    monkeypatch.setattr(lines, 'check_capture_device', lambda device: None)
+    monkeypatch.setattr(lines, 'check_playback_device', lambda device: None)
+    monkeypatch.setenv('VB_ANDROID_ANSWER_TIMEOUT_SECONDS', '0' if scenario == 'timeout' else '2')
+    def snapshot(state=''):
+        return 'CallsManager: \n  mCalls: \n' + (f'    Call: state={state}\n' if state else '') + '  mCallAudioManager:\n'
+    snapshots = {
+        'busy': [snapshot('ACTIVE')], 'unknown': ['Historical: state=ACTIVE'],
+        'answer': [snapshot(), snapshot('DIALING'), snapshot('ACTIVE')],
+        'no_answer': [snapshot(), snapshot('DIALING'), snapshot()],
+        'timeout': [snapshot()],
+    }[scenario]
+    commands = []
+    class Device:
+        def run(self, *args):
+            commands.append(args)
+            if args == ('get-state',):
+                return 'device'
+            if args == ('shell', 'dumpsys', 'telecom'):
+                return snapshots.pop(0)
+            return ''
+    async def run():
+        line = AndroidLine('android-test', tmp_path, Device())
+        line.input_device, line.output_device = 'receiver', 'transmitter'
+        async def monitor():
+            await asyncio.Future()
+        line.monitor = monitor
+        if scenario == 'answer':
+            await line.place('+15550100100')
+            assert line.observed_active and not snapshots
+        else:
+            with pytest.raises(DialFailed) as error:
+                await line.place('+15550100100')
+            if scenario in ('no_answer', 'timeout'):
+                assert error.value.reason == 'no_answer'
+        await line.hangup()
+        await line.hangup()  # Only the call owned by Stuart is ended, once.
+        if line.monitor_task:
+            await asyncio.gather(line.monitor_task, return_exceptions=True)
+        owned = scenario in ('answer', 'no_answer', 'timeout')
+        assert sum(args[:3] == ('shell', 'am', 'start') for args in commands) == int(owned)
+        assert commands.count(('shell', 'input', 'keyevent', '6')) == int(owned)
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('scenario', ['stable', 'timeout', 'disconnected'])
+def test_android_requires_stable_audio_route_before_prompts(tmp_path, monkeypatch, scenario):
+    import stuart.lines as lines
+    monkeypatch.setattr(lines, 'check_capture_device', lambda device: None)
+    monkeypatch.setattr(lines, 'check_playback_device', lambda device: None)
+    monkeypatch.setenv('VB_ANDROID_REQUIRED_AUDIO_ROUTE', 'TYPE_BLUETOOTH_SCO')
+    monkeypatch.setenv('VB_ANDROID_AUDIO_ROUTE_TIMEOUT_SECONDS', '0' if scenario == 'timeout' else '2')
+    original_sleep = asyncio.sleep
+    async def immediate_sleep(seconds):
+        await original_sleep(0)
+    monkeypatch.setattr(lines.asyncio, 'sleep', immediate_sleep)
+    def snapshot(state, route='TYPE_EARPIECE'):
+        return ('CallsManager:\n  mCalls:\n' + (f'    Call: state={state}\n' if state else '') +
+                '  mCallAudioManager:\n    mCallAudioRouteAdapter:\n' +
+                f'      Current route: AudioRoute[Type={route}, Address=masked]\n')
+    states = [snapshot(''), snapshot('ACTIVE')]
+    if scenario == 'stable':
+        states += ([snapshot('ACTIVE', 'TYPE_BLUETOOTH_SCO')] * 2 + [snapshot('ACTIVE')] +
+                   [snapshot('ACTIVE', 'TYPE_BLUETOOTH_SCO')] * 5)
+    elif scenario == 'disconnected':
+        states += [snapshot('')]
+    commands = []
+    class Device:
+        def run(self, *args):
+            commands.append(args)
+            if args == ('get-state',):
+                return 'device'
+            if args == ('shell', 'dumpsys', 'telecom'):
+                return states.pop(0)
+            return ''
+    async def run():
+        line = AndroidLine('android-test', tmp_path, Device())
+        line.input_device, line.output_device = 'receiver', 'transmitter'
+        async def monitor():
+            await asyncio.Future()
+        line.monitor = monitor
+        if scenario == 'stable':
+            await line.place('+15550100100')
+            assert not states  # A brief Bluetooth route must not open prompts.
+        else:
+            with pytest.raises(DialFailed if scenario == 'timeout' else CallerHungUp):
+                await line.place('+15550100100')
+        await line.hangup()
+        await asyncio.gather(line.monitor_task, return_exceptions=True)
+        assert commands.count(('shell', 'input', 'keyevent', '6')) == 1
+    asyncio.run(run())
+
+
+@pytest.mark.skipif(os.name!='nt',reason='Windows COM audio lifecycle')
+@pytest.mark.parametrize('result,uninitializes',[(0,1),(1,1),(-2147417850,0),(-2147221008,0)])
+def test_windows_audio_thread_balances_com_even_on_failure(monkeypatch,result,uninitializes):
+    import ctypes
+    from types import SimpleNamespace
+    from stuart.audio import windows_audio_thread
+    calls=[]
+    class Initialize:
+        def __call__(self,pointer,flags):
+            calls.append('initialize')
+            return result
+    api=SimpleNamespace(CoInitializeEx=Initialize(),CoUninitialize=lambda:calls.append('uninitialize'))
+    monkeypatch.setattr(ctypes,'WinDLL',lambda name:api)
+    if result==-2147221008:
+        with pytest.raises(OSError,match='COM initialization'):
+            with windows_audio_thread():
+                pytest.fail('Failed COM initialization must prevent audio access')
+    else:
+        with pytest.raises(ValueError,match='audio failure'):
+            with windows_audio_thread():
+                raise ValueError('audio failure')
+    assert calls.count('initialize')==1
+    assert calls.count('uninitialize')==uninitializes
+
+
 def test_callback_playback_preserves_pcm_and_pads_last_buffer(tmp_path,monkeypatch):
     import sounddevice as sd
     import wave
     played=[]
+    monkeypatch.setattr(sd,'query_devices',lambda *args:{'hostapi':0})
+    monkeypatch.setattr(sd,'query_hostapis',lambda *args:{'name':'Test'})
     class Output:
         def __init__(self,callback,finished_callback,**kwargs):
             self.callback,self.finished=callback,finished_callback
@@ -66,6 +207,8 @@ def test_callback_playback_preserves_pcm_and_pads_last_buffer(tmp_path,monkeypat
 
 def test_capture_callback_reports_driver_overflow(monkeypatch):
     import sounddevice as sd
+    monkeypatch.setattr(sd,'query_devices',lambda *args:{'hostapi':0})
+    monkeypatch.setattr(sd,'query_hostapis',lambda *args:{'name':'Test'})
     class Input:
         active=True
         def __init__(self,callback,**kwargs):
@@ -83,6 +226,34 @@ def test_capture_callback_reports_driver_overflow(monkeypatch):
     with input_chunks() as read:
         with pytest.raises(OSError,match='overflow'):
             read()
+
+
+def test_native_wasapi_preserves_stereo_pcm_and_honors_cancel(tmp_path,monkeypatch):
+    import wave
+    import stuart.audio as audio
+    played=[]
+    class Player:
+        buffersize=1600
+        def __enter__(self): return self
+        def __exit__(self,*args): pass
+        def play(self,data): played.append(data.copy())
+    class Speaker:
+        channels=2
+        def player(self,**kwargs):
+            assert kwargs['samplerate']==16000 and kwargs['channels']==2
+            return Player()
+    monkeypatch.setattr(audio,'wasapi_speaker',lambda device:Speaker())
+    path=tone(tmp_path/'native.wav',0.1)
+    play_blocking(path,'wasapi:test')
+    with wave.open(str(path),'rb') as wav:
+        expected=np.frombuffer(wav.readframes(wav.getnframes()),dtype='<i2').astype('float32')/32768
+    actual=np.concatenate(played)
+    assert np.array_equal(actual[:len(expected),0],expected)
+    assert np.array_equal(actual[:len(expected),1],expected)
+    assert np.all(actual[len(expected):]==0)
+    played.clear()
+    play_blocking(path,'wasapi:test',stopped=lambda:True)
+    assert not played
 
 
 def test_loopback_captures_stereo_then_downmixes_to_contract_pcm(monkeypatch):

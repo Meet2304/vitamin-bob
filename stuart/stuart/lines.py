@@ -7,7 +7,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from .audio import check_capture_device, detect_dtmf, duration, input_chunks, play_blocking, record_blocking, tone
+from .audio import check_capture_device, check_playback_device, detect_dtmf, duration, input_chunks, play_blocking, record_blocking, tone
 
 
 class DialFailed(Exception):
@@ -18,6 +18,22 @@ class DialFailed(Exception):
 
 class CallerHungUp(Exception):
     pass
+
+
+def live_telecom_states(text):
+    """Read current calls only; dumpsys also includes historical ACTIVE events."""
+    section=re.search(r'(?ms)^CallsManager:[ \t]*\r?\n.*?^([ \t]+)mCalls:[ \t]*\r?\n(.*?)(?=^\1\S|\Z)',text)
+    if not section:
+        return None
+    return re.findall(r'\bstate\s*[:=]\s*([A-Z_]+)',section[2],re.IGNORECASE)
+
+
+def live_telecom_audio_route(text):
+    section = re.search(r'(?ms)^([ \t]+)mCallAudioRouteAdapter:[ \t]*\r?\n(.*?)(?=^\1\S|\Z)', text)
+    if not section:
+        return None
+    route = re.search(r'(?m)^\s+Current route: AudioRoute\[Type=([A-Z_]+),', section[2])
+    return route[1] if route else None
 
 
 class SimulatorLine:
@@ -129,6 +145,7 @@ class AndroidLine(SimulatorLine):
         self.state = "offline"
         self.monitor_task = None
         self.observed_active = False
+        self.dial_started = False
 
     async def available(self):
         try:
@@ -137,21 +154,58 @@ class AndroidLine(SimulatorLine):
             return False
 
     async def place(self, phone):
+        self.dial_started = False
         if not await self.available():
             raise DialFailed("Android USB line offline")
         if self.input_device is None or self.output_device is None:
             raise DialFailed("Set verified VB_AUDIO_INPUT and VB_AUDIO_OUTPUT before phone callbacks")
-        import sounddevice as sd
+        states = live_telecom_states(await asyncio.to_thread(self.adb.run, 'shell', 'dumpsys', 'telecom'))
+        if states is None:
+            raise DialFailed('Android live call state unavailable; handset compatibility test required')
+        if states:
+            raise DialFailed('Android already has a call; leave it under operator control')
         try:
-            check_capture_device(self.input_device)
-            sd.check_output_settings(device=self.output_device,channels=1,dtype='int16',samplerate=16000)
+            await asyncio.to_thread(check_capture_device, self.input_device)
+            await asyncio.to_thread(check_playback_device, self.output_device)
         except Exception as exc:
             raise DialFailed('Configured audio endpoints cannot carry PCM16 at 16 kHz') from exc
         output=await asyncio.to_thread(self.adb.run, "shell", "am", "start", "-a", "android.intent.action.CALL", "-d", "tel:"+phone)
         if 'Error:' in output or 'Permission Denial' in output:
             raise DialFailed('Android rejected the call command')
+        self.dial_started = True
         self.disconnected, self.state, self.observed_active = False, "in_call", False
+        deadline=time.monotonic()+float(os.getenv('VB_ANDROID_ANSWER_TIMEOUT_SECONDS','45'))
+        seen=False
+        while time.monotonic()<deadline:
+            states=live_telecom_states(await asyncio.to_thread(self.adb.run,'shell','dumpsys','telecom'))
+            if states is None:
+                raise DialFailed('Android live call state unavailable; handset compatibility test required')
+            states=[s.upper() for s in states]
+            if 'ACTIVE' in states:
+                self.observed_active=True
+                break
+            seen=seen or bool(states)
+            if seen and not states:
+                raise DialFailed('Call ended before remote answer',reason='no_answer')
+            await asyncio.sleep(0.5)
+        else:
+            raise DialFailed('Remote answer deadline exceeded',reason='no_answer')
         self.monitor_task = asyncio.create_task(self.monitor())
+        required_route = os.getenv('VB_ANDROID_REQUIRED_AUDIO_ROUTE')
+        if required_route:
+            deadline = time.monotonic() + float(os.getenv('VB_ANDROID_AUDIO_ROUTE_TIMEOUT_SECONDS', '60'))
+            stable = 0
+            while time.monotonic() < deadline:
+                self.check()
+                dump = await asyncio.to_thread(self.adb.run, 'shell', 'dumpsys', 'telecom')
+                if not live_telecom_states(dump):
+                    raise CallerHungUp()
+                stable = stable + 1 if live_telecom_audio_route(dump) == required_route else 0
+                if stable >= 5:
+                    break
+                await asyncio.sleep(0.5)
+            else:
+                raise DialFailed('Required call audio route unavailable; select Transfer to PC in Phone Link')
 
     async def monitor(self):
         # This signal is OEM-dependent: report disconnect only after seeing non-idle state.
@@ -199,8 +253,10 @@ class AndroidLine(SimulatorLine):
 
     async def hangup(self):
         try:
-            await asyncio.to_thread(self.adb.run, "shell", "input", "keyevent", "6")
+            if self.dial_started:
+                await asyncio.to_thread(self.adb.run, "shell", "input", "keyevent", "6")
         finally:
+            self.dial_started = False
             await super().hangup()
             if self.monitor_task:
                 self.monitor_task.cancel()
