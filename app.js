@@ -452,7 +452,8 @@ function show(view) {
   if (location.hash.slice(1) !== view) history.replaceState(null, "", "#" + view);
 }
 document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => show(b.dataset.view));
-show(["story", "explore", "method"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "story");
+document.querySelectorAll("[data-goto]").forEach(a => a.onclick = e => { e.preventDefault(); show(a.dataset.goto); window.scrollTo(0, 0); });
+show(["story", "product", "explore", "method"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "story");
 
 const stops = () => [...document.querySelectorAll("#story .intro, #story .step, #story .ps")];
 document.addEventListener("keydown", e => {

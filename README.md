@@ -1,10 +1,22 @@
-# Rural Clinic Explorer
+# Vitamin Bob
 
-**Why do rural clinics stall?** A two-minute data story and a focused country explorer. It covers health workforce, connectivity, staff absence, paperwork and facility data for about 195 countries, with Indonesia and India in focus, and a feasibility case for starting in Indonesia.
+**Primary care triage over a free missed call.** A patient with any phone gives a missed call; the district machine calls back, listens in Hindi or Gujarati with an on-device Gemma 4 model, asks only the keypad questions it still needs, and routes the patient to the nearest open clinic or to 108. No app, no internet, no cost to the patient.
 
 Built by Egshi, Meet, Rizaldy and Yusril for the Hack-Nation × World Bank *Small AI for Development* hackathon (Health track), October 2026.
 
-- **The story:** seven numbers that lead to the problem statement. They include why Indonesia is ready (power, internet, mobile and mandatory e-records are in place; health workers are not) and a Pareto of why Indonesia and India are worth it: 74% of the people in countries that are ready but short-staffed. Press ↓ / ↑ to present.
+**Live site:** https://rzrizaldy.github.io/vitamin-bob/
+
+| Folder | What |
+|---|---|
+| [`bob/`](bob/) | The brain: conversation, Gemma 4 understanding, deterministic urgency rules, clinic routing and failover, alerts, dashboard, evaluation |
+| [`stuart/`](stuart/) | Telephony and messaging: missed calls, callbacks, SMS, encrypted sync to Central. Start with [`stuart/DEMO_GUIDE.md`](stuart/DEMO_GUIDE.md) for the integrated demo |
+| repository root | The landing site: data story, product overview, country explorer (this README describes it below) |
+| [`slides/`](slides/) | Data slides for the video (static HTML, imported into Canva) |
+
+## The landing site
+
+- **The story:** seven numbers that lead to the problem statement. They include why Indonesia is ready (power, internet, mobile and mandatory e-records are in place; health workers are not) and a Pareto of why India and Indonesia are worth it: 74% of the people in countries that are ready but short-staffed. Press ↓ / ↑ to present.
+- **The product:** how a Vitamin Bob call works, the architecture, guardrails, evaluation results and hardware evidence, taken from `bob/` and `stuart/`.
 - **Explore countries:** a world map on an Esri Light Gray basemap. Colour it by health workers, rural share, internet use, mobile, electricity, service coverage, TB incidence or feasibility, then pick any country to see its numbers, rank and trend.
 - **Data & method:** sources, licenses, evidence labels, and what the data does not show.
 

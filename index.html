@@ -79,6 +79,51 @@
   .pareto-ctl { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
   .pareto-ctl .pill { font-size: 13px; padding: 4px 11px; }
 
+  /* product */
+  #product { max-width: 1080px; margin: 0 auto; padding: 8px 22px 64px; }
+  .p-hero { padding: 40px 0 28px; border-bottom: 1px solid var(--rule); }
+  .p-title { font-stretch: 72%; font-weight: 800; font-size: clamp(30px, 3.6vw, 46px); line-height: 1; margin: 0 0 14px; max-width: 24ch; }
+  .p-dek { font-size: 18px; line-height: 1.5; color: var(--ink-2); max-width: 64ch; margin: 0 0 26px; }
+  .p-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .p-kpis div { border-top: 2px solid var(--ink); padding-top: 10px; }
+  .p-kpis b { display: block; font-stretch: 72%; font-weight: 800; font-size: 34px; line-height: 1.05; }
+  .p-kpis span { font-size: 13.5px; color: var(--ink-2); }
+  .p-sec { padding: 36px 0 30px; border-bottom: 1px solid var(--rule); }
+  .p-sec h3 { font-stretch: 72%; font-weight: 800; font-size: 28px; margin: 0 0 16px; }
+  .flow { list-style: none; counter-reset: s; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; }
+  .flow li { counter-increment: s; border-top: 3px solid var(--series); padding-top: 10px; }
+  .flow li::before { content: counter(s); display: block; font-stretch: 72%; font-weight: 800; font-size: 26px; color: var(--series); }
+  .flow b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .flow span { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+  .flow em, .p-sec em { font-style: normal; font-weight: 600; color: var(--ink); }
+  table.tiers, table.evalt, table.proof { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tiers th, .tiers td, .evalt th, .evalt td, .proof th, .proof td { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .tiers th, .evalt th, .proof th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .tier { display: inline-block; font-weight: 700; font-size: 12.5px; padding: 2px 8px; border-radius: 3px; }
+  .t-e { background: #fbe3e1; color: var(--bad); } .t-h { background: #fdf1d9; color: #8a5a00; }
+  .t-m { background: #e6eefb; color: var(--series-deep); } .t-l { background: #e3f1ea; color: var(--good); }
+  .arch { width: 100%; height: auto; display: block; }
+  .p-note { font-size: 13.5px; color: var(--muted); margin: 12px 0 0; max-width: 80ch; }
+  .p-two { display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; }
+  .checks { list-style: none; padding: 0; margin: 0; font-size: 14.5px; color: var(--ink-2); }
+  .checks li { padding: 8px 0 8px 22px; border-top: 1px solid var(--rule); position: relative; }
+  .checks li::before { content: ""; position: absolute; left: 2px; top: 14px; width: 10px; height: 6px; border-left: 2px solid var(--good); border-bottom: 2px solid var(--good); transform: rotate(-45deg); }
+  .checks b { color: var(--ink); }
+  .evalt tr.hl td { background: #f4f8fd; }
+  .evalt td:nth-child(n+2) { font-variant-numeric: tabular-nums; }
+  .ok { color: var(--good); font-weight: 700; } .todo { color: #8a5a00; font-weight: 700; }
+  .p-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .p-cards a { display: block; text-decoration: none; color: var(--ink); background: var(--wash); border-radius: 6px; padding: 16px 18px; border-top: 3px solid var(--series); }
+  .p-cards a:hover { background: #eaf1fa; }
+  .p-cards b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .p-cards span { font-size: 13.5px; color: var(--ink-2); }
+  .p-links { border-bottom: 0; }
+  @media (max-width: 900px) {
+    .p-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .flow { grid-template-columns: 1fr 1fr; }
+    .p-two, .p-cards { grid-template-columns: 1fr; }
+  }
+
   /* explore */
   #explore { padding: 16px 22px 40px; }
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -137,6 +182,7 @@
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button role="tab" data-view="story" aria-selected="true">The story</button>
+    <button role="tab" data-view="product" aria-selected="false">The product</button>
     <button role="tab" data-view="explore" aria-selected="false">Explore countries</button>
     <button role="tab" data-view="method" aria-selected="false">Data &amp; method</button>
   </nav>
@@ -240,14 +286,164 @@
 
     <section class="ps" id="st6">
       <p class="kicker">So the problem is</p>
-      <blockquote>Because of <span class="slot">this tool</span>, a nurse in an understaffed rural clinic, starting with Indonesia's puskesmas, will see each patient and finish their record in the same visit, that morning, instead of working through one first-come queue and back-filling registers at the end of the day; we know because:</blockquote>
+      <blockquote>Because of <b>Vitamin Bob</b>, a rural patient with any phone will learn in one free call whether to call 108, go to the nearest open clinic now, or come at a booked time, instead of travelling to a clinic that may be closed and waiting in one first-come queue; we know because:</blockquote>
       <div class="ev">
         <div><b id="ps-below">44%</b>of countries lack the WHO minimum health workforce</div>
         <div><b>35 to 40%</b>of health-centre staff absent on a given day</div>
         <div><b>26 to 53%</b>of each consultation spent writing</div>
       </div>
-      <p class="feasible">Why start in Indonesia: <b>73% online</b>, <b>99.9% electricity</b>, <b>123 mobile lines per 100 people</b>, and electronic records already mandatory in every puskesmas. The infrastructure is there; the staff time is not. Why India next: together the two hold <b id="ps-pareto">74%</b> of the people in countries that are ready but short-staffed.</p>
-      <p class="src" style="margin-top:14px">Draft problem statement in the hackathon template. The tool is deliberately unnamed here.</p>
+      <p class="feasible">Built and tested first in <b>India</b>, in Hindi and Gujarati, where the scale is. <b>Indonesia</b> is the readiness case for the next language pack: 73% online, 99.9% electricity, and electronic records already mandatory in every puskesmas. Together the two hold <b id="ps-pareto">74%</b> of the people in countries that are ready but short-staffed.</p>
+      <p class="src" style="margin-top:14px">Problem statement in the hackathon template. <a href="#product" data-goto="product">See how Vitamin Bob works →</a></p>
+    </section>
+  </div>
+
+
+  <!-- PRODUCT -->
+  <div class="view" id="product" role="tabpanel" hidden>
+    <section class="p-hero">
+      <p class="kicker">The product</p>
+      <h2 class="p-title">Vitamin Bob: primary care triage over a free missed call</h2>
+      <p class="p-dek">A patient with any phone, even a basic feature phone, gives a missed call. The district machine calls back, listens in Hindi or Gujarati, asks only the keypad questions it still needs, and routes the patient to the nearest clinic that is actually open, or to 108. No app, no internet, no cost to the patient.</p>
+      <div class="p-kpis">
+        <div><b>0</b><span>missed urgent cases in every evaluation set and language</span></div>
+        <div><b>14% → 7%</b><span>Hindi "uncertain" rate, keyword baseline vs Gemma 4 (Gujarati 10% → 5%)</span></div>
+        <div><b>5–7 s</b><span>to transcribe a 25-second description on a laptop GPU, offline</span></div>
+        <div><b>₹0</b><span>for the patient: missed call in, callback out</span></div>
+      </div>
+    </section>
+
+    <section class="p-sec">
+      <h3>One call, seven steps</h3>
+      <ol class="flow">
+        <li><b>Missed call</b><span>The patient rings the district number and hangs up. It never connects, so it costs nothing.</span></li>
+        <li><b>Callback</b><span><em>Stuart</em>, the telephony module, queues the number and calls back from the district phone line.</span></li>
+        <li><b>Language</b><span>Press 1 for Hindi, 2 for Gujarati. Known callers skip the menu.</span></li>
+        <li><b>Describe it</b><span>Up to 25 seconds in the patient's own words. <em>Gemma 4 E2B</em> transcribes it and fills a fixed form on the laptop.</span></li>
+        <li><b>Only what's missing</b><span>Keypad yes / no / don't know for the facts the description didn't settle. Silence counts as "don't know".</span></li>
+        <li><b>Rules decide</b><span>Deterministic rules set the tier and pick the nearest open clinic with capacity; every decision has a stated reason.</span></li>
+        <li><b>Outcome + alert</b><span>The patient hears a pre-recorded outcome. Clinicians get an alert for anything urgent or uncertain; a compact record goes to Central by SMS.</span></li>
+      </ol>
+      <table class="tiers">
+        <thead><tr><th>Tier</th><th>Patient hears</th><th>Also</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tier t-e">Emergency</span></td><td>Call 108 now (said twice), with a case number</td><td>Alert to the nearest open clinic</td></tr>
+          <tr><td><span class="tier t-h">High / Uncertain</span></td><td>Go now to <i>[clinic]</i>; the doctor will call you</td><td>Top of that clinic's queue + alert</td></tr>
+          <tr><td><span class="tier t-m">Medium</span></td><td>Booked at <i>[clinic]</i>, today or tomorrow at <i>[hour]</i></td><td>Appointment slot</td></tr>
+          <tr><td><span class="tier t-l">Low</span></td><td>Booked at the next free slot</td><td></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="p-sec">
+      <h3>Everything runs on one laptop and one phone</h3>
+      <svg class="arch" viewBox="0 0 1000 330" role="img" aria-label="Architecture: patient phone, cellular network, Kevin's phone line, Kevin laptop running Stuart, Bob and Gemma, clinicians and Central">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a5563"/></marker></defs>
+        <g font-family="Archivo, sans-serif" fill="#1e2a36">
+          <rect x="10" y="120" width="150" height="90" rx="8" fill="#f4f6f8" stroke="#c5cbd3"/>
+          <text x="85" y="155" text-anchor="middle" font-weight="700" font-size="16">Patient</text>
+          <text x="85" y="176" text-anchor="middle" font-size="13" fill="#4a5563">any phone</text>
+          <text x="85" y="194" text-anchor="middle" font-size="13" fill="#4a5563">voice + keypad</text>
+          <line x1="160" y1="165" x2="238" y2="165" stroke="#4a5563" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <text x="199" y="152" text-anchor="middle" font-size="12" fill="#7b8594">cellular</text>
+          <rect x="240" y="120" width="150" height="90" rx="8" fill="#fff" stroke="#c5cbd3"/>
+          <text x="315" y="155" text-anchor="middle" font-weight="700" font-size="16">District line</text>
+          <text x="315" y="176" text-anchor="middle" font-size="13" fill="#4a5563">Android phone</text>
+          <text x="315" y="194" text-anchor="middle" font-size="13" fill="#4a5563">USB to the laptop</text>
+          <line x1="390" y1="165" x2="448" y2="165" stroke="#4a5563" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <rect x="450" y="40" width="330" height="250" rx="10" fill="#eef4fb" stroke="#2a78d6"/>
+          <text x="615" y="68" text-anchor="middle" font-weight="800" font-size="17">Kevin · district laptop, offline</text>
+          <rect x="470" y="88" width="140" height="80" rx="6" fill="#fff" stroke="#c5cbd3"/>
+          <text x="540" y="118" text-anchor="middle" font-weight="700" font-size="15">Stuart</text>
+          <text x="540" y="138" text-anchor="middle" font-size="12" fill="#4a5563">calls · SMS · queues</text>
+          <text x="540" y="154" text-anchor="middle" font-size="12" fill="#4a5563">encrypted sync</text>
+          <rect x="620" y="88" width="140" height="80" rx="6" fill="#fff" stroke="#c5cbd3"/>
+          <text x="690" y="118" text-anchor="middle" font-weight="700" font-size="15">Bob</text>
+          <text x="690" y="138" text-anchor="middle" font-size="12" fill="#4a5563">conversation · rules</text>
+          <text x="690" y="154" text-anchor="middle" font-size="12" fill="#4a5563">routing · dashboard</text>
+          <line x1="610" y1="128" x2="620" y2="128" stroke="#4a5563" stroke-width="2"/>
+          <rect x="620" y="190" width="140" height="80" rx="6" fill="#184f95"/>
+          <text x="690" y="222" text-anchor="middle" font-weight="700" font-size="15" fill="#fff">Gemma 4 E2B</text>
+          <text x="690" y="242" text-anchor="middle" font-size="12" fill="#cde2fb">audio → fixed form</text>
+          <text x="690" y="258" text-anchor="middle" font-size="12" fill="#cde2fb">llama.cpp, local</text>
+          <line x1="690" y1="168" x2="690" y2="188" stroke="#4a5563" stroke-width="2" marker-end="url(#ar)"/>
+          <rect x="470" y="190" width="140" height="80" rx="6" fill="#fff" stroke="#c5cbd3"/>
+          <text x="540" y="222" text-anchor="middle" font-weight="700" font-size="15">Clinic data</text>
+          <text x="540" y="242" text-anchor="middle" font-size="12" fill="#4a5563">hours · capacity</text>
+          <text x="540" y="258" text-anchor="middle" font-size="12" fill="#4a5563">routes · alerts</text>
+          <rect x="840" y="40" width="150" height="100" rx="8" fill="#f4f6f8" stroke="#c5cbd3"/>
+          <text x="915" y="74" text-anchor="middle" font-weight="700" font-size="16">Clinicians</text>
+          <text x="915" y="95" text-anchor="middle" font-size="12" fill="#4a5563">alerts by SMS</text>
+          <text x="915" y="112" text-anchor="middle" font-size="12" fill="#4a5563">OPEN · CLOSED · FULL</text>
+          <text x="915" y="128" text-anchor="middle" font-size="12" fill="#4a5563">ACK</text>
+          <rect x="840" y="190" width="150" height="100" rx="8" fill="#f4f6f8" stroke="#c5cbd3"/>
+          <text x="915" y="224" text-anchor="middle" font-weight="700" font-size="16">Central</text>
+          <text x="915" y="245" text-anchor="middle" font-size="12" fill="#4a5563">state record</text>
+          <text x="915" y="262" text-anchor="middle" font-size="12" fill="#4a5563">≤200-byte records</text>
+          <text x="915" y="278" text-anchor="middle" font-size="12" fill="#4a5563">AES-256-GCM over SMS</text>
+          <line x1="780" y1="100" x2="838" y2="90" stroke="#4a5563" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <line x1="780" y1="230" x2="838" y2="240" stroke="#4a5563" stroke-width="2" marker-end="url(#ar)"/>
+          <text x="809" y="80" text-anchor="middle" font-size="12" fill="#7b8594">SMS</text>
+          <text x="809" y="258" text-anchor="middle" font-size="12" fill="#7b8594">SMS</text>
+        </g>
+      </svg>
+      <p class="p-note">Demo hardware: a Windows laptop (Ryzen 7 6800H, RTX 3050 Ti 4 GB) and a Samsung Galaxy S24 Plus as the district line. Prompt audio is generated before the demo; nothing calls the cloud at runtime.</p>
+    </section>
+
+    <section class="p-sec p-two">
+      <div>
+        <h3>Guardrails: safe before clever</h3>
+        <ul class="checks">
+          <li><b>The tier comes from rules, not the model.</b> The rules are deterministic and explain every tier.</li>
+          <li><b>The model only fills a fixed form.</b> Every yes/no must quote words from the transcript, or it drops to "unknown".</li>
+          <li><b>The description can raise urgency, never quietly lower it.</b> A "no" on an emergency sign, or a short duration, is confirmed on the keypad.</li>
+          <li><b>Unknown means a human decides.</b> Open questions that could hide an urgent case give UNCERTAIN plus an alert.</li>
+          <li><b>Unacknowledged alerts escalate</b>: next open clinic, referral hospital, then the district contact.</li>
+          <li><b>The model never speaks.</b> Every sentence is a list of pre-recorded clips.</li>
+          <li><b>Privacy:</b> numbers masked on screen, recordings deleted once processed, Central gets a keyed hash, never a number.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Evaluation</h3>
+        <table class="evalt">
+          <thead><tr><th>Set</th><th>Cases</th><th>Missed urgent</th><th>Tier accuracy</th><th>Uncertain</th><th>Keypad Qs / call</th></tr></thead>
+          <tbody>
+            <tr><td>Keyword · Hindi · text</td><td>43</td><td><b>0</b></td><td>93%</td><td>14%</td><td>6.65</td></tr>
+            <tr><td>Keyword · Gujarati · text</td><td>21</td><td><b>0</b></td><td>95%</td><td>10%</td><td>5.71</td></tr>
+            <tr class="hl"><td>Gemma · Hindi · text</td><td>43</td><td><b>0</b></td><td>93%</td><td>7%</td><td>5.60</td></tr>
+            <tr class="hl"><td>Gemma · Gujarati · text</td><td>21</td><td><b>0</b></td><td>95%</td><td>5%</td><td>4.67</td></tr>
+            <tr class="hl"><td>Audio · Hindi · recordings</td><td>5</td><td><b>0</b></td><td>100%</td><td>0%</td><td>5.80</td></tr>
+            <tr class="hl"><td>Audio · Gujarati · recordings</td><td>5</td><td><b>0</b></td><td>100%</td><td>0%</td><td>6.00</td></tr>
+          </tbody>
+        </table>
+        <p class="p-note">54 synthetic vignettes plus 10 team recordings, run 4 Oct 2026 with Gemma 4 E2B Q8_0. No emergency was ever sent to a clinic instead of 108. Gemma's misreads lean towards over-triage; its duration misreads were caught by the keypad guardrail.</p>
+      </div>
+    </section>
+
+    <section class="p-sec">
+      <h3>What has been proven, and what hasn't</h3>
+      <table class="proof">
+        <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Missed call → callback → answer → hangup on the real phone</td><td><span class="ok">Passed</span></td></tr>
+          <tr><td>Spoken prompt, keypad input and speech capture on a real call</td><td><span class="ok">Passed</span> (operator transfers audio to the PC)</td></tr>
+          <tr><td>Voice call with the phone's Wi-Fi and mobile data off</td><td><span class="ok">Passed</span></td></tr>
+          <tr><td>Outbound SMS, delivered exactly once</td><td><span class="ok">Passed</span></td></tr>
+          <tr><td>Bob + Gemma + Stuart integrated: Hindi fever → Medium; Gujarati emergency → 108 + alert; Clinic A closed → High routed to Clinic B</td><td><span class="ok">Passed</span> (recorded audio, local SMS)</td></tr>
+          <tr><td>Encrypted Central records: framing, ACK, de-duplication, loss and tamper recovery</td><td><span class="ok">Passed</span> (automated + local loopback); 65 Stuart tests</td></tr>
+          <tr><td>A full real phone call with Gemma understanding live</td><td><span class="todo">Not yet tested</span></td></tr>
+          <tr><td>Incoming SMS from clinicians; Central over a real SMS link</td><td><span class="todo">Pending hardware proof</span></td></tr>
+        </tbody>
+      </table>
+      <p class="p-note"><b>Not covered yet:</b> real patients; clinician-reviewed labels (the danger signs are drafted from WHO IMCI and not yet clinician-reviewed); dialects beyond the team's voices; noisy phone lines; conditions beyond fever, cough and diarrhoea. Gujarati prompts need a native speaker's check.</p>
+    </section>
+
+    <section class="p-sec p-links">
+      <h3>Run it, read the code</h3>
+      <div class="p-cards">
+        <a href="https://github.com/rzrizaldy/vitamin-bob/blob/main/stuart/DEMO_GUIDE.md"><b>Integrated demo guide</b><span>Start Gemma, Bob and Stuart with one launcher; the five-minute presentation script</span></a>
+        <a href="https://github.com/rzrizaldy/vitamin-bob/tree/main/bob"><b>Bob</b><span>Conversation, understanding with Gemma 4, rules, routing, dashboard, evaluation</span></a>
+        <a href="https://github.com/rzrizaldy/vitamin-bob/tree/main/stuart"><b>Stuart</b><span>Missed calls, callbacks, SMS, encrypted sync to Central, hardware evidence</span></a>
+      </div>
     </section>
   </div>
 
