@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -11,7 +12,7 @@ import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 
 from .audio import tone
-from .contracts import Actions, CONTRACT, IncomingSms, Input, Missed, Sms, Sync, compact, safe_wav, validate_event
+from .contracts import Actions, CONTRACT, IncomingSms, Input, Missed, Sms, Sync, compact, normalize_phone, safe_wav, validate_event
 from .lines import Adb, AndroidLine, CallerHungUp, DialFailed, SimulatorLine
 from .storage import Store, now, uid
 from .sync_link import Codec, Receiver, load_key
@@ -33,7 +34,7 @@ class Switchboard:
     def __init__(self, data_dir=None, runtime=None, bob_url=None, lines=None):
         root = Path(__file__).resolve().parents[2]
         self.data = Path(data_dir or os.getenv("VB_DATA_DIR",root/"data")).resolve()
-        self.runtime = Path(runtime or root/"stuart"/"runtime").resolve()
+        self.runtime = Path(runtime or os.getenv('VB_RUNTIME_DIR',root/"stuart"/"runtime")).resolve()
         self.runtime.mkdir(parents=True,exist_ok=True)
         (self.data/"recordings").mkdir(parents=True,exist_ok=True)
         self.store = Store(self.data/"stuart.db")
@@ -50,6 +51,11 @@ class Switchboard:
         self.tasks, self.errors = [], {}
         self.event_locks = {}
         self.deciding = set()
+        allowed=os.getenv('VB_PHONE_ALLOWLIST')
+        self.allowed_phones=set(json.loads(allowed)) if allowed is not None else None
+        self.calls_enabled=os.getenv('VB_ANDROID_CALLS_ENABLED','1')=='1'
+        self.sms_send_enabled=os.getenv('VB_SMS_SEND_ENABLED','1')=='1'
+        self.bridge=None
         self.client = httpx.AsyncClient(timeout=self.event_timeout,trust_env=False)
         self.hold = tone(self.runtime/"hold.wav",0.25,350)
         if lines is not None:
@@ -87,6 +93,10 @@ class Switchboard:
         for line in self.lines.values():
             if isinstance(line,AndroidLine):
                 self.spawn(self.poll_android(line))
+        if os.getenv('VB_MANAGE_SMS_GATEWAY')=='1':
+            from .gateway import GatewayBridge
+            self.bridge=GatewayBridge(self)
+            self.spawn(self.bridge.run())
 
     def spawn(self,coro):
         task=asyncio.create_task(coro)
@@ -103,6 +113,8 @@ class Switchboard:
         for task in self.tasks:
             task.cancel()
         await asyncio.gather(*self.tasks,return_exceptions=True)
+        if self.bridge:
+            await self.bridge.close()
         await self.client.aclose()
         self.store.close()
         self.central.db.close()
@@ -149,6 +161,8 @@ class Switchboard:
         raise OSError(f"Bob event {typ} was not acknowledged: {last_error or 'retry limit exhausted'}")
 
     async def missed(self,request):
+        if self.allowed_phones is not None and request.phone not in self.allowed_phones:
+            raise ValueError('Phone is outside the configured test allowlist')
         if request.line_id not in self.lines:
             raise ValueError("Unknown line")
         if request.source_id:
@@ -189,9 +203,13 @@ class Switchboard:
     async def dispatch(self):
         while True:
             for line in self.lines.values():
+                if isinstance(line,AndroidLine) and not self.calls_enabled:
+                    continue
                 if line.state=="idle":
                     pending=self.store.rows("SELECT * FROM missed WHERE status='queued' AND next_at<=? ORDER BY received_at",(time.time(),))
-                    row=next((r for r in pending if isinstance(self.lines[r['line_id']],AndroidLine)==isinstance(line,AndroidLine)),None)
+                    row=next((r for r in pending if r['line_id'] in self.lines
+                              and (self.allowed_phones is None or r['phone'] in self.allowed_phones)
+                              and isinstance(self.lines[r['line_id']],AndroidLine)==isinstance(line,AndroidLine)),None)
                     if row:
                         self.store.execute("UPDATE missed SET status='calling',attempts=attempts+1 WHERE id=?",(row["id"],))
                         row["attempts"]+=1
@@ -312,6 +330,10 @@ class Switchboard:
                 pass
 
     def queue_sms(self,request):
+        if not self.sms_send_enabled:
+            raise ValueError('SMS sending is disabled in this runtime profile')
+        if self.allowed_phones is not None and request.to not in self.allowed_phones:
+            raise ValueError('Phone is outside the configured test allowlist')
         payload=request.model_dump()
         existing=self.store.one("SELECT request FROM sms WHERE id=?",(request.message_id,))
         if existing:
@@ -353,7 +375,14 @@ class Switchboard:
 
     async def sms_worker(self):
         while True:
+            if not self.sms_send_enabled:
+                await asyncio.sleep(.5)
+                continue
             for row in self.store.rows("SELECT * FROM sms WHERE status='queued' ORDER BY priority,rowid"):
+                request=json.loads(row['request'])
+                if self.allowed_phones is not None and request['to'] not in self.allowed_phones:
+                    await self.sms_status(row['id'],'failed','Phone is outside the configured test allowlist')
+                    continue
                 target=os.getenv("VB_SMS_LINE_ID")
                 eligible=[l for l in self.lines.values() if (not target or l.line_id==target) and l.state!="offline" and (row["priority"]<2 or l.state=="idle")]
                 # Never silently simulate SMS when an Android transport is configured.
@@ -369,7 +398,7 @@ class Switchboard:
                     continue
                 self.store.execute("UPDATE sms SET status='sending',line_id=?,sent_at=? WHERE id=?",(line.line_id,now(),row["id"]))
                 try:
-                    status=await line.send_sms(json.loads(row["request"]))
+                    status=await line.send_sms(request)
                     if status=="accepted":
                         self.store.execute("UPDATE sms SET status='accepted' WHERE id=? AND status='sending'",(row["id"],))
                     else:
@@ -490,6 +519,8 @@ class Switchboard:
             await asyncio.sleep(0.2)
 
     async def incoming_sms(self,request):
+        if self.allowed_phones is not None and request.phone not in self.allowed_phones:
+            return
         if request.line_id not in self.lines:
             raise ValueError('Unknown incoming SMS line')
         prior=self.store.one("SELECT * FROM incoming WHERE id=?",(request.message_id,))
@@ -519,8 +550,20 @@ class Switchboard:
                     continue
                 if line.state=="offline":
                     line.state="idle"
+                self.errors.pop('android',None)
+                if not self.calls_enabled:
+                    await asyncio.sleep(1)
+                    continue
                 state=await asyncio.to_thread(line.adb.run,"shell","dumpsys","telephony.registry")
-                if "mCallState=1" in state and line.state=="idle":
+                # On a shared demo phone, leave unrelated callers under human control.
+                allowed_ring=self.allowed_phones is None
+                caller=re.search(r'(?m)^\s*mCallIncomingNumber=([^\r\n]*)',state)
+                if self.allowed_phones is not None and caller:
+                    try:
+                        allowed_ring=normalize_phone(caller[1],os.getenv('VB_COUNTRY_CODE','+91')) in self.allowed_phones
+                    except ValueError:
+                        pass
+                if "mCallState=1" in state and line.state=="idle" and allowed_ring:
                     line.state="ringing"
                     await asyncio.to_thread(line.adb.run,"shell","input","keyevent","6")
                     line.state="idle"
@@ -528,15 +571,14 @@ class Switchboard:
                                              "--projection","_id:number:type:date","--where",f"date>{since}")
                 if "Permission Denial" in raw or "Error while accessing provider" in raw:
                     raise PermissionError("Android blocks shell call-log access; companion app required")
-                import re
                 for entry in raw.splitlines():
                     match=re.search(r"_id=(\d+), number=(.*?), type=(\d+), date=(\d+)",entry)
                     if not match or match[1] in seen or match[3] not in ("3","5"):
                         continue
                     seen.add(match[1])
-                    phone=re.sub(r"[\s()-]","",match[2])
-                    if not phone.startswith("+"):
-                        phone=os.getenv("VB_COUNTRY_CODE","+91")+phone.lstrip("0")
+                    phone=normalize_phone(match[2],os.getenv('VB_COUNTRY_CODE','+91'))
+                    if self.allowed_phones is not None and phone not in self.allowed_phones:
+                        continue
                     await self.missed(Missed(phone=phone,line_id=line.line_id,source_id="adb-call-"+match[1]))
             except Exception as exc:
                 self.errors["android"]=type(exc).__name__+": check USB authorization and call-log permissions"
@@ -610,7 +652,8 @@ def make_app(board=None):
         typ,payload=body.get('event'),body.get('payload',{})
         try:
             if typ=='sms:received':
-                await b.incoming_sms(IncomingSms(message_id=payload['messageId'],phone=payload['sender'],text=payload['message'],line_id='android-1'))
+                phone=normalize_phone(payload['sender'],os.getenv('VB_COUNTRY_CODE','+91'))
+                await b.incoming_sms(IncomingSms(message_id=payload['messageId'],phone=phone,text=payload['message'],line_id='android-1'))
             elif typ in ('sms:sent','sms:delivered','sms:failed'):
                 await b.sms_status(payload['messageId'],typ.split(':')[1],payload.get('reason'))
             else:
@@ -664,6 +707,24 @@ def make_app(board=None):
                 "sync_transport":b.sync_transport,"sms_price_assumption":b.price,
                 "reserved_segments_today":sum(b.used_segments(line,datetime.now().astimezone().date().isoformat()) for line in b.lines),
                 "estimated_sms_rupees_today":b.status()["sms"]["segments_today"]*b.price}
+    @app.get('/ready')
+    async def ready(b=Depends(get_board)):
+        bob=False
+        try:
+            response=await b.client.get(b.bob_url+'/v1/health',headers={'X-VB-Contract':CONTRACT},timeout=2)
+            bob=response.status_code==200 and response.json()=={'ok':True,'module':'bob'}
+        except (httpx.HTTPError,ValueError):
+            pass
+        failed_workers=sum(t.done() and not t.cancelled() and t.exception() is not None for t in b.tasks)
+        android=[l for l in b.lines.values() if isinstance(l,AndroidLine)]
+        usb=all(l.state!='offline' for l in android)
+        gateway=b.bridge.state if b.bridge else {'managed':False}
+        ok=bob and not failed_workers and usb and (not b.bridge or gateway.get('ready',False))
+        from fastapi.responses import JSONResponse
+        return JSONResponse({'ready':ok,'process_id':os.getpid(),'bob':bob,'usb':usb if android else None,
+            'gateway':gateway,'failed_workers':failed_workers,'calls_enabled':b.calls_enabled if android else bool(b.lines),
+            'sms_send_enabled':b.sms_send_enabled,'audio_route':'operator_transfer_required' if android and b.calls_enabled else 'not_active'},
+            status_code=200 if ok else 503)
     @app.get("/central/records")
     async def records(b=Depends(get_board)):
         return {"transport":b.sync_transport,"records":b.central.rows()}

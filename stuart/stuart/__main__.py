@@ -6,12 +6,29 @@ from pathlib import Path
 
 def main():
     parser=argparse.ArgumentParser(description="Stuart local transport service")
-    parser.add_argument("command",choices=["serve","fake-bob","central","trigger","devices","check-phone"])
+    parser.add_argument("command",choices=["serve","fake-bob","central","trigger","devices","check-phone","run","doctor","backup","restore"])
+    parser.add_argument('--config',type=Path)
+    parser.add_argument('--backup',type=Path)
     parser.add_argument("--port",type=int)
     parser.add_argument("--phone",default="+919000000001")
     parser.add_argument("--line",default="sim-1")
     args=parser.parse_args()
-    if args.command in ("serve","fake-bob","central"):
+    if args.command in ('run','doctor','backup','restore'):
+        from .runtime import load_profile, supervise, doctor, backup, restore
+        if not args.config:
+            parser.error('--config is required')
+        profile=load_profile(args.config)
+        if args.command=='doctor':
+            print(json.dumps(doctor(profile),indent=2))
+        elif args.command=='backup':
+            print(json.dumps(backup(profile),indent=2))
+        elif args.command=='restore':
+            if not args.backup:
+                parser.error('--backup is required')
+            print(json.dumps(restore(profile,args.backup),indent=2))
+        else:
+            raise SystemExit(supervise(profile))
+    elif args.command in ("serve","fake-bob","central"):
         import importlib
         import hmac
         import uvicorn

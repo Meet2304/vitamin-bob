@@ -4,7 +4,7 @@ Contract 0.2. Windows service for local call actions, callback queues, SMS and e
 
 ## Current evidence
 
-Latest verification: 43 automated tests passed. A real missed call triggered an Android callback and answer detection. A later callback, transferred to the PC by the operator, carried spoken instructions, decoded `12` with `#`, recorded 3.4 seconds of speech and hung up cleanly. Evidence: ignored `runtime/hardware-callback-result.json`. The simulator previously completed eight calls, one outbound SMS and three acknowledged Central records. Actual Bob/Stuart HTTP integration completed synthetic Hindi and Gujarati conversations, but exposed a Bob outbox status race. With the prepared fix in an isolated Bob copy, three simulated SMS were delivered and four encrypted Central records remained acknowledged in Bob. One approved nonclinical SMS reached the second phone exactly once. SMSGate reports Delivered; Stuart recovered that status by polling after the success webhook was missed. Evidence: ignored runtime/hardware-sms-result.json. Inbound SMS and Gemma processing over a real phone call remain unverified.
+Latest verification: 62 automated tests passed. A real missed call triggered an Android callback and answer detection. A later callback, transferred to the PC by the operator, carried spoken instructions, decoded `12` with `#`, recorded 3.4 seconds of speech and hung up cleanly. Evidence: ignored `runtime/hardware-callback-result.json`. The simulator previously completed eight calls, one outbound SMS and three acknowledged Central records. Actual Bob/Stuart HTTP integration completed synthetic Hindi and Gujarati conversations, but exposed a Bob outbox status race. With the prepared fix in an isolated Bob copy, three simulated SMS were delivered and four encrypted Central records remained acknowledged in Bob. One approved nonclinical SMS reached the second phone exactly once. SMSGate reports Delivered; Stuart recovered that status by polling after the success webhook was missed. Evidence: ignored runtime/hardware-sms-result.json. A further callback passed with the S24 Wi-Fi and mobile data both off: keypad 12#, 2.8 seconds of speech, and clean hangup. Inbound SMS and Gemma processing over a real phone call remain unverified.
 
 - Scripted missed-call → Bob callback decision → play → keypad → record → hangup works against fake Bob.
 - Callback queue, duplicate-number merging, event IDs and HTTP acknowledgements persist in SQLite.
@@ -13,6 +13,10 @@ Latest verification: 43 automated tests passed. A real missed call triggered an 
 - Encrypted SMS-sized frames, authenticated ACKs, fragment restart recovery and one Central record per ID are tested under drop, duplicate and tamper faults.
 - ADB is authorized on the S24 Plus (SM-S926B, Android 16). Call-log detection, answer state and operator-transferred callback audio passed. Direct Bluetooth playback failed. The verified route uses VB-CABLE transmit and native WASAPI Realtek loopback receive. Selecting “Transfer to PC” remains a human step. See `PHONE_AUDIO_SETUP.md`.
 - Fake Bob uses tones, not bilingual clinical prompts. Hindi/Gujarati content and the real routing dashboard are Bob's responsibility.
+
+## Managed Windows runtime
+
+See `OPERATIONS.md` for validated profiles, DPAPI-protected credentials, start/stop/status commands, crash supervision, USB/webhook repair, readiness diagnostics, and SQLite backup/restore. `POC_EVIDENCE.md` separates observed hardware results from simulated checks. The prepared `runtime/profiles/kevin.json` targets Bob on port 8100 and keeps real calls/outbound SMS disabled until an attended demo is configured.
 
 ## Quick demo (no phone required)
 
@@ -86,7 +90,7 @@ While enabled, Stuart rejects ringing incoming calls and detects new missed/reje
 
 ## SMSGate local mode
 
-SMS Gateway for Android is installed on the S24. Use **Local Server** mode. In the installed version, the enabled Local server toggle and **STOP SERVICE** button show that its service is running; there is no Online/Offline button. Verify reachability with GET /health. SEND_SMS was still denied after the phone settings attempt; the user authorized an ADB grant for user 0, which succeeded. Grant additional receive permissions only when setting up the inbound test. [Official permission troubleshooting](https://docs.sms-gate.app/faq/errors/).
+SMS Gateway for Android is installed on the S24. Use **Local Server** mode. In the installed version, the enabled Local server toggle and **STOP SERVICE** button show that its service is running; there is no Online/Offline button. Verify reachability with GET /health. SEND_SMS was still denied after the phone settings attempt; the user authorized an ADB grant for user 0, which succeeded. RECEIVE_SMS has since been granted with user authorization; the inbound hardware probe remains unverified because the second phone sent MMS. [Official permission troubleshooting](https://docs.sms-gate.app/faq/errors/).
 
 ```powershell
 & .\runtime\tools\platform-tools\adb.exe forward tcp:8080 tcp:8080

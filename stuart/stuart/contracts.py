@@ -1,10 +1,32 @@
 import json
+import re
 from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
 
 CONTRACT = "0.2"
+
+
+def normalize_phone(value, country_code='+91'):
+    """Convert carrier-formatted numeric senders to the contract's E.164 form."""
+    if not isinstance(value,str):
+        raise ValueError('Numeric sender required')
+    number=re.sub(r'[\s().-]','',value)
+    if number.startswith('00'):
+        number='+'+number[2:]
+    elif not number.startswith('+'):
+        prefix=country_code.lstrip('+')
+        # NANP often supplies its 11-digit international number without the +.
+        if prefix=='1' and len(number)==11 and number.startswith('1'):
+            number='+'+number
+        elif prefix=='91' and len(number)==12 and number.startswith('91'):
+            number='+'+number
+        else:
+            number=country_code+number.lstrip('0')
+    if not re.fullmatch(r'\+[1-9]\d{6,14}',number):
+        raise ValueError('Numeric E.164 sender required')
+    return number
 
 
 class Model(BaseModel):
