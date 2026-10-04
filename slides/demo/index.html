@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>Vitamin Bob demo slides</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#12352b; --band:#3e7458; --green:#4f8f44; --blue:#2d5c9e; --coral:#e8473b; --amber:#e09a00; --muted:#5f6b66; --bg:#f4f4f2; --card:#ffffff; --line:#d9dedb; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #888; font-family: Inter, Helvetica, Arial, sans-serif; color: var(--ink); }
+  section { width: 1920px; height: 1080px; position: relative; overflow: hidden; background: var(--bg); margin: 0 auto 40px; }
+  .pad { position: absolute; left: 110px; right: 110px; top: 90px; }
+  .kicker { font-size: 24px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--blue); }
+  h1 { font-size: 76px; line-height: 1.05; font-weight: 800; letter-spacing: -1.5px; margin-top: 16px; color: var(--ink); }
+  h1 .g { color: var(--green); }
+  .sub { font-size: 30px; line-height: 1.4; color: var(--muted); margin-top: 22px; max-width: 1500px; }
+  .logo { position: absolute; right: 70px; bottom: 50px; width: 190px; }
+  .src { position: absolute; left: 110px; bottom: 48px; font-size: 19px; color: var(--muted); max-width: 1450px; line-height: 1.4; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 22px; padding: 36px 38px; }
+  .card h3 { font-size: 34px; font-weight: 800; margin-bottom: 14px; }
+  .card p { font-size: 26px; line-height: 1.45; color: #2c3b36; }
+  .lab { font-size: 20px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--band); margin-bottom: 10px; }
+  .shot { border-radius: 16px; border: 2px solid var(--line); display: block; background: #fff; }
+  .band { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; background: var(--band); }
+</style>
+</head>
+<body>
+
+<!-- 1 · Solution -->
+<section data-document-role="page" data-label="Solution" data-speaker-notes="Vitamin Bob turns one free missed call into the first step of care. Noor learns, in one call and in her own language, whether to call 108, go now, or come at a booked time. The clinic gets urgent cases first, with the story already written down. And it all runs on one laptop, offline.">
+  <div class="pad">
+    <div class="kicker">The solution</div>
+    <h1>One free missed call.<br><span class="g">The right care, at the right time.</span></h1>
+  </div>
+  <img src="img/phone.png" style="position:absolute; left:20px; top:350px; width:880px;" alt="Feature phone receiving a call from Vitamin Bob">
+  <div style="position:absolute; left:900px; right:110px; top:330px; display:flex; flex-direction:column; gap:20px;">
+    <div class="card" style="padding:26px 34px;"><div class="lab">For Noor</div><h3>Knows what to do in one call</h3><p>Call 108, go to the nearest open clinic now, or come at a booked time. Free, on any phone, in her own language.</p></div>
+    <div class="card" style="padding:26px 34px;"><div class="lab">For the clinic</div><h3>Urgent cases first, story already written</h3><p>Patients arrive sorted by need, with their symptoms recorded. Less paperwork for scarce staff.</p></div>
+    <div class="card" style="padding:26px 34px;"><div class="lab">For the district</div><h3>One laptop, no internet</h3><p>A small AI model runs on the laptop and sends patients to the nearest clinic that is open.</p></div>
+  </div>
+</section>
+
+<!-- 2 · How it works -->
+<section data-document-role="page" data-label="How it works" data-speaker-notes="Here is how a call works. Noor gives a free missed call. Bob calls her back in Hindi or Gujarati. She describes the problem in her own words, and Gemma 4, running on the laptop, fills a checklist. Bob asks only what is still missing, on the keypad. Then fixed rules, not the AI, set the urgency, and a clinician confirms every urgent case.">
+  <div class="pad">
+    <div class="kicker">How it works</div>
+    <h1>Five steps, about three minutes</h1>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:330px; display:flex; gap:22px;">
+    <div class="card" style="flex:1; padding:34px 30px;"><div style="font-size:64px; font-weight:800; color:var(--green);">1</div><h3 style="margin-top:8px;">Free missed call</h3><p>Noor calls and hangs up. It costs her nothing.</p></div>
+    <div class="card" style="flex:1; padding:34px 30px;"><div style="font-size:64px; font-weight:800; color:var(--green);">2</div><h3 style="margin-top:8px;">Bob calls back</h3><p>In Hindi or Gujarati, on any phone.</p></div>
+    <div class="card" style="flex:1; padding:34px 30px;"><div style="font-size:64px; font-weight:800; color:var(--green);">3</div><h3 style="margin-top:8px;">She describes it</h3><p>Gemma 4, on the laptop, turns her words into a checklist.</p></div>
+    <div class="card" style="flex:1; padding:34px 30px;"><div style="font-size:64px; font-weight:800; color:var(--green);">4</div><h3 style="margin-top:8px;">Only what's missing</h3><p>Keypad questions: 1 yes, 2 no, 3 don't know.</p></div>
+    <div class="card" style="flex:1; padding:34px 30px; border-color:var(--coral);"><div style="font-size:64px; font-weight:800; color:var(--coral);">5</div><h3 style="margin-top:8px;">Rules decide</h3><p>Call 108, go now, or a booked slot. A clinician confirms urgent cases.</p></div>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:800px; font-size:44px; font-weight:800; line-height:1.25;">The AI never speaks and never decides the urgency.<br><span style="color:var(--green);">It only listens and fills in the form.</span></div>
+  <img class="logo" src="img/logo.png" alt="Vitamin Bob">
+</section>
+
+<!-- 3 · Product demo -->
+<section data-document-role="page" data-label="Product demo" data-speaker-notes="This is Bob's real dashboard during a test call. Left: the missed-call queue, with Noor's callback. Middle: what Gemma understood from her description, fever and cough, so Bob skips those questions. Right: the outcome, HIGH, go now to Rampur PHC, top of the queue.">
+  <div class="pad">
+    <div class="kicker">Product demo</div>
+    <h1>What Bob's dashboard shows during a call</h1>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:300px; display:flex; gap:34px; align-items:flex-start;">
+    <div style="flex:1.15;"><div class="lab">1 · Missed call, then callback</div><img class="shot" src="img/01-callback-queue.png" style="width:100%;" alt="Missed call and callback queue"></div>
+    <div style="flex:0.85;"><div class="lab">2 · What Gemma understood</div><img class="shot" src="img/03-understood.png" style="width:100%;" alt="Checklist filled from the patient's description"></div>
+    <div style="flex:1;"><div class="lab">3 · The outcome</div><img class="shot" src="img/05-outcome.png" style="width:100%;" alt="Outcome HIGH, go now to Rampur PHC"><p style="font-size:26px; line-height:1.45; margin-top:28px; color:#2c3b36;">Fever and cough came <b>from her description</b>, so Bob only asked about the danger signs still missing.</p></div>
+  </div>
+  <div class="src">Real screens from Bob's dashboard running the team's 17 scripted test calls (all passed). Dummy district and numbers.</div>
+  <img class="logo" src="img/logo.png" alt="Vitamin Bob">
+</section>
+
+<!-- 4 · Under the hood -->
+<section data-document-role="page" data-label="Under the hood" data-speaker-notes="Under the hood. The patient uses any basic phone over the normal phone network, no internet. Bob's line is an Android phone with a SIM, and the call audio goes to the district laptop over Bluetooth. On the laptop, Stuart handles calls and messages, Bob runs the conversation and the rules, and Gemma 4 E2B runs locally through llama.cpp. The model is about 6 gigabytes, downloaded once, and understands 25 seconds of speech in 5 to 7 seconds on a 4 gigabyte GPU.">
+  <div class="pad">
+    <div class="kicker">Under the hood</div>
+    <h1>Small AI on one laptop, <span class="g">no internet</span></h1>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:320px; display:flex; align-items:center; gap:18px;">
+    <div class="card" style="width:300px; text-align:center;"><div class="lab">Patient</div><h3 style="margin:0;">Any basic phone</h3></div>
+    <div style="width:150px; text-align:center; font-size:20px; color:var(--muted); line-height:1.3;"><div style="font-size:48px; color:var(--band);">→</div>Phone call<br>no data</div>
+    <div class="card" style="width:300px; text-align:center;"><div class="lab">Bob's line</div><h3 style="margin:0;">Android phone + SIM</h3></div>
+    <div style="width:150px; text-align:center; font-size:20px; color:var(--muted); line-height:1.3;"><div style="font-size:48px; color:var(--band);">→</div>Bluetooth<br>audio</div>
+    <div class="card" style="flex:1; border:3px solid var(--band); padding:28px 30px;">
+      <div class="lab">District laptop</div>
+      <div style="display:flex; gap:14px; margin-top:6px;">
+        <div style="flex:1; background:var(--bg); border-radius:14px; padding:18px;"><h3 style="font-size:26px; margin-bottom:6px;">Stuart</h3><p style="font-size:20px;">Calls, callbacks, message queue</p></div>
+        <div style="flex:1; background:var(--bg); border-radius:14px; padding:18px;"><h3 style="font-size:26px; margin-bottom:6px;">Bob</h3><p style="font-size:20px;">Conversation, rules, clinic routing</p></div>
+        <div style="flex:1; background:#e6efe8; border-radius:14px; padding:18px;"><h3 style="font-size:26px; margin-bottom:6px; color:var(--green);">Gemma 4 E2B</h3><p style="font-size:20px;">Speech → checklist, via llama.cpp</p></div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:640px; display:flex; gap:26px;">
+    <div class="card" style="flex:1;"><div style="font-size:72px; font-weight:800; color:var(--green); line-height:1;">6 GB</div><p style="margin-top:12px;">model, downloaded once</p></div>
+    <div class="card" style="flex:1;"><div style="font-size:72px; font-weight:800; color:var(--green); line-height:1;">5–7 s</div><p style="margin-top:12px;">to understand 25 s of speech</p></div>
+    <div class="card" style="flex:1;"><div style="font-size:72px; font-weight:800; color:var(--green); line-height:1;">0</div><p style="margin-top:12px;">cloud AI calls</p></div>
+    <div class="card" style="flex:1;"><div style="font-size:72px; font-weight:800; color:var(--green); line-height:1;">4 GB</div><p style="margin-top:12px;">GPU laptop (RTX 3050 Ti)</p></div>
+  </div>
+  <div class="src">Gemma 4 E2B, Q8_0, llama.cpp, measured on the demo laptop. If the model is slow or unsure, Bob asks more keypad questions; it never skips a safety check.</div>
+  <img class="logo" src="img/logo.png" alt="Vitamin Bob">
+</section>
+
+<!-- 5 · Live call -->
+<section data-document-role="page" data-label="Live call" data-speaker-notes="And this is not a mock-up. On the 4th of October we ran a real call end to end. A missed call at 7:47:50, Bob called back nine seconds later, the patient described the problem in Gujarati, Gemma processed the recording on the laptop in about eight seconds, and at 7:50:21 the answer on convulsions made it an emergency: call 108 now, with a clinician acknowledgement pending. The whole call took under three minutes.">
+  <div class="pad">
+    <div class="kicker">Technical walkthrough</div>
+    <h1>A real call, end to end, on 4 Oct 2026</h1>
+  </div>
+  <img src="img/ph-call.png" style="position:absolute; left:110px; top:300px; height:640px; border-radius:36px; border:10px solid #10261b;" alt="Bob's phone line during the call, caller details blurred">
+  <div style="position:absolute; left:470px; top:300px; width:1340px;">
+    <div class="lab">Gemma processes the recording on the laptop</div>
+    <img class="shot" src="img/lw-understand.png" style="width:1000px;" alt="Bob is understanding your answer, processed on this laptop">
+  </div>
+  <div style="position:absolute; left:470px; top:640px; width:1340px; display:flex; gap:30px;">
+    <div style="flex:1;">
+      <div style="display:flex; flex-direction:column; gap:12px; font-size:24px; line-height:1.3;">
+        <div><b>07:47:50</b> Free missed call</div>
+        <div><b>07:47:59</b> Bob calls back</div>
+        <div><b>07:48:13</b> Connected, Gujarati</div>
+        <div><b>~8 s</b> Gemma reads her answer</div>
+        <div style="color:var(--coral);"><b>07:50:21</b> EMERGENCY: call 108</div>
+        <div><b>07:50:44</b> Done, under 3 minutes</div>
+      </div>
+    </div>
+    <div style="flex:1.6;">
+      <img class="shot" src="img/lw-emergency.png" style="width:100%;" alt="Emergency: call 108 now, clinician acknowledgement pending">
+    </div>
+  </div>
+  <img class="logo" src="img/logo.png" alt="Vitamin Bob">
+</section>
+
+<!-- 6 · Impact -->
+<section data-document-role="page" data-label="Impact" data-speaker-notes="What changes? In our evaluation, 54 synthetic cases and 10 recordings, Bob missed no urgent case, in either language. Gemma halves the uncertain cases compared with a keyword baseline. And the call costs the patient nothing. For Noor, that means she knows before she travels. For the clinic, urgent patients first, already documented. What is not proven yet: a clinician still has to review the protocol, and no real patients have used it.">
+  <div class="pad">
+    <div class="kicker">Impact</div>
+    <h1>What changes</h1>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:290px; display:flex; gap:26px;">
+    <div class="card" style="flex:1;"><div style="font-size:150px; font-weight:800; color:var(--green); line-height:1;">0</div><h3 style="margin-top:14px;">urgent cases missed</h3><p>in every test set, Hindi and Gujarati</p></div>
+    <div class="card" style="flex:1;"><div style="font-size:150px; font-weight:800; color:var(--green); line-height:1;">½</div><h3 style="margin-top:14px;">as many "uncertain" cases</h3><p>Gemma vs keywords: Hindi 14% → 7%, Gujarati 10% → 5%</p></div>
+    <div class="card" style="flex:1;"><div style="font-size:150px; font-weight:800; color:var(--green); line-height:1;">₹0</div><h3 style="margin-top:14px;">for the patient</h3><p>A missed call in, a callback out</p></div>
+  </div>
+  <div style="position:absolute; left:110px; right:110px; top:760px; display:flex; gap:26px;">
+    <div style="flex:1;"><div class="lab">For Noor</div><p style="font-size:28px; line-height:1.4;">Knows <b>before she travels</b> whether to go, wait or call 108.</p></div>
+    <div style="flex:1;"><div class="lab">For the clinic</div><p style="font-size:28px; line-height:1.4;">Urgent patients <b>first</b>, already documented. Less writing.</p></div>
+    <div style="flex:1;"><div class="lab" style="color:var(--coral);">Not proven yet</div><p style="font-size:28px; line-height:1.4;">Clinician review of the protocol. Use with real patients.</p></div>
+  </div>
+  <div class="src">Bob's evaluation: 54 synthetic cases written by the team and 10 recordings of team members' voices, Gemma 4 E2B. Not real patients; labels not yet clinician-reviewed.</div>
+  <img class="logo" src="img/logo.png" alt="Vitamin Bob">
+</section>
+
+<!-- 7 · Close -->
+<section data-document-role="page" data-label="Try it" data-speaker-notes="Vitamin Bob: listen, guide, connect. The website, code and the instructions to run the local model are all open.">
+  <img src="img/logo.png" style="position:absolute; left:110px; top:150px; width:760px;" alt="Vitamin Bob">
+  <div style="position:absolute; left:110px; top:430px; font-size:84px; font-weight:800; letter-spacing:-1.5px;">Listen. Guide. <span style="color:var(--green);">Connect.</span></div>
+  <div style="position:absolute; left:110px; top:570px; font-size:36px; line-height:1.6; color:var(--ink);">
+    <div><b>vitamin-bob.vercel.app</b></div>
+    <div>github.com/rzrizaldy/vitamin-bob <span style="color:var(--muted);">· run Gemma 4 locally, step by step</span></div>
+  </div>
+  <img src="img/phone.png" style="position:absolute; right:-60px; top:180px; width:900px;" alt="Feature phone">
+  <div class="band"></div>
+  <div style="position:absolute; left:110px; bottom:52px; font-size:34px; font-weight:600; color:#fff;">Egshiglen · Meet · Rizaldy · Yusril</div>
+  <div style="position:absolute; right:110px; bottom:56px; font-size:24px; color:#e6efe8;">Hack-Nation × World Bank · Small AI for Development · Health</div>
+</section>
+
+</body>
+</html>
