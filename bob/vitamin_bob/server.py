@@ -44,7 +44,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Vitamin Bob", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory=Path(__file__).with_name("static")), name="static")
+_HERE = Path(__file__).parent
+app.mount("/static", StaticFiles(directory=_HERE / "static"), name="static")
+# The story website (a static export of vitamin-bob-site, built with basePath /website), served by the same
+# backend so its "Live call" screen can embed /dashboard/live from the same origin.
+WEBSITE = _HERE / "website"
+if WEBSITE.is_dir():
+    app.mount("/website", StaticFiles(directory=WEBSITE, html=True), name="website")
 
 
 def _lock_for(key: str) -> threading.Lock:
@@ -135,12 +141,18 @@ DASHBOARD = Path(__file__).with_name("dashboard.html")
 
 @app.get("/")
 def root():
-    return RedirectResponse("/dashboard")
+    return RedirectResponse("/website/" if WEBSITE.is_dir() else "/dashboard")
 
 
+@app.get("/dashboard/live")
 @app.get("/dashboard")
 def dashboard():
     return FileResponse(DASHBOARD, media_type="text/html")
+
+
+@app.get("/dashboard/details")
+def dashboard_details():
+    return FileResponse(DASHBOARD.with_name('dashboard-details.html'), media_type="text/html")
 
 
 def _model_available() -> bool:
@@ -203,7 +215,7 @@ def _costs(stuart: dict) -> dict:
 
 
 def _stats() -> dict:
-    """Today's count at every stage of the pipeline, for the dashboard's funnel."""
+    """Today's count at every stage of the pipeline, for the details dashboard's funnel."""
     day = db.now().strftime("%Y-%m-%d") + "%"
     n = lambda sql, *a: db.one(sql, *a)["n"]  # noqa: E731
     tiers = {r["tier"]: r["n"] for r in db.q("SELECT tier, COUNT(*) AS n FROM triages WHERE created_at LIKE ? GROUP BY tier", day)}

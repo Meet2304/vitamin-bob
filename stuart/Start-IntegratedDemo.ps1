@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('recorded','phone')][string]$Mode = 'recorded',
+    [ValidateSet('recorded','phone')][string]$Mode = 'phone',
     [string]$AssetsDir = (Join-Path $PSScriptRoot '..\..\vitamin-bob-bob\data'),
     [string]$LlamaExe = (Join-Path $PSScriptRoot '..\..\llama.cpp\llama-server.exe'),
     [string]$ModelsDir = (Join-Path $PSScriptRoot '..\..\models')
@@ -21,6 +21,9 @@ if (-not (Test-Path -LiteralPath $vbConfig)) {
     & (Join-Path $PSScriptRoot 'Initialize-Stuart.ps1') @vbArguments
     $vbNew = Get-Content -LiteralPath $vbConfig -Raw | ConvertFrom-Json
     $vbNew.calls_enabled = ($Mode -eq 'phone')
+    if ($Mode -eq 'phone') {
+        $vbNew | Add-Member -NotePropertyName line_phone -NotePropertyValue $vbPhone.line_phone -Force
+    }
     $vbNew.daily_sms_cap = 500
     $vbNew | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $vbConfig -Encoding UTF8
 }
@@ -55,7 +58,7 @@ try {
         if ($vbProcess.HasExited) { throw "Demo exited. Read $($vbProfile.runtime_dir)\integrated.stderr.log and model.log." }
         try {
             $vbState = Invoke-RestMethod http://127.0.0.1:8200/demo/state -TimeoutSec 1
-            if ($vbState.model_ready) { Write-Output 'Demo ready: http://127.0.0.1:8200/demo'; return }
+            if ($vbState.model_ready) { Write-Output 'Dashboard ready: http://127.0.0.1:8100/dashboard'; Write-Output 'Demo setup: http://127.0.0.1:8100/dashboard/setup'; Write-Output 'Website: http://127.0.0.1:8100/website/'; return }
         } catch { }
         Start-Sleep -Seconds 1
     }

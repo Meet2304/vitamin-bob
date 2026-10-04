@@ -36,6 +36,7 @@ class Profile(BaseModel):
     country_code:str=Field(default='+91',pattern=r'^\+[1-9]\d{0,3}$')
     adb_path:Path=MODULE/'runtime/tools/platform-tools/adb.exe'
     android_serial:str|None=None
+    line_phone:str|None=Field(default=None,pattern=r'^\+[1-9]\d{6,14}$')
     gateway_port:int=Field(default=18080,ge=1024,le=65535)
     audio_input:str='loopback:Speaker (Realtek(R) Audio)'
     audio_output:str='wasapi:CABLE Input (VB-Audio Virtual Cable)'
@@ -102,6 +103,8 @@ class Profile(BaseModel):
             env.update(VB_PHONE_ALLOWLIST=json.dumps(self.allowed_phones),VB_SMS_LINE_ID='android-1')
         if self.android_serial:
             env['VB_ANDROID_SERIAL']=self.android_serial
+        if self.line_phone:
+            env['VB_LINE_PHONE']=self.line_phone
         if self.central_phone:
             env['VB_CENTRAL_PHONE']=self.central_phone
         return env

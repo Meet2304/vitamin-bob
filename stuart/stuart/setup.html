@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitamin Bob · Demo setup</title>
+<link rel="stylesheet" href="/static/fonts/fonts.css">
+<style>
+  :root { --lcd:#c9e6c1; --lcd-2:#bddcb4; --ghost:#b2d1a9; --px:#22322a; --px-2:#4e6a55;
+    --display:'Space Grotesk',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--px); font:16px/1.45 var(--display); background:var(--lcd);
+    background-image:linear-gradient(rgb(34 50 42/.045) 1px,transparent 1px),linear-gradient(90deg,rgb(34 50 42/.045) 1px,transparent 1px);
+    background-size:4px 4px; padding-bottom:48px; }
+  a { color:inherit; }
+  .bar { position:sticky; top:0; z-index:5; border-bottom:3px solid var(--px); background:rgb(201 230 193/.96); }
+  .bar-in { max-width:1180px; margin:0 auto; padding:10px 24px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; font:500 13px var(--mono); }
+  .bar-in .t { font:700 15px var(--display); margin-right:auto; }
+  .nav { padding:3px 9px; border:2px solid var(--px); text-decoration:none; }
+  .nav.on { background:var(--px); color:var(--lcd); }
+  main { max-width:1180px; margin:0 auto; padding:24px; }
+  h1 { margin:0; font-size:40px; letter-spacing:-.01em; }
+  .lead { margin:8px 0 0; font-size:19px; max-width:820px; }
+  .box { border:3px solid var(--px); box-shadow:4px 4px 0 var(--px); background:var(--lcd); padding:18px; }
+  .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:18px; }
+  @media (max-width:980px) { .grid { grid-template-columns:1fr; } }
+  .card h2 { margin:0; font-size:20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .role { font:600 12px var(--mono); letter-spacing:.05em; text-transform:uppercase; color:var(--px-2); }
+  .status { font:600 11px var(--mono); padding:2px 7px; border:2px solid var(--px); white-space:nowrap; }
+  .status.ok { background:var(--px); color:var(--lcd); }
+  .status.wait { border-style:dashed; }
+  .status.none { border-style:dotted; }
+  .why { margin:8px 0 12px; font-size:15px; }
+  label { display:block; font:600 12px var(--mono); margin:10px 0 4px; }
+  input, select { width:100%; font:17px var(--mono); color:var(--px); background:var(--lcd-2); border:2px solid var(--px); padding:9px 10px; }
+  input:focus, select:focus { outline:3px solid var(--px); outline-offset:2px; }
+  .note { margin-top:10px; padding:8px 10px; border-left:4px solid var(--px); background:var(--lcd-2); font-size:14px; }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .btn { border:3px solid var(--px); background:var(--px); color:var(--lcd); padding:11px 18px; font:600 14px var(--mono); cursor:pointer; }
+  .btn:hover { background:var(--lcd); color:var(--px); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .msg { margin-top:14px; padding:12px 14px; border:3px solid var(--px); font-weight:600; }
+  .msg.bad { border-style:dashed; }
+  .msg ul { margin:6px 0 0; padding-left:20px; font-weight:400; }
+  pre { margin:8px 0 0; padding:10px; border:2px dashed var(--px); font:13px var(--mono); white-space:pre-wrap; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px; }
+  @media (max-width:980px) { .two { grid-template-columns:1fr; } }
+  table { width:100%; border-collapse:collapse; font-size:15px; }
+  td { padding:7px 4px; border-bottom:1px dotted var(--px-2); vertical-align:top; }
+  td.s { font:600 12px var(--mono); white-space:nowrap; text-align:right; }
+  .muted { color:var(--px-2); }
+  .small { font-size:13px; }
+</style>
+</head>
+<body>
+<header class="bar"><div class="bar-in">
+  <span class="t">Vitamin Bob · operator</span>
+  <a class="nav" href="/dashboard/live">Live demo</a>
+  <a class="nav on" href="/dashboard/setup" aria-current="page">Demo setup</a>
+  <a class="nav" href="/dashboard/details">Operations</a>
+  <a class="nav" href="/website/">Website</a>
+</div></header>
+<main>
+  <h1>Demo setup</h1>
+  <p class="lead">Who plays which part in the demo. Saving does <b>not</b> change the running demo and never places a call or sends a message: the new settings take effect the next time the demo starts.</p>
+  <div id="revision" class="msg" style="margin-top:16px">Loading…</div>
+
+  <form id="form" novalidate>
+    <div class="box" style="margin-top:18px">
+      <label for="country">Country for numbers written without a + code</label>
+      <select id="country"><option value="">Every number includes its + country code</option></select>
+      <div class="small muted" style="margin-top:6px">Nothing is assumed: a number without + needs a country here.</div>
+    </div>
+
+    <div class="grid">
+      <section class="box card" aria-labelledby="k-h">
+        <div class="role">1 · Kevin</div>
+        <h2 id="k-h">Receiving phone <span class="status" id="k-s"></span></h2>
+        <p class="why">Patients call this number. The connected S24 handles calls and SMS; this laptop runs Bob.</p>
+        <label for="k">Phone number</label>
+        <input id="k" inputmode="tel" autocomplete="off" required>
+        <div class="note">Enter the actual number of the SIM in the connected phone. Changing it here does not change the SIM or create a new line. USB, Bluetooth, Phone Link and the manual “Transfer to PC” step stay the same.</div>
+      </section>
+
+      <section class="box card" aria-labelledby="p-h">
+        <div class="role">2 · Patient</div>
+        <h2 id="p-h">Demonstration caller <span class="status" id="p-s"></span></h2>
+        <p class="why">This phone places the missed call, receives the callback and receives the patient summary.</p>
+        <label for="p">Phone number</label>
+        <input id="p" inputmode="tel" autocomplete="off" required>
+        <div class="note">Must not be a registered clinician or the district contact: Bob treats a clinician’s missed call as a check-in, not a patient.</div>
+      </section>
+
+      <section class="box card" aria-labelledby="c-h">
+        <div class="role">3 · Clinician</div>
+        <h2 id="c-h">Receiving alerts <span class="status" id="c-s"></span></h2>
+        <p class="why">This phone receives clinician summaries and alerts for the selected clinic.</p>
+        <label for="cn">Name</label>
+        <input id="cn" autocomplete="off" maxlength="60">
+        <label for="c">Phone number</label>
+        <input id="c" inputmode="tel" autocomplete="off">
+        <label for="cc">Clinic</label>
+        <select id="cc"></select>
+        <div class="note">Leave name and number empty to run without a clinician: the demo still works; clinician SMS is unavailable.</div>
+      </section>
+    </div>
+
+    <div class="row" style="margin-top:18px">
+      <button class="btn" id="save" type="submit">Save changes</button>
+      <span class="small muted">Restart required to apply. Active calls are never interrupted.</span>
+    </div>
+    <div id="result" aria-live="polite"></div>
+  </form>
+
+  <div class="two">
+    <section class="box" aria-labelledby="n-h">
+      <h2 id="n-h" style="margin:0 0 8px;font-size:20px">SMS summaries</h2>
+      <table id="caps"></table>
+      <p class="small muted" style="margin:10px 0 0">These are SMS messages, not app or browser push notifications, which do not exist. “Configured” above means a number is set, not that delivery has been tested.</p>
+    </section>
+    <section class="box" aria-labelledby="r-h">
+      <h2 id="r-h" style="margin:0 0 8px;font-size:20px">Which clinic reaches a real phone</h2>
+      <table id="clinics"></table>
+      <p class="small muted" style="margin:10px 0 0">The clinician receives alerts only for the clinic selected above. Cases routed to other clinics go to their placeholder numbers. Alerts can always be acknowledged on the operations dashboard; acknowledgement by SMS has not been demonstrated yet.</p>
+    </section>
+  </div>
+</main>
+<script>
+let S = null, lastSaved = null, filled = false;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function status(el, applied, pending, has) {
+  el.className = "status " + (pending ? "wait" : has ? "ok" : "none");
+  el.textContent = pending ? "Changes awaiting restart" : has ? "Configured" : "Not configured";
+}
+
+function fill() {
+  const a = S.applied || {}, p = S.pending;
+  const v = p || a;
+  $("k").value = v.kevin_phone || ""; $("p").value = v.patient_phone || "";
+  $("cn").value = v.clinician?.name || ""; $("c").value = v.clinician?.phone || "";
+  $("cc").innerHTML = S.clinics.map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  if (v.clinician?.clinic_id) $("cc").value = v.clinician.clinic_id;
+  $("country").innerHTML = '<option value="">Every number includes its + country code</option>' + S.countries.map((c) => `<option value="${esc(c.code)}">${esc(c.label)}</option>`).join("");
+  if (v.country) $("country").value = v.country;
+  const diff = (key) => p && JSON.stringify(p[key] ?? null) !== JSON.stringify(a[key] ?? null);
+  status($("k-s"), a.kevin_phone, diff("kevin_phone"), !!a.kevin_phone);
+  status($("p-s"), a.patient_phone, diff("patient_phone"), !!a.patient_phone);
+  status($("c-s"), a.clinician, diff("clinician"), !!a.clinician);
+}
+
+function renderRevision() {
+  const el = $("revision");
+  if (S.error) { el.className = "msg bad"; el.innerHTML = `Settings could not be applied, so calls and outgoing SMS are off for this run.<ul><li>${esc(S.error)}</li></ul>`; return; }
+  if (S.pending) {
+    el.className = "msg bad";
+    el.innerHTML = `Revision ${S.pending.revision} is saved and waits for a restart. The demo is still running with revision ${S.applied_revision}.<pre>${S.restart.map(esc).join("\n")}</pre>`;
+    return;
+  }
+  el.className = "msg";
+  el.textContent = lastSaved && S.applied_revision >= lastSaved
+    ? `Applied: the demo is running with revision ${S.applied_revision}.`
+    : `The demo is running with revision ${S.applied_revision}. No changes are waiting.`;
+}
+
+function renderCaps() {
+  const c = S.capabilities;
+  const row = (name, state, detail) => `<tr><td><b>${esc(name)}</b><div class="small muted">${esc(detail)}</div></td><td class="s">${esc(state)}</td></tr>`;
+  $("caps").innerHTML =
+    row("Outgoing SMS enabled", c.outgoing_sms ? "ON" : "OFF", c.outgoing_sms ? "Messages leave through the connected phone." : "Disabled in this demo; messages wait in the outbox.") +
+    row("Urgent clinician alerts", "BUILT", "HIGH, EMERGENCY and UNCERTAIN cases, to the routed clinic’s clinician. Needs outgoing SMS.") +
+    row("Patient completion summary", "NOT BUILT YET", "Needs new backend work.") +
+    row("Clinician consultation summary", "NOT BUILT YET", "Summaries of every consultation need new backend work.");
+  $("clinics").innerHTML = S.clinics.map((k) => `<tr><td>${esc(k.name)}</td><td class="s">${k.real_recipient ? "REAL PHONE" : "PLACEHOLDER ONLY"}</td></tr>`).join("");
+}
+
+async function load() {
+  try {
+    const r = await fetch("/api/demo/settings", { cache: "no-store" });
+    if (r.status === 404) { $("revision").className = "msg bad"; $("revision").textContent = "Demo setup is available when the demo is started with Start-IntegratedDemo.ps1."; $("save").disabled = true; return; }
+    S = await r.json();
+    if (!filled) { fill(); filled = true; }  // never overwrite what someone is typing
+    renderRevision(); renderCaps();
+  } catch (e) { $("revision").className = "msg bad"; $("revision").textContent = "The local Bob server is not responding."; }
+}
+
+function clientCheck(body) {
+  const errs = [], nums = [];
+  const norm = (x) => { const s = x.replace(/[\s\-().]/g, ""); return s.startsWith("+") ? s : body.country ? body.country + s.replace(/^0+/, "") : null; };
+  for (const [label, val] of [["Kevin", body.kevin_phone], ["Patient", body.patient_phone], ...(body.clinician ? [["Clinician", body.clinician.phone]] : [])]) {
+    const n = norm(val || "");
+    if (!n) errs.push(`${label}: choose a country or start the number with +`);
+    else if (!/^\+[1-9]\d{6,14}$/.test(n)) errs.push(`${label}: not a valid international number`);
+    else nums.push(n);
+  }
+  if (new Set(nums).size !== nums.length) errs.push("Kevin, patient and clinician must be three different numbers");
+  if (body.clinician && !body.clinician.name.trim()) errs.push("Clinician: add a name");
+  return errs;
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const cn = $("cn").value.trim(), cp = $("c").value.trim();
+  const body = { revision: S.revision, country: $("country").value || null, kevin_phone: $("k").value.trim(), patient_phone: $("p").value.trim(),
+    clinician: cn || cp ? { name: cn, phone: cp, clinic_id: $("cc").value } : null };
+  const out = $("result");
+  const errs = clientCheck(body);
+  if (errs.length) { out.innerHTML = `<div class="msg bad">Not saved.<ul>${errs.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`; return; }
+  $("save").disabled = true;
+  try {
+    const r = await fetch("/api/demo/settings", { method: "PUT", headers: { "Content-Type": "application/json", "X-VB-Demo": "1" }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (r.ok) { lastSaved = j.revision; out.innerHTML = `<div class="msg">Saved as revision ${j.revision}. Restart the demo to apply it:<pre>${S.restart.map(esc).join("\n")}</pre></div>`; }
+    else if (r.status === 409) out.innerHTML = `<div class="msg bad">${esc(j.detail)}</div>`;
+    else { const list = j.detail?.errors || [typeof j.detail === "string" ? j.detail : "Invalid settings"]; out.innerHTML = `<div class="msg bad">Not saved.<ul>${list.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`; }
+  } catch (err) { out.innerHTML = `<div class="msg bad">The local Bob server did not answer. Nothing was saved.</div>`; }
+  $("save").disabled = false;
+  filled = false;
+  load();
+});
+load();
+setInterval(load, 5000);
+</script>
+</body>
+</html>
