@@ -1,6 +1,6 @@
 # S24 Plus audio setup and evidence
 
-ADB is authorized on the SM-S926B running Android 16. VB-CABLE is installed and Windows has restarted. No real SMS has been sent.
+ADB is authorized on the SM-S926B running Android 16. VB-CABLE is installed and Windows has restarted. One approved nonclinical SMS has been delivered, with the recipient confirming it arrived exactly once.
 
 ## Route that passed a manual PC call
 
@@ -33,3 +33,11 @@ The successful bounded probe waited for five stable Bluetooth route observations
 The official VB-CABLE package is under `runtime/tools/vb-cable/`; its installer signature was verified. [VB-Audio installation instructions](https://vb-audio.com/Cable/). [Microsoft Phone Link call setup](https://support.microsoft.com/en-us/windows/apps/phonelink/setting-up-calls-in-the-phone-link).
 
 Restart the separate scripted simulator with `./Start-Demo.ps1`. Its calls and encrypted loopback sync are independent of physical tests.
+
+## SMS setup and hardware result
+
+The installed SMSGate version shows Local server enabled and STOP SERVICE while running. Cloud server is off. The laptop reaches the local gateway through adb forward tcp:18080 tcp:8080, avoiding dependence on the phone Wi-Fi address. GET /health and authenticated access succeeded. Credentials are stored only in ignored runtime files; the password uses Windows DPAPI.
+
+The first send was blocked before sending because SEND_SMS was denied. After explicit user authorization, adb shell pm grant --user 0 me.capcom.smsgateway android.permission.SEND_SMS granted outbound permission. The approved retry reached the second phone exactly once, and the gateway reports Delivered. Success webhooks did not reach Stuart during the 60-second probe; authenticated lookup of the known ID recovered Delivered into the Stuart database using the production receipt worker. Evidence: runtime/hardware-sms-result.json. No additional message was sent during receipt recovery. All temporary probe webhooks were removed.
+
+The inbound receive path is still unverified. Its test must use a controlled sender and a nonclinical test phrase, with Bob responses disabled. Receive permission has not been granted through ADB. [SMSGate permission troubleshooting](https://docs.sms-gate.app/faq/errors/) and [status tracking](https://docs.sms-gate.app/features/status-tracking/).

@@ -274,3 +274,19 @@ class AndroidLine(SimulatorLine):
             response.raise_for_status()
         # API acceptance is queued, not proof of sending or delivery; webhook updates later.
         return "accepted"
+
+    async def sms_receipt(self, message_id):
+        import httpx
+        from urllib.parse import quote
+        url = os.getenv("VB_SMS_GATE_URL", "http://127.0.0.1:8080").rstrip('/')
+        username, password = os.getenv("VB_SMS_GATE_USER"), os.getenv("VB_SMS_GATE_PASSWORD")
+        if not username or not password:
+            raise OSError("SMSGate local credentials are not configured")
+        async with httpx.AsyncClient(timeout=8, trust_env=False) as client:
+            response = await client.get(url+"/message/"+quote(message_id,safe=''),
+                                        auth=(username,password))
+            response.raise_for_status()
+            body = response.json()
+        status = {'Sent':'sent','Delivered':'delivered','Failed':'failed'}.get(body.get('state'))
+        error = next((r.get('error') for r in body.get('recipients',[]) if r.get('error')),None)
+        return status, error

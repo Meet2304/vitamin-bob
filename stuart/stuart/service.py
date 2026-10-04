@@ -81,6 +81,7 @@ class Switchboard:
             self.spawn(self.sms_status(row['id'],'failed'))
         self.spawn(self.dispatch())
         self.spawn(self.sms_worker())
+        self.spawn(self.sms_receipts())
         self.spawn(self.sync_worker())
         self.spawn(self.recover_decisions())
         for line in self.lines.values():
@@ -319,9 +320,14 @@ class Switchboard:
             return
         self.store.execute("INSERT INTO sms(id,request,priority,segments,status,created_at,updated_at) VALUES(?,?,?,?,'queued',?,?)",(request.message_id,compact(payload),{"urgent":0,"normal":1,"bulk":2}[request.priority],segments(request.text),now(),now()))
 
-    async def sms_status(self,message_id,status):
+    async def sms_status(self,message_id,status,error=None):
         previous=self.store.one("SELECT status FROM sms WHERE id=?",(message_id,))
-        if not previous or previous['status']==status or previous['status']=='delivered':
+        if not previous or previous['status']=='delivered':
+            return
+        # Keep gateway diagnostics locally; the Bob event remains contract v0.2.
+        if status=='failed' and isinstance(error,str) and error:
+            self.store.execute("UPDATE sms SET error=? WHERE id=?",(error[:1024],message_id))
+        if previous['status']==status:
             return
         self.store.execute("UPDATE sms SET status=?,updated_at=? WHERE id=?",(status,now(),message_id))
         try:
@@ -380,6 +386,29 @@ class Switchboard:
         # Include uncertain sends: cost may have occurred even when delivery status is unknown.
         rows=self.store.rows("SELECT segments,sent_at FROM sms WHERE line_id=? AND sent_at IS NOT NULL",(line_id,))
         return sum(r["segments"] for r in rows if datetime.fromisoformat(r["sent_at"]).astimezone().date().isoformat()==today)
+
+    async def sms_receipts(self):
+        cursor=0
+        while True:
+            pending=self.store.rows("SELECT id,line_id FROM sms WHERE status IN ('accepted','sent') ORDER BY rowid")
+            if pending:
+                cursor %= len(pending)
+                ordered=pending[cursor:]+pending[:cursor]
+                for row in ordered[:10]:
+                    line=self.lines.get(row['line_id'])
+                    if not isinstance(line,AndroidLine):
+                        continue
+                    try:
+                        status,error=await line.sms_receipt(row['id'])
+                        self.errors.pop('sms_receipts',None)
+                        if status:
+                            await self.sms_status(row['id'],status,error)
+                    except Exception as exc:
+                        # A missing receipt never triggers a second charged send.
+                        self.errors['sms_receipts']=type(exc).__name__
+                        break
+                cursor += min(10,len(pending))
+            await asyncio.sleep(10)
 
     async def queue_sync(self,request):
         # Validate every ID before inserting any item in a batch.
@@ -583,7 +612,7 @@ def make_app(board=None):
             if typ=='sms:received':
                 await b.incoming_sms(IncomingSms(message_id=payload['messageId'],phone=payload['sender'],text=payload['message'],line_id='android-1'))
             elif typ in ('sms:sent','sms:delivered','sms:failed'):
-                await b.sms_status(payload['messageId'],typ.split(':')[1])
+                await b.sms_status(payload['messageId'],typ.split(':')[1],payload.get('reason'))
             else:
                 raise ValueError('Unsupported webhook event')
         except (ValueError,KeyError) as exc:

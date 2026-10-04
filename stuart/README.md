@@ -4,7 +4,7 @@ Contract 0.2. Windows service for local call actions, callback queues, SMS and e
 
 ## Current evidence
 
-Latest verification: 37 automated tests passed. A real missed call triggered an Android callback and answer detection. A later callback, transferred to the PC by the operator, carried spoken instructions, decoded `12` with `#`, recorded 3.4 seconds of speech and hung up cleanly. Evidence: ignored `runtime/hardware-callback-result.json`. The simulator previously completed eight calls, one outbound SMS and three acknowledged Central records. Actual Bob/Stuart HTTP integration completed synthetic Hindi and Gujarati conversations, but exposed a Bob outbox status race. With the prepared fix in an isolated Bob copy, three simulated SMS were delivered and four encrypted Central records remained acknowledged in Bob. No real SMS has been sent; Gemma processing over a real phone call remains unverified.
+Latest verification: 43 automated tests passed. A real missed call triggered an Android callback and answer detection. A later callback, transferred to the PC by the operator, carried spoken instructions, decoded `12` with `#`, recorded 3.4 seconds of speech and hung up cleanly. Evidence: ignored `runtime/hardware-callback-result.json`. The simulator previously completed eight calls, one outbound SMS and three acknowledged Central records. Actual Bob/Stuart HTTP integration completed synthetic Hindi and Gujarati conversations, but exposed a Bob outbox status race. With the prepared fix in an isolated Bob copy, three simulated SMS were delivered and four encrypted Central records remained acknowledged in Bob. One approved nonclinical SMS reached the second phone exactly once. SMSGate reports Delivered; Stuart recovered that status by polling after the success webhook was missed. Evidence: ignored runtime/hardware-sms-result.json. Inbound SMS and Gemma processing over a real phone call remain unverified.
 
 - Scripted missed-call → Bob callback decision → play → keypad → record → hangup works against fake Bob.
 - Callback queue, duplicate-number merging, event IDs and HTTP acknowledgements persist in SQLite.
@@ -86,7 +86,7 @@ While enabled, Stuart rejects ringing incoming calls and detects new missed/reje
 
 ## SMSGate local mode
 
-Meet chooses whether to install SMS Gateway for Android. Use **Local Server** mode, not a public cloud endpoint. Grant its SMS permissions and disable battery optimization only if acceptable for this dedicated demo phone.
+SMS Gateway for Android is installed on the S24. Use **Local Server** mode. In the installed version, the enabled Local server toggle and **STOP SERVICE** button show that its service is running; there is no Online/Offline button. Verify reachability with GET /health. SEND_SMS was still denied after the phone settings attempt; the user authorized an ADB grant for user 0, which succeeded. Grant additional receive permissions only when setting up the inbound test. [Official permission troubleshooting](https://docs.sms-gate.app/faq/errors/).
 
 ```powershell
 & .\runtime\tools\platform-tools\adb.exe forward tcp:8080 tcp:8080
@@ -97,7 +97,7 @@ $env:VB_SMS_WEBHOOK_TOKEN = '<random secret>'
 $env:VB_SMS_LINE_ID = 'android-1'
 ```
 
-Register the app's `sms:received`, `sms:sent`, `sms:delivered` and `sms:failed` webhooks at `http://127.0.0.1:8200/android/smsgate?token=<same-secret>`. The adapter accepts the documented `event` + `payload` shape. Credentials and token are env variables, never committed. Android permissions and webhook delivery must be tested on the actual phone. A POST accepted by the gateway is recorded as `accepted`; it becomes `sent` or `delivered` only through the corresponding webhook.
+Register the app's `sms:received`, `sms:sent`, `sms:delivered` and `sms:failed` webhooks at `http://127.0.0.1:8200/android/smsgate?token=<same-secret>`. The adapter accepts the documented `event` + `payload` shape. Credentials and token are env variables, never committed. Android permissions and webhook delivery must be tested on the actual phone. A POST accepted by the gateway is recorded as `accepted`; it becomes `sent` or `delivered` through a webhook or an authenticated status query for that known message ID. Stuart checks up to ten outstanding Android message receipts every ten seconds, rotating through them. A receipt lookup never resends a message, and a network error leaves its delivery outcome unresolved. Failed webhook reasons are retained locally, bounded to 1,024 characters; the Bob event shape stays at v0.2. [Official status tracking](https://docs.sms-gate.app/features/status-tracking/).
 
 SMS contents are transported unchanged. The Central link is encrypted, but a supplied ordinary clinician SMS is not automatically encrypted: Meet must resolve the brief's encryption scope before using patient-bearing SMS. All callbacks and SMS are charged to the line owner. Caps use segments, not logical messages; cost is a configurable assumption, not a verified tariff.
 
@@ -127,7 +127,7 @@ Tests cover action validation, UTF-8 payload bounds, GSM/Unicode counting, DTMF 
 
 ## Known limitations and contract decisions
 
-See `CONTRACT_NOTES.md`. Callback audio passes with operator transfer; unattended routing, real SMS and Gemma over the call path remain checks. VAD uses a simple RMS threshold. Normal sounddevice devices require 16 kHz support; WASAPI shared-mode conversion is enabled. Native `wasapi:<speaker name>` transmit and `loopback:<speaker name>` receive use SoundCard with per-thread COM initialization. Receive captures stereo and downmixes to mono at 16 kHz. It includes all sound on that speaker; keep other app audio quiet. The hold tone is half duplex; barge-in during prompts is not captured. Caller keys must follow the entire prompt. A readiness beep followed by a two-second pause passed the physical keypad check. Fake Bob is a transport mock.
+See `CONTRACT_NOTES.md`. Callback audio passes with operator transfer; unattended routing, inbound SMS and Gemma over the call path remain checks. Outbound SMS passed on the S24, including recovery of its Delivered status through the local gateway API. VAD uses a simple RMS threshold. Normal sounddevice devices require 16 kHz support; WASAPI shared-mode conversion is enabled. Native `wasapi:<speaker name>` transmit and `loopback:<speaker name>` receive use SoundCard with per-thread COM initialization. Receive captures stereo and downmixes to mono at 16 kHz. It includes all sound on that speaker; keep other app audio quiet. The hold tone is half duplex; barge-in during prompts is not captured. Caller keys must follow the entire prompt. A readiness beep followed by a two-second pause passed the physical keypad check. Fake Bob is a transport mock.
 
 After event retry exhaustion, failures remain in the outbox for inspection. Pending missed-call decisions can be retried by `POST /operator/retry-pending` with the contract header. No phone callback is queued while its decision is unknown. Interrupted outgoing SMS are marked as an unknown failed outcome rather than automatically resent, to avoid charging for a duplicate send.
 

@@ -433,6 +433,88 @@ def test_daily_cap_and_priority(tmp_path,monkeypatch):
     asyncio.run(run())
 
 
+def test_sms_webhook_auth_failure_reason_and_duplicate_receipts(tmp_path,monkeypatch):
+    monkeypatch.setenv('VB_SMS_WEBHOOK_TOKEN','test-secret')
+    async def run():
+        board=Switchboard(tmp_path/'data',tmp_path/'runtime',lines={})
+        await board.client.aclose()
+        board.client=httpx.AsyncClient(transport=httpx.MockTransport(
+            lambda request:httpx.Response(200,json={'ack':True})))
+        board.queue_sms(Sms(message_id='m',to='+15550100100',text='test',priority='normal'))
+        payload={'event':'sms:failed','payload':{'messageId':'m','reason':'SEND_SMS denied'}}
+        app=make_app(board)
+        app.state.board=board  # ASGITransport does not run the application lifespan.
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
+                                    base_url='http://stuart') as client:
+            assert (await client.post('/android/smsgate',json=payload)).status_code==403
+            assert board.store.one("SELECT status,error FROM sms WHERE id='m'")=={'status':'queued','error':None}
+            url='/android/smsgate?token=test-secret'
+            assert (await client.post(url,json=payload)).status_code==200
+            assert board.store.one("SELECT status,error FROM sms WHERE id='m'")=={'status':'failed','error':'SEND_SMS denied'}
+            payload['payload']['reason']='x'*1100
+            assert (await client.post(url,json=payload)).status_code==200
+            assert len(board.store.one("SELECT error FROM sms WHERE id='m'")['error'])==1024
+            assert len(board.store.rows('SELECT * FROM events'))==1
+            payload['payload']['messageId']='unknown'
+            assert (await client.post(url,json=payload)).status_code==200
+            assert len(board.store.rows('SELECT * FROM events'))==1
+            payload={'event':'sms:delivered','payload':{'messageId':'m'}}
+            assert (await client.post(url,json=payload)).status_code==200
+            payload={'event':'sms:failed','payload':{'messageId':'m','reason':'late failure'}}
+            assert (await client.post(url,json=payload)).status_code==200
+            assert board.store.one("SELECT status FROM sms WHERE id='m'")['status']=='delivered'
+            assert board.store.one("SELECT error FROM sms WHERE id='m'")['error']!='late failure'
+            assert len(board.store.rows('SELECT * FROM events'))==2
+        await board.stop()
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('state,expected',[('Pending',None),('Sent','sent'),('Delivered','delivered'),('Failed','failed')])
+def test_android_sms_receipt_reads_only_known_id(tmp_path,monkeypatch,state,expected):
+    monkeypatch.setenv('VB_SMS_GATE_USER','test-user')
+    monkeypatch.setenv('VB_SMS_GATE_PASSWORD','test-password')
+    monkeypatch.setenv('VB_SMS_GATE_URL','http://gateway')
+    original_client=httpx.AsyncClient
+    def response(request):
+        assert request.method=='GET' and request.url.path=='/message/known-id'
+        assert request.headers['authorization'].startswith('Basic ')
+        return httpx.Response(200,json={'state':state,'recipients':[{'error':'permission denied' if state=='Failed' else None}]})
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:original_client(
+        transport=httpx.MockTransport(response),**kwargs))
+    async def run():
+        line=AndroidLine('android-1',tmp_path,Adb('unused'))
+        assert await line.sms_receipt('known-id')==(expected,'permission denied' if state=='Failed' else None)
+    asyncio.run(run())
+
+
+def test_sms_poll_recovers_receipt_without_resending(tmp_path):
+    class ReceiptLine(AndroidLine):
+        async def send_sms(self,request):
+            raise AssertionError('Receipt recovery must not send')
+        async def sms_receipt(self,message_id):
+            assert message_id=='accepted'
+            return 'delivered',None
+    async def run():
+        line=ReceiptLine('android-1',tmp_path,Adb('unused'))
+        board=Switchboard(tmp_path/'data',tmp_path/'runtime',lines={line.line_id:line})
+        await board.client.aclose()
+        board.client=httpx.AsyncClient(transport=httpx.MockTransport(
+            lambda request:httpx.Response(200,json={'ack':True})))
+        for message_id in ('accepted','failed','queued'):
+            board.queue_sms(Sms(message_id=message_id,to='+15550100100',text='test',priority='normal'))
+            board.store.execute('UPDATE sms SET status=?,line_id=? WHERE id=?',(message_id,line.line_id,message_id))
+        board.spawn(board.sms_receipts())
+        try:
+            await wait_for(lambda:board.store.one("SELECT status FROM sms WHERE id='accepted'")['status']=='delivered')
+            assert board.store.one("SELECT status FROM sms WHERE id='failed'")['status']=='failed'
+            assert board.store.one("SELECT status FROM sms WHERE id='queued'")['status']=='queued'
+            events=[json.loads(r['payload']) for r in board.store.rows('SELECT payload FROM events')]
+            assert len(events)==1 and events[0]['status']=='delivered'
+        finally:
+            await board.stop()
+    asyncio.run(run())
+
+
 def test_http_contract_header_and_id_conflict(tmp_path):
     from fastapi.testclient import TestClient
     fake=make_fake(tmp_path/"data",tmp_path/"runtime")
