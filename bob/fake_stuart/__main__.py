@@ -155,6 +155,23 @@ def serve_in_background() -> None:
 
 
 # --- the scripted patient ---------------------------------------------------------------------
+def resolve(obj, phones: dict):
+    """Fill {clinician:<clinic_id>} with the clinician's phone from the seed Bob runs with."""
+    if isinstance(obj, str) and obj.startswith("{clinician:"):
+        return phones[obj[len("{clinician:"):-1]]
+    if isinstance(obj, list):
+        return [resolve(x, phones) for x in obj]
+    if isinstance(obj, dict):
+        return {k: resolve(v, phones) for k, v in obj.items()}
+    return obj
+
+
+def clinician_phones() -> dict:
+    from vitamin_bob.privacy import norm_phone  # noqa: PLC0415
+    seed = json.loads(config.SEED_FILE.read_text(encoding="utf-8"))
+    return {c["clinic_id"]: norm_phone(c["phone"]) for c in seed["clinicians"]}
+
+
 def load_vignettes() -> dict:
     out = {}
     for f in (BOB_DIR / "eval").glob("vignettes*.jsonl"):
@@ -434,6 +451,7 @@ def main() -> int:
         return 1
 
     scenarios = json.loads((Path(__file__).with_name("scenarios.json")).read_text(encoding="utf-8"))["scenarios"]
+    scenarios = resolve(scenarios, clinician_phones())
     if args.names:
         scenarios = [s for s in scenarios if s["name"] in args.names]
     vignettes, ctx, results = load_vignettes(), {}, []

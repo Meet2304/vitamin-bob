@@ -1,5 +1,5 @@
 {
- "_note": "Scripted calls for the fake Stuart. 'vignette' names a case in eval/vignettes*.jsonl: its transcript is what the patient says and its ground truth is how the patient answers keypad questions. 'menu' lists the keys pressed at each language menu (null = no key, timeout). 'keys' overrides answers per clip key, consumed in order. 'expect' is checked from the outcome clips Bob plays and the SMS Bob asks Stuart to send.",
+ "_note": "{clinician:<clinic_id>} is replaced by that clinic's clinician phone from Bob's seed file. Scripted calls for the fake Stuart. 'vignette' names a case in eval/vignettes*.jsonl: its transcript is what the patient says and its ground truth is how the patient answers keypad questions. 'menu' lists the keys pressed at each language menu (null = no key, timeout). 'keys' overrides answers per clip key, consumed in order. 'expect' is checked from the outcome clips Bob plays and the SMS Bob asks Stuart to send.",
  "scenarios": [
   {
    "name": "hi_emergency",
@@ -10,7 +10,7 @@
    "vignette": "v04",
    "expect": {
     "outcome": "emergency",
-    "alert_sms_to": "+919000000001"
+    "alert_sms_to": "{clinician:rampur}"
    }
   },
   {
@@ -139,7 +139,7 @@
    "hangup_after_questions": 1,
    "expect": {
     "outcome": null,
-    "alert_sms_to": "+919000000001"
+    "alert_sms_to": "{clinician:rampur}"
    }
   },
   {
@@ -168,11 +168,11 @@
   },
   {
    "name": "clinician_checkin_missed_call",
-   "phone": "+919000000002",
+   "phone": "{clinician:devgaon}",
    "kind": "missed_call_only",
    "expect": {
     "callback": false,
-    "sms_to": "+919000000002"
+    "sms_to": "{clinician:devgaon}"
    }
   },
   {
@@ -181,10 +181,10 @@
    "steps": [
     {
      "sms": {
-      "from": "+919000000001",
+      "from": "{clinician:rampur}",
       "text": "CLOSED"
      },
-     "expect_sms_to": "+919000000001"
+     "expect_sms_to": "{clinician:rampur}"
     },
     {
      "call": {
@@ -201,10 +201,10 @@
     },
     {
      "sms": {
-      "from": "+919000000001",
+      "from": "{clinician:rampur}",
       "text": "open"
      },
-     "expect_sms_to": "+919000000001"
+     "expect_sms_to": "{clinician:rampur}"
     },
     {
      "call": {
@@ -239,10 +239,10 @@
     },
     {
      "sms": {
-      "from": "+919000000001",
+      "from": "{clinician:rampur}",
       "text": "ACK {last_code}"
      },
-     "expect_sms_to": "+919000000001"
+     "expect_sms_to": "{clinician:rampur}"
     },
     {
      "sms": {
@@ -258,7 +258,7 @@
    "phone": "+919811000014",
    "kind": "callback_failed",
    "expect": {
-    "alert_sms_to": "+919000000001"
+    "alert_sms_to": "{clinician:rampur}"
    }
   }
  ]

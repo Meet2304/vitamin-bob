@@ -8,6 +8,11 @@ import re
 from . import config
 
 
+def norm_phone(phone: str | None) -> str:
+    """'+1 412-595 4322' -> '+14125954322' (E.164, as Stuart sends it), so seeded numbers always match."""
+    return "".join(ch for ch in (phone or "") if ch.isdigit() or ch == "+")
+
+
 def mask(phone: str | None) -> str:
     """+919812345678 -> +91 ••••••5678. Every phone number on the dashboard goes through this."""
     if not phone:

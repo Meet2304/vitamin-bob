@@ -22,7 +22,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import ValidationError
 
 from . import alerts, clinics, config, contract, conversation, db, sms_commands, stuart_client, sync, understand
-from .privacy import mask, mask_text
+from .privacy import mask, mask_text, norm_phone
 from .prompts import SYSTEM, clip_path, prompts_dir
 
 _call_locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
@@ -115,7 +115,7 @@ def dispatch(ev: dict) -> dict:
 
 def on_missed_call(ev: dict) -> dict:
     """Decide who gets a callback. A registered clinician's missed call is a free check-in instead."""
-    phone = ev["phone"]
+    phone = norm_phone(ev["phone"])
     if clinic := sms_commands.checkin(phone):
         callback, reason = False, f"clinician check-in: {clinic['name']} on duty"
     elif phone == db.hub()["contact_phone"]:

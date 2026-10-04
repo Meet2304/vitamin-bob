@@ -10,6 +10,7 @@ from datetime import timedelta
 from pathlib import Path
 
 os.environ["VB_BOB_DB"] = str(Path(tempfile.mkdtemp()) / "bob_test.db")
+os.environ["VB_SEED_FILE"] = str(Path(__file__).with_name("seed_test.json"))  # fixed dummies, whatever the demo seed says
 os.environ["VB_STUART_URL"] = "http://127.0.0.1:9"  # nothing listens: outboxes must keep messages
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

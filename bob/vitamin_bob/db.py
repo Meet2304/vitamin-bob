@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS clinics (
   referral INTEGER, status TEXT, status_source TEXT, status_at TEXT, reopen_at TEXT);
 CREATE TABLE IF NOT EXISTS clinic_routes (village_id TEXT, clinic_id TEXT, rank INTEGER, travel_minutes INTEGER,
   PRIMARY KEY (village_id, clinic_id));
-CREATE TABLE IF NOT EXISTS clinicians (clinician_id TEXT PRIMARY KEY, clinic_id TEXT, name TEXT, phone TEXT UNIQUE,
+CREATE TABLE IF NOT EXISTS clinicians (clinician_id TEXT PRIMARY KEY, clinic_id TEXT, name TEXT, phone TEXT,
   on_duty_at TEXT);
 CREATE TABLE IF NOT EXISTS clinic_status_log (id TEXT PRIMARY KEY, clinic_id TEXT, status TEXT, source TEXT,
   at TEXT, detail TEXT);
@@ -87,7 +87,14 @@ def conn() -> sqlite3.Connection:
             _conn.execute("PRAGMA journal_mode=WAL")
             _conn.executescript(SCHEMA)
             if not _conn.execute("SELECT 1 FROM hubs").fetchone():
-                seed(_conn)
+                # All or nothing: a half-seeded database would silently lose clinicians.
+                _conn.execute("BEGIN IMMEDIATE")
+                try:
+                    seed(_conn)
+                    _conn.execute("COMMIT")
+                except BaseException:
+                    _conn.execute("ROLLBACK")
+                    raise
         return _conn
 
 
@@ -129,11 +136,13 @@ def hub() -> dict:
 
 
 def seed(c: sqlite3.Connection) -> None:
+    """One phone may serve several clinics (in the demo, Meet's phone is every clinician)."""
+    from .privacy import norm_phone, patient_key  # noqa: PLC0415 - avoid an import cycle at module load
     data = json.loads(config.SEED_FILE.read_text(encoding="utf-8"))
     h = data["hub"]
     hub_id, at = h["hub_id"], iso()
     c.execute("INSERT INTO hubs VALUES (?, ?, ?, ?)",
-              (hub_id, h["name"], h["district_contact"]["name"], h["district_contact"]["phone"]))
+              (hub_id, h["name"], h["district_contact"]["name"], norm_phone(h["district_contact"]["phone"])))
     for v in data["villages"]:
         c.execute("INSERT INTO villages VALUES (?, ?, ?)", (v["village_id"], hub_id, v["name"]))
     for cl in data["clinics"]:
@@ -145,11 +154,12 @@ def seed(c: sqlite3.Connection) -> None:
         for rank, (clinic_id, minutes) in enumerate(route):
             c.execute("INSERT INTO clinic_routes VALUES (?, ?, ?, ?)", (village_id, clinic_id, rank, minutes))
     for cn in data["clinicians"]:
-        c.execute("INSERT INTO clinicians VALUES (?, ?, ?, ?, NULL)", (new_id(), cn["clinic_id"], cn["name"], cn["phone"]))
-    from .privacy import patient_key  # noqa: PLC0415 - avoid an import cycle at module load
+        c.execute("INSERT INTO clinicians VALUES (?, ?, ?, ?, NULL)",
+                  (new_id(), cn["clinic_id"], cn["name"], norm_phone(cn["phone"])))
     for p in data.get("patients", []):
+        phone = norm_phone(p["phone"])
         c.execute("INSERT INTO patients VALUES (?, ?, ?, ?, ?, ?, NULL, ?)",
-                  (new_id(), hub_id, patient_key(p["phone"]), p["phone"], p.get("preferred_lang"),
+                  (new_id(), hub_id, patient_key(phone), phone, p.get("preferred_lang"),
                    p.get("village_id"), at))
     c.execute("INSERT INTO protocols VALUES (?, NULL, NULL, ?)",
               (config.PROTOCOL_VERSION, "Drafted from WHO IMCI danger signs; NOT yet clinician-reviewed."))
@@ -175,7 +185,7 @@ def reset() -> None:
 if __name__ == "__main__":
     import sys
 
-    if "--reset" in sys.argv:
+    if any(a.startswith("--reset") for a in sys.argv[1:]):
         reset()
         print(f"Recreated and seeded {config.DB_PATH}")
     else:

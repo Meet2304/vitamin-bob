@@ -132,9 +132,16 @@ def queue(clinic_id: str) -> list[dict]:
                    WHERE a.clinic_id=? AND a.status='booked' ORDER BY a.priority, a.slot_start""", clinic_id)
 
 
+def clinician_clinics(phone: str) -> list[dict]:
+    """Clinics this phone is registered for, Clinic A first. One phone may cover several clinics."""
+    from .privacy import norm_phone  # noqa: PLC0415
+    return db.q("""SELECT c.*, k.name AS clinician_name, k.clinician_id FROM clinicians k
+                   JOIN clinics c USING (clinic_id) WHERE k.phone=? ORDER BY c.referral, c.label""", norm_phone(phone))
+
+
 def clinician_clinic(phone: str) -> dict | None:
-    return db.one("""SELECT c.*, k.name AS clinician_name, k.clinician_id FROM clinicians k
-                     JOIN clinics c USING (clinic_id) WHERE k.phone=?""", phone)
+    rows = clinician_clinics(phone)
+    return rows[0] if rows else None
 
 
 def clinicians_of(clinic_id: str) -> list[dict]:

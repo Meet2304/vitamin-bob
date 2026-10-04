@@ -2,6 +2,9 @@
 
     OPEN | CLOSED (or CLOSE) | FULL | BACK 14:00 (or BACK 1400, BACK 2PM) | ACK <code> | STATUS | HELP
 
+A phone registered for several clinics may name one at the end: "CLOSED B", "OPEN devgaon".
+Without a name, the command applies to its first clinic (Clinic A first).
+
 Only registered clinician (or district contact) numbers are obeyed; anything else is logged and
 ignored without a reply, so strangers cannot change routing or run up SMS costs. Every accepted
 command is confirmed with a short reply.
@@ -11,6 +14,7 @@ import re
 from datetime import timedelta
 
 from . import alerts, clinics, db, stuart_client
+from .privacy import norm_phone
 
 HELP = "VB commands: OPEN, CLOSED, FULL, BACK 14:00, ACK <code>, STATUS"
 
@@ -30,14 +34,27 @@ def _parse_time(text: str):
     return t if t > db.now() else t + timedelta(days=1)
 
 
+def _pick(mine: list[dict], words: list[str]) -> tuple[dict | None, list[str]]:
+    """Choose which of the sender's clinics a command is about; strip a trailing clinic name."""
+    if not mine:
+        return None, words
+    if len(words) >= 2 and len(mine) > 1 and words[0].upper() != "ACK":
+        key = words[-1].lower()
+        for c in mine:
+            if key in (c["clinic_id"].lower(), c["label"].split()[-1].lower(), c["name"].split()[0].lower()):
+                return c, words[:-1]
+    return mine[0], words
+
+
 def handle(phone: str, text: str) -> str:
     """Apply a command; returns what happened (also stored in sms_inbox.result)."""
-    clinic = clinics.clinician_clinic(phone)
+    phone = norm_phone(phone)
+    mine = clinics.clinician_clinics(phone)
     is_district = phone == db.hub()["contact_phone"]
-    if not clinic and not is_district:
+    if not mine and not is_district:
         return "ignored: unregistered sender"
 
-    words = text.strip().split()
+    clinic, words = _pick(mine, text.strip().split())
     cmd = words[0].upper().strip(".!") if words else ""
     reply, result = None, None
 
@@ -82,6 +99,7 @@ def _village_of(clinic_id: str) -> str | None:
 
 def checkin(phone: str) -> dict | None:
     """A free missed call from a registered clinician means 'on duty now'."""
+    phone = norm_phone(phone)
     clinic = clinics.clinician_clinic(phone)
     if not clinic:
         return None
