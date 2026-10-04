@@ -173,6 +173,7 @@ class AndroidLine(SimulatorLine):
         if 'Error:' in output or 'Permission Denial' in output:
             raise DialFailed('Android rejected the call command')
         self.dial_started = True
+        getattr(self,'on_phase',lambda stage: None)('ringing_back')
         self.disconnected, self.state, self.observed_active = False, "in_call", False
         deadline=time.monotonic()+float(os.getenv('VB_ANDROID_ANSWER_TIMEOUT_SECONDS','45'))
         seen=False
@@ -193,6 +194,7 @@ class AndroidLine(SimulatorLine):
         self.monitor_task = asyncio.create_task(self.monitor())
         required_route = os.getenv('VB_ANDROID_REQUIRED_AUDIO_ROUTE')
         if required_route:
+            getattr(self,'on_phase',lambda stage: None)('transfer_to_pc')
             deadline = time.monotonic() + float(os.getenv('VB_ANDROID_AUDIO_ROUTE_TIMEOUT_SECONDS', '60'))
             stable = 0
             while time.monotonic() < deadline:
