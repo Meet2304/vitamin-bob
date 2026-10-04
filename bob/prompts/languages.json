@@ -1,0 +1,24 @@
+{
+  "_note": "Languages are data. To add one: add an entry here and a <code>.json catalogue with the same keys as hi.json, then run tools/gen_prompts.py. menu_key must match the digit spoken in that language's lang_select text.",
+  "tts": {
+    "provider": "sarvam",
+    "model": "bulbul:v3",
+    "pace": 0.95
+  },
+  "languages": [
+    {
+      "code": "hi",
+      "name": "Hindi",
+      "menu_key": "1",
+      "enabled": true,
+      "tts": {"language_code": "hi-IN", "speaker": "priya"}
+    },
+    {
+      "code": "gu",
+      "name": "Gujarati",
+      "menu_key": "2",
+      "enabled": true,
+      "tts": {"language_code": "gu-IN", "speaker": "priya"}
+    }
+  ]
+}
