@@ -136,9 +136,15 @@ def root():
     return RedirectResponse("/dashboard")
 
 
+@app.get("/dashboard/live")
 @app.get("/dashboard")
 def dashboard():
     return FileResponse(DASHBOARD, media_type="text/html")
+
+
+@app.get("/dashboard/details")
+def dashboard_details():
+    return FileResponse(DASHBOARD.with_name('dashboard-details.html'), media_type="text/html")
 
 
 def _model_available() -> bool:

@@ -1,4 +1,4 @@
-param([ValidateSet('recorded','phone')][string]$Mode = 'recorded')
+param([ValidateSet('recorded','phone')][string]$Mode = 'phone')
 $ErrorActionPreference = 'Stop'
 $vbName = "demo-$Mode"
 $vbConfig = Get-Content (Join-Path $PSScriptRoot "runtime\profiles\$vbName.json") -Raw | ConvertFrom-Json

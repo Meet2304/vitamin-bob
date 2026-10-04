@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitamin Bob · District Hub</title>
+<style>
+  /* Offline by design: system fonts, no CDN, no build step. Refreshes from /api/state every second. */
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #17202a; --muted: #5d6b7a; --line: #e3e7ec; --soft: #f7f9fb;
+    --accent: #0f6e5c; --accent-soft: #e3f3ef;
+    --emergency: #c0262d; --high: #d9661f; --uncertain: #7b45b8; --medium: #b98a00; --low: #2f8a4b;
+    --open: #2f8a4b; --closed: #c0262d; --full: #d9661f; --unknown: #7a8796;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans", "Noto Sans Devanagari", "Noto Sans Gujarati", sans-serif; }
+  header { background: #12312b; color: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .2px; }
+  header h1 small { font-weight: 400; opacity: .75; margin-left: 8px; font-size: 13px; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; align-items: center; }
+  .pill { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,.12); white-space: nowrap; }
+  .pill.ok::before, .pill.bad::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .pill.ok::before { background: #4ade80; } .pill.bad::before { background: #f87171; }
+  .clock { font-variant-numeric: tabular-nums; opacity: .9; }
+  main { padding: 16px 20px 40px; display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  .panel h2 .count { background: var(--soft); border: 1px solid var(--line); color: var(--ink); border-radius: 999px; padding: 0 7px; font-size: 11px; letter-spacing: 0; }
+  .span3 { grid-column: span 3; } .span4 { grid-column: span 4; } .span5 { grid-column: span 5; }
+  .span7 { grid-column: span 7; } .span8 { grid-column: span 8; } .span12 { grid-column: span 12; } .span6 { grid-column: span 6; }
+  @media (max-width: 1100px) { .span3, .span4, .span5, .span6, .span7, .span8 { grid-column: span 12; } }
+  .empty { color: var(--muted); font-style: italic; padding: 6px 0; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .grow { flex: 1; min-width: 0; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; font-size: 12px; }
+  .muted { color: var(--muted); } .small { font-size: 12px; }
+  .tier { display: inline-block; font-weight: 700; font-size: 11px; letter-spacing: .5px; padding: 2px 8px; border-radius: 4px; color: #fff; }
+  .tier.EMERGENCY { background: var(--emergency); } .tier.HIGH { background: var(--high); } .tier.UNCERTAIN { background: var(--uncertain); }
+  .tier.MEDIUM { background: var(--medium); } .tier.LOW { background: var(--low); }
+  .st { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; color: #fff; }
+  .st.open { background: var(--open); } .st.closed { background: var(--closed); } .st.full { background: var(--full); } .st.unknown { background: var(--unknown); }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); }
+  .tag.desc { background: var(--accent-soft); border-color: #bfe3da; color: var(--accent); }
+  .tag.key { background: #eef1fb; border-color: #d4dbf3; color: #3b4f9a; }
+  .tag.live { background: #fde8e8; border-color: #f6c4c4; color: var(--emergency); font-weight: 600; }
+  button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { color: #fff; filter: brightness(1.1); }
+  button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .calls { display: grid; grid-template-columns: 260px 1fr; gap: 12px; }
+  @media (max-width: 800px) { .calls { grid-template-columns: 1fr; } }
+  .calllist { border-right: 1px solid var(--line); padding-right: 10px; max-height: 560px; overflow: auto; }
+  .callitem { padding: 8px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; margin-bottom: 4px; }
+  .callitem:hover { background: var(--soft); }
+  .callitem.sel { background: var(--accent-soft); border-color: #bfe3da; }
+  .detail { min-width: 0; }
+  .timeline { max-height: 300px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--soft); }
+  .turn { display: grid; grid-template-columns: 64px 62px 1fr; gap: 8px; padding: 4px 0; border-top: 1px dashed var(--line); font-size: 13px; }
+  .turn:first-child { border-top: 0; }
+  .who { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+  .who.bob { color: var(--accent); } .who.patient { color: #3b4f9a; } .who.system { color: var(--muted); }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  @media (max-width: 800px) { .facts { grid-template-columns: 1fr; } }
+  .box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .box h3 { margin: 0 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .transcript { font-size: 15px; background: #fffdf5; border: 1px solid #f0e6c4; border-radius: 6px; padding: 8px 10px; }
+  ul.reasons { margin: 6px 0 0; padding-left: 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .clinics { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .clinic { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .clinic.closed, .clinic.unknown { background: #fbf6f6; }
+  .clinic .name { font-weight: 600; } .clinic .why { font-size: 12px; color: var(--muted); margin: 4px 0 8px; min-height: 18px; }
+  .clinic .toggles { display: flex; gap: 4px; margin-bottom: 8px; }
+  .q { font-size: 12px; display: flex; gap: 6px; align-items: center; padding: 3px 0; border-top: 1px dashed var(--line); }
+  .alert { border: 1px solid var(--line); border-left: 4px solid var(--uncertain); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+  .alert.EMERGENCY { border-left-color: var(--emergency); } .alert.HIGH { border-left-color: var(--high); }
+  .alert.open { background: #fff7f7; } .alert.acked { opacity: .65; background: #fff; }
+  .alert .top { display: flex; gap: 8px; align-items: center; }
+  .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi div { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .kpi b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .banner { grid-column: span 12; background: #fff4e5; border: 1px solid #f3d3a3; color: #7a4a00; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Vitamin Bob <small id="hub">District hub</small></h1>
+  <div class="pills" id="pills"></div>
+  <span class="clock" id="clock"></span>
+</header>
+<main id="main">
+  <div id="banners" style="display:contents"></div>
+
+  <section class="panel span4"><h2>Missed calls &amp; callback queue <span class="count" id="mc-count">0</span></h2><div id="queue"></div></section>
+  <section class="panel span4"><h2>Live calls <span class="count" id="live-count">0</span></h2><div id="live"></div></section>
+  <section class="panel span4"><h2>Cost to the health system (today)</h2><div id="costs"></div></section>
+
+  <section class="panel span8"><h2>Calls: what was said, understood and decided</h2>
+    <div class="calls"><div class="calllist" id="calllist"></div><div class="detail" id="detail"></div></div></section>
+  <section class="panel span4"><h2>Urgent alerts: a clinician must acknowledge <span class="count" id="alert-count">0</span></h2><div id="alerts"></div></section>
+
+  <section class="panel span12"><h2>Clinics: status, failover and queues</h2><div class="clinics" id="clinics"></div></section>
+
+  <section class="panel span5"><h2>Sync to Central (SMS data link via Stuart)
+    <button style="margin-left:auto" onclick="post('/api/sync/daily_summary')">Send daily summary</button></h2><div id="sync"></div></section>
+  <section class="panel span4"><h2>SMS</h2><div id="sms"></div></section>
+  <section class="panel span3"><h2>System</h2><div id="system"></div></section>
+
+  <section class="panel span12"><h2>Evaluation (per language)</h2><div id="eval"></div></section>
+</main>
+<script>
+const LANG = { hi: "Hindi", gu: "Gujarati" };
+let selected = null, lastCallIds = "", S = null;
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const t = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
+const hm = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+const ago = s => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${Math.floor(s / 3600)}h`;
+const tier = x => x ? `<span class="tier ${x}">${x}</span>` : "";
+const st = x => `<span class="st ${x}">${x}</span>`;
+const label = k => k.replace(/_days$/, " duration").replace(/_/g, " ");
+const slot = iso => new Date(iso).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+
+async function post(url, body) {
+  try { await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); }
+  catch (e) { console.warn(e); }
+  refresh();
+}
+
+function renderHeader(s) {
+  document.getElementById("hub").textContent = `${s.hub.name} · ${s.hub.hub_id}`;
+  document.getElementById("clock").textContent = new Date(s.now).toLocaleTimeString();
+  const m = s.model, stu = s.stuart;
+  document.getElementById("pills").innerHTML = [
+    `<span class="pill ${stu.reachable ? "ok" : "bad"}">Stuart ${stu.reachable ? "connected" : "unreachable"}</span>`,
+    `<span class="pill ${m.available ? "ok" : "bad"}">${m.available ? "Gemma 4 on-device: " + esc(m.name) : "Model offline: keyword fallback"}</span>`,
+    `<span class="pill">Contract ${esc(s.contract)}</span>`,
+    `<span class="pill">Protocol ${esc(s.protocol?.version)} · not yet clinician-reviewed</span>`,
+    `<span class="pill">No internet used</span>`,
+  ].join("");
+  const b = [];
+  if (!s.prompts_ready) b.push("Prompt audio missing: run tools/gen_prompts.py before taking calls.");
+  if (!stu.reachable) b.push(`Stuart is not reachable at ${esc(s.stuart_url)}. Calls cannot arrive; SMS and sync wait in Bob's outbox.`);
+  document.getElementById("banners").innerHTML = b.map(x => `<div class="banner">${x}</div>`).join("");
+}
+
+function renderQueue(s) {
+  const q = s.stuart.status?.queue || [];
+  const lines = s.stuart.status?.lines || [];
+  let h = lines.map(l => `<div class="row small"><span class="tag">${esc(l.label)}</span><span class="mono">${esc(l.msisdn)}</span><span class="grow"></span><span class="muted">${esc(l.state)}</span></div>`).join("");
+  h += q.length ? q.map(x => `<div class="row"><span class="mono">${esc(x.phone)}</span><span class="grow muted small">received ${hm(x.received_at)} · attempts ${x.attempts}</span><span class="tag">${esc(x.status)}</span></div>`).join("")
+               : `<div class="empty">Callback queue empty</div>`;
+  h += `<div class="muted small" style="margin-top:8px">Recent missed calls (Bob's decision)</div>`;
+  h += s.missed_calls.slice(0, 6).map(m => `<div class="row small"><span class="mono">${esc(m.phone)}</span><span class="grow muted">${hm(m.at)} · ${esc(m.reason)}</span>${m.callback ? '<span class="tag desc">call back</span>' : '<span class="tag">no callback</span>'}</div>`).join("") || `<div class="empty">None yet</div>`;
+  document.getElementById("queue").innerHTML = h;
+  document.getElementById("mc-count").textContent = q.length;
+}
+
+function renderLive(s) {
+  const live = s.calls.filter(c => c.live);
+  const active = s.stuart.status?.active_calls || [];
+  document.getElementById("live-count").textContent = live.length;
+  document.getElementById("live").innerHTML = live.length ? live.map(c => {
+    const a = active.find(x => x.call_id === c.call_id);
+    const last = c.turns[c.turns.length - 1];
+    return `<div class="row" style="cursor:pointer" onclick="selectCall('${c.call_id}')"><span class="tag live">LIVE</span><span class="mono">${esc(c.phone)}</span>
+      <span class="grow small muted">${esc(LANG[c.lang] || "choosing language")} · ${esc(c.step)}${a ? " · " + esc(a.current_action) : ""}<br>${esc((last?.text || "").slice(0, 70))}</span></div>`;
+  }).join("") : `<div class="empty">No call in progress</div>`;
+}
+
+function renderCosts(s) {
+  const c = s.costs;
+  document.getElementById("costs").innerHTML = `<div class="kpi">
+    <div><b>₹${c.patient_pays}</b><span>Patient pays</span></div>
+    <div><b>${c.per_case_inr == null ? "–" : "₹" + c.per_case_inr.toFixed(2)}</b><span>Est. cost per case</span></div>
+    <div><b>${c.cases_today}</b><span>Cases today</span></div>
+    <div><b>${c.segments_today ?? "–"}</b><span>SMS segments (${c.sms_sent_today ?? "–"} SMS)</span></div></div>
+    <div class="muted small" style="margin-top:8px">Callbacks ${c.call_minutes_today} min (₹${c.call_inr}) + SMS ₹${c.sms_inr}. Estimates at ₹${c.prices.sms_segment_inr}/segment and ₹${c.prices.call_minute_inr}/min; counts from Stuart.</div>`;
+}
+
+function selectCall(id) { selected = id; renderCalls(S); }
+
+function renderCalls(s) {
+  const ids = s.calls.map(c => c.call_id).join(",");
+  if (!selected || !s.calls.find(c => c.call_id === selected) || (ids !== lastCallIds && s.calls[0]?.live)) selected = s.calls[0]?.call_id || null;
+  lastCallIds = ids;
+  document.getElementById("calllist").innerHTML = s.calls.length ? s.calls.map(c => `<div class="callitem ${c.call_id === selected ? "sel" : ""}" onclick="selectCall('${c.call_id}')">
+      <div>${c.live ? '<span class="tag live">LIVE</span> ' : ""}${tier(c.triage?.tier)} <span class="mono">${esc(c.phone)}</span></div>
+      <div class="small muted">${hm(c.started_at)} · ${esc(LANG[c.lang] || "—")}${c.triage ? " · " + esc(c.triage.clinic_name || "") : ""}</div></div>`).join("")
+    : `<div class="empty">No calls yet. Give a missed call to Kevin's line.</div>`;
+  const c = s.calls.find(x => x.call_id === selected);
+  document.getElementById("detail").innerHTML = c ? callDetail(c) : "";
+}
+
+function callDetail(c) {
+  const tr = c.triage, u = c.understanding;
+  const turns = c.turns.map(x => `<div class="turn"><span class="muted mono">${t(x.at)}</span><span class="who ${x.who}">${esc(x.who)}</span>
+      <span>${x.kind === "keypad" ? `<span class="tag key">pressed ${esc(x.text)}</span>` : esc(x.text)}</span></div>`).join("");
+  let facts = "";
+  if (tr) {
+    const a = tr.answers, rows = [];
+    for (const [k, v] of Object.entries(a.symptoms)) if (v.present !== "unknown")
+      rows.push([k, v.present + (v.days ? `, ${v.days} d` : ""), a.source[k], a.source[k + "_days"]]);
+    for (const [k, v] of Object.entries(a.flags)) if (v !== "unknown") rows.push([k, v, a.source[k]]);
+    const src = x => x === "description" ? '<span class="tag desc">from description</span>' : x === "keypad" ? '<span class="tag key">keypad</span>' : "";
+    const understood = rows.length ? `<table><tr><th>Item</th><th>Value</th><th>Source</th></tr>${rows.map(r =>
+        `<tr><td>${esc(label(r[0]))}</td><td>${esc(r[1])}</td><td>${src(r[2])}${r[3] && r[3] !== r[2] ? " " + src(r[3]) : ""}</td></tr>`).join("")}</table>` : `<div class="empty">Nothing recorded</div>`;
+    const skipped = (tr.skipped || []).map(k => `<li>Skipped <b>${esc(k.name)}</b>: ${esc(k.reason)}</li>`).join("");
+    const appt = tr.appointment ? (tr.appointment.priority <= 2 ? "Go now · top of the clinic's queue" : `Appointment ${slot(tr.appointment.slot_start)}`) : "Call 108 now (no clinic appointment)";
+    facts = `<div class="facts">
+      <div class="box"><h3>Outcome</h3><div>${tier(tr.tier)} <span class="muted small">case ${esc(tr.code)} · ${tr.questions} keypad question${tr.questions === 1 ? "" : "s"}</span></div>
+        <ul class="reasons">${tr.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+        <div style="margin-top:8px"><b>${esc(tr.tier === "EMERGENCY" ? "108 ambulance" : tr.clinic_name)}</b> · ${esc(appt)}</div>
+        ${tr.tier === "EMERGENCY" ? `<div class="small muted">Alert sent to ${esc(tr.clinic_name)}</div>` : ""}
+        ${skipped ? `<ul class="reasons small">${skipped}</ul>` : ""}
+        <div class="muted small" style="margin-top:6px">Protocol ${esc(tr.protocol_version)} · ${esc(tr.model_version)}${tr.understand_ms ? ` · understood in ${(tr.understand_ms / 1000).toFixed(1)} s` : ""}</div></div>
+      <div class="box"><h3>What was understood, and from where</h3>${understood}
+        ${u?.rejected?.length ? `<div class="small muted" style="margin-top:6px">Dropped (model claim not in the transcript): ${esc(u.rejected.join(", "))}</div>` : ""}
+        ${u?.notes?.length ? `<div class="small muted">${esc(u.notes.join(" · "))}</div>` : ""}</div></div>`;
+  }
+  return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">${c.live ? '<span class="tag live">LIVE</span>' : ""}<span class="mono">${esc(c.phone)}</span>
+      <span class="muted small">${esc(LANG[c.lang] || "")} · started ${t(c.started_at)}${c.ended_at ? " · ended " + t(c.ended_at) + " (" + esc(c.end_reason) + ")" : ""}</span></div>
+    ${tr?.transcript ? `<div class="transcript">“${esc(tr.transcript)}”</div>` : ""}
+    <div class="timeline" style="margin-top:10px">${turns}</div>${facts}`;
+}
+
+function renderAlerts(s) {
+  const open = s.alerts.filter(a => !a.acked_at);
+  document.getElementById("alert-count").textContent = open.length;
+  document.getElementById("alerts").innerHTML = s.alerts.length ? s.alerts.slice(0, 10).map(a => `<div class="alert ${a.tier} ${a.acked_at ? "acked" : "open"}">
+      <div class="top">${tier(a.tier)}<b class="mono">#${esc(a.code)}</b><span class="grow small muted">${esc(a.clinic_name || "")} · ${ago(a.age_s)} ago</span>
+      ${a.acked_at ? `<span class="tag">acked</span>` : `<button class="primary" onclick="post('/api/alerts/${a.alert_id}/ack',{by:'Dashboard'})">Acknowledge</button>`}</div>
+      <div class="small" style="margin-top:4px">${esc(a.summary)}</div>
+      <div class="small muted">${esc(a.phone)} · ${esc(a.kind.replace(/_/g, " "))}${a.escalated_to.length ? " · escalated to " + esc(a.escalated_to.join(" → ")) : ""}${a.acked_at ? " · acknowledged by " + esc(a.acked_by) + " at " + hm(a.acked_at) : ""}</div></div>`).join("")
+    : `<div class="empty">No alerts</div>`;
+}
+
+function renderClinics(s) {
+  document.getElementById("clinics").innerHTML = s.clinics.map(c => `<div class="clinic ${c.effective_status}">
+      <div style="display:flex;gap:6px;align-items:center"><span class="name grow">${esc(c.name)}</span>${st(c.effective_status)}</div>
+      <div class="small muted">${esc(c.label)} · ${esc(c.hours)} · ${c.booked_today}/${c.capacity_per_day} today${c.referral ? " · referral" : ""}</div>
+      <div class="why">${esc(c.why)}</div>
+      <div class="toggles">${["open", "closed", "full"].map(x => `<button class="${c.status === x ? "on" : ""}" onclick="post('/api/clinics/${c.clinic_id}/status',{status:'${x}'})">${x}</button>`).join("")}</div>
+      ${c.queue.length ? c.queue.slice(0, 6).map(q => `<div class="q">${tier(q.tier)}<span class="mono">#${esc(q.code)}</span><span class="grow muted">${q.priority <= 2 ? "now" : slot(q.slot_start)}</span></div>`).join("")
+        + (c.queue.length > 6 ? `<div class="small muted">+${c.queue.length - 6} more</div>` : "") : `<div class="small muted">Queue empty</div>`}</div>`).join("");
+}
+
+function renderSync(s) {
+  const k = s.sync.counts, ss = s.stuart.status?.sync;
+  document.getElementById("sync").innerHTML = `<div class="small muted" style="margin-bottom:6px">Bob's outbox: ${["pending", "queued", "sent", "acked", "failed"].map(x => `${x} ${k[x] || 0}`).join(" · ")}${ss ? ` &nbsp;|&nbsp; Stuart: acked ${ss.acked}, failed ${ss.failed}` : ""}</div>
+    <table><tr><th>Time</th><th>Kind</th><th>Payload (what Central receives)</th><th class="num">Bytes</th><th>Status</th></tr>
+    ${s.sync.recent.slice(0, 8).map(r => `<tr><td class="mono">${hm(r.created_at)}</td><td>${esc(r.kind)}</td><td class="mono" style="word-break:break-all">${esc(r.payload)}</td><td class="num">${r.bytes}</td><td>${esc(r.status)}</td></tr>`).join("")}</table>
+    <div class="small muted" style="margin-top:6px">≤ 200 bytes each; no phone numbers, names or free text. Patient key is a keyed hash.</div>`;
+}
+
+function renderSms(s) {
+  const out = s.sms.slice(0, 7).map(m => `<div class="row small"><span class="tag">${esc(m.priority)}</span><span class="grow">→ <span class="mono">${esc(m.to_phone)}</span> ${esc(m.text.slice(0, 80))}</span><span class="muted">${esc(m.status)}</span></div>`).join("");
+  const inn = s.sms_inbox.slice(0, 5).map(m => `<div class="row small"><span class="tag key">in</span><span class="grow"><span class="mono">${esc(m.phone)}</span> “${esc(m.text)}”</span><span class="muted">${esc(m.result)}</span></div>`).join("");
+  document.getElementById("sms").innerHTML = (inn ? `<div class="muted small">Received (clinician commands)</div>${inn}` : "") + `<div class="muted small" style="margin-top:6px">Sent via Stuart</div>${out || '<div class="empty">None</div>'}`;
+}
+
+function renderSystem(s) {
+  document.getElementById("system").innerHTML = `<div class="small">Bob ${esc(s.bob_url)}<br>Stuart ${esc(s.stuart_url)}<br>Model ${esc(s.model.url)} (${esc(s.model.mode)})</div>
+    <div class="muted small" style="margin-top:8px">Recent warnings</div>${s.warnings.length ? s.warnings.map(w => `<div class="small row"><span class="mono muted">${hm(w.at)}</span><span class="grow">${esc(w.source)}: ${esc(w.text)}</span></div>`).join("") : '<div class="empty">None</div>'}`;
+}
+
+function renderEval(s) {
+  const e = s.eval;
+  if (!e) { document.getElementById("eval").innerHTML = `<div class="empty">Run: python eval/run_eval.py --mode all</div>`; return; }
+  document.getElementById("eval").innerHTML = `<table><tr><th>Set</th><th class="num">Cases</th><th class="num">Missed urgent (target 0)</th><th class="num">Emergency not sent to 108</th><th class="num">Tier accuracy</th><th class="num">Uncertain rate</th><th class="num">Keypad questions / call</th><th class="num">Misreads</th><th class="num">Understand time</th></tr>
+    ${e.summaries.map(x => `<tr><td>${esc(x.set)}</td><td class="num">${x.n}</td><td class="num" style="color:${x.missed_urgent ? "var(--emergency)" : "inherit"};font-weight:700">${x.missed_urgent}</td><td class="num">${x.emerg_to_clinic}</td><td class="num">${Math.round(x.accuracy * 100)}%</td><td class="num">${Math.round(x.uncertain_rate * 100)}%</td><td class="num">${x.avg_questions}</td><td class="num">${x.misreads}</td><td class="num">${x.avg_understand_s} s</td></tr>`).join("")}</table>
+    <div class="small muted" style="margin-top:6px">Synthetic vignettes written by the team plus 10 real recordings by the team; not real patients. Run at ${esc(e.at)}.</div>`;
+}
+
+async function refresh() {
+  try {
+    const r = await fetch("/api/state", { cache: "no-store" });
+    S = await r.json();
+    renderHeader(S); renderQueue(S); renderLive(S); renderCosts(S); renderCalls(S); renderAlerts(S);
+    renderClinics(S); renderSync(S); renderSms(S); renderSystem(S); renderEval(S);
+  } catch (e) {
+    document.getElementById("banners").innerHTML = `<div class="banner">Bob is not responding (${esc(e.message)}). Retrying…</div>`;
+  }
+}
+refresh();
+setInterval(refresh, 1000);
+</script>
+</body>
+</html>

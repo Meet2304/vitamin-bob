@@ -44,6 +44,8 @@ class Store:
           id TEXT PRIMARY KEY, request TEXT, status TEXT, seq INTEGER,
           frames TEXT, attempts INTEGER DEFAULT 0, next_at REAL DEFAULT 0);
         CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS call_progress (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, missed_id TEXT, stage TEXT, at TEXT);
         """)
         sms_columns={r['name'] for r in self.db.execute('PRAGMA table_info(sms)')}
         for column in ('created_at','updated_at'):

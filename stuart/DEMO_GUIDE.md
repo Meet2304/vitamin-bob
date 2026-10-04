@@ -1,14 +1,24 @@
 # Integrated Vitamin Bob demonstration
 
-Combines merged `main` at `58d2341` (Claude's Bob PR) with Stuart. Open **http://127.0.0.1:8200/demo**. Bob's full dashboard is at **http://127.0.0.1:8100/dashboard**.
+Combines merged Bob with Stuart and local Gemma. The primary live-phone dashboard is **http://127.0.0.1:8100/dashboard**. The older detailed operations view is available at `/dashboard/details`.
+
+For adding this view to the website branch, see [WEBSITE_INTEGRATION.md](WEBSITE_INTEGRATION.md). The stable embed URL is `/dashboard/live`.
+
+## Live phone first
+
+The launcher now defaults to live phone mode. On the approved caller phone, dial the S24 number shown on the dashboard, let it ring, and hang up. The dashboard shows **Missed call → In the queue → Calling you → Conversation → Your result**. The queue waits eight seconds before dialing so the transition is visible. **Pause callbacks** holds queued work without interrupting an active call; **Resume callbacks** releases it.
+
+Answer the callback, then click **Transfer to PC** in Phone Link. That manual audio transfer is still required. Follow the Hindi/Gujarati spoken prompts on your own phone. The dashboard shows when to listen, press keys, or speak, and displays the result once Bob confirms the call data. A new missed call after a completed or failed call can trigger a fresh callback immediately; duplicate observations of the same Android call-log entry remain deduplicated.
+
+The real receiving number is stored only in the ignored local profile. Only the approved caller is processed. USB, Bluetooth, Phone Link, the configured PC audio route, and SMSGate Local server must remain available. Outgoing SMS remains disabled; Central delivery uses encrypted local loopback.
 
 ## Start and stop
 
 From this repository's `stuart/` directory in PowerShell:
 
 ```powershell
-.\Start-IntegratedDemo.ps1
-.\Stop-IntegratedDemo.ps1
+.\Start-IntegratedDemo.ps1 -Mode phone
+.\Stop-IntegratedDemo.ps1 -Mode phone
 ```
 
 The launcher starts local Gemma, Bob, and Stuart, waits for the model, and reports the demo URL. It refuses occupied ports. Stop shuts down both HTTP services and the model it started. History survives a restart. It does not install a Windows service.
@@ -18,6 +28,8 @@ The existing Python environment in `stuart/.venv` satisfies Bob's dependencies t
 Private profiles, copied assets, databases, recordings, logs, and tokens live under ignored `stuart/runtime/`. The original Bob worktree and database are untouched. The demo seeds from the merged dummy district, not a private clinician seed.
 
 ## Five-minute presentation
+
+The following is an optional recorded demonstration. Start it explicitly with `Start-IntegratedDemo.ps1 -Mode recorded`, after stopping phone mode, and stop it with `Stop-IntegratedDemo.ps1 -Mode recorded`. Its controls remain at http://127.0.0.1:8200/demo.
 
 1. Open the demo page. The top status should show Gemma + Bob + Stuart, local.
 2. Select **Hindi · fever for two days**. Preview its audio if useful, then click **Start conversation**. Watch the description, follow-up questions, MEDIUM tier, and appointment below.
@@ -51,7 +63,7 @@ Stop recorded mode first, then:
 
 The first launch derives the allowed test peer from private `kevin.json`, uses a separate dataset, and enables actual callbacks for that peer. Keep USB connected, Bluetooth paired, Phone Link open, and SMSGate's Local server running. From the approved second phone, call the S24 and hang up. Answer the callback and choose **Transfer to PC**. Use 1 for Hindi or 2 for Gujarati, then follow Bob's prompts.
 
-This wires the previously verified phone transport to real Bob/Gemma. A full physical call through this new integrated mode has **not** been performed, following the request to stop phone probes. Outbound SMS starts disabled; alerts remain in Bob's outbox and can be acknowledged on the dashboard. Plain incoming SMS remains unverified because earlier messages arrived as MMS.
+An actual missed-call callback completed through integrated Bob/Gemma on October 4, 2026. The dashboard recorded the missed call, queue, callback, connection, conversation, and final data receipt. The caller selected Gujarati; Gemma processed the recording in about eight seconds. This run used manual **Transfer to PC**. Evidence is saved locally in `runtime/integrated-reports/live-phone-2026-10-04.json`; it establishes the integration path, not clinical accuracy. Outbound SMS starts disabled; alerts remain in Bob's outbox and can be acknowledged on the dashboard. Plain incoming SMS remains unverified because earlier messages arrived as MMS.
 
 ## Integration result, 2026-10-04
 

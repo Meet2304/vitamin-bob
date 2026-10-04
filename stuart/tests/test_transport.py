@@ -391,6 +391,15 @@ def test_end_to_end_mock_call_sms_and_sync(tmp_path,monkeypatch):
             await wait_for(lambda: board.store.one("SELECT status FROM sync WHERE id='rec1'")["status"]=="acked",6)
             assert len(board.central.rows())==1
             assert board.store.one("SELECT attempts FROM sync WHERE id='rec1'")["attempts"]==2
+            phases=[r['stage'] for r in board.store.rows('SELECT stage FROM call_progress WHERE missed_id=? ORDER BY id',(first,))]
+            assert phases[:2]==['missed','queued']
+            assert phases.index('dialing')<phases.index('connected')<phases.index('completed')<phases.index('data_received')
+            # A fresh physical missed call can retry immediately after completion.
+            second=await board.missed(Missed(phone='+919000000001',source_id='physical-second'))
+            assert second!=first
+            assert await board.missed(Missed(phone='+919000000001',source_id='physical-second'))==second
+            await wait_for(lambda: board.store.one('SELECT status FROM missed WHERE id=?',(second,))['status']=='done')
+            assert await board.missed(Missed(phone='+919000000001',source_id='physical-second'))==second
         finally:
             await board.stop()
     asyncio.run(run())
