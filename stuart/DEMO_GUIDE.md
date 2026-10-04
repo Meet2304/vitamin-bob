@@ -84,3 +84,23 @@ To repeat the integration check against an idle recorded demo:
 ```
 
 It refuses phone mode, uses real Gemma without transcript sidecars, retains history, and saves a report under `runtime/integrated-reports/`.
+
+
+## Demo setup (Kevin, patient, clinician)
+
+Open **http://127.0.0.1:8100/dashboard/setup** (local operator screen, integrated launcher only).
+
+- **Kevin** is the number people dial: enter the actual number of the SIM in the connected phone. Changing it does not change the SIM or the USB, Bluetooth, Phone Link and Transfer to PC setup.
+- **Patient** places the missed call and receives the callback. It must not be a registered clinician or the district contact (a clinician's missed call is a check-in).
+- **Clinician** (optional) receives alerts for the selected clinic only. Other clinics keep placeholder numbers.
+
+Numbers are normalised to E.164 on the server; a number without `+` needs the country selector. Saving writes a private pending revision to `runtime/.../demo-settings.json` and never places calls or sends messages. **Restart to apply**:
+
+```powershell
+.\Stop-IntegratedDemo.ps1 -Mode phone
+.\Start-IntegratedDemo.ps1 -Mode phone
+```
+
+At startup, before any worker runs, the launcher writes Kevin's number to the active profile's `line_phone`, replaces the previously managed patient/clinician numbers in `allowed_phones` (other peers such as an SMS Central receiver are kept), and registers the clinician in Bob's database (idempotent; no reset, history kept). If this fails, calls and outgoing SMS stay off for that run and the setup screen shows the error. The screen reports success only when the running revision matches the saved one.
+
+Not built yet (shown as such on the screen): patient completion summaries, all-consultation clinician summaries, a hold/review for old queued messages before enabling outgoing SMS, and Queued → Accepted → Sent → Delivered tracking. Outgoing SMS remains disabled in this demo.
