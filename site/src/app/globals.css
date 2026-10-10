@@ -67,6 +67,7 @@ body {
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 @keyframes ring { 0%, 50%, 100% { transform: translateX(0); } 55% { transform: translateX(-4px); } 60% { transform: translateX(4px); } 65% { transform: translateX(-4px); } 70% { transform: translateX(4px); } }
 @keyframes step-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wave { 0%, 75%, 100% { opacity: 0.15; } 15%, 60% { opacity: 1; } }
 
 /* Lids are hidden except for the instant of a blink, so with motion off the eyes stay open. */
 .blink-lids { opacity: 0; animation: px-blink 4.5s steps(1) infinite; }
@@ -74,10 +75,12 @@ body {
 .flicker { animation: flicker 3.2s steps(1) infinite; }
 .marquee { animation: marquee 22s linear infinite; }
 .ring { animation: ring 1.6s steps(1) infinite; }
+/* Ringing signal beside Bob in the hero; arcs light up outwards in turn. */
+.wave { animation: wave 1.8s steps(1) infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .blink-lids, .cursor, .flicker, .marquee, .ring { animation: none !important; }
+  .blink-lids, .cursor, .flicker, .marquee, .ring, .wave { animation: none !important; }
 }
 
 /* Voice bars while Bob listens. */
