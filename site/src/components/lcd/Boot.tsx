@@ -1,6 +1,36 @@
 import { IvrMenu, Screen } from "./Phone";
 import { Sprite } from "./Sprite";
 
+/** Pixels of a ")" arc: part of a circle of radius r centred left of the grid, like a ringing signal. */
+function arc(r: number, cy: number): [number, number][] {
+  const span = Math.round(r * 0.7);
+  const out: [number, number][] = [];
+  for (let dy = -span; dy <= span; dy++) out.push([Math.round(Math.sqrt(r * r - dy * dy)) - Math.round(r * 0.7), cy + dy]);
+  return out;
+}
+
+/** Three arcs that light up one after another while the phone rings, on the same 8px grid as Bob. */
+function RingWaves({ flip = false }: { flip?: boolean }) {
+  return (
+    <svg
+      viewBox="0 3 9 15"
+      width={9 * 8}
+      height={15 * 8}
+      shapeRendering="crispEdges"
+      aria-hidden
+      className={flip ? "-scale-x-100" : ""}
+    >
+      {[3, 6, 9].map((r, i) => (
+        <g key={r} fill="var(--color-px)" className="wave" style={{ animationDelay: `${i * 0.25}s` }}>
+          {arc(r, 10).map(([x, y]) => (
+            <rect key={`${x},${y}`} x={x + i * 2} y={y} width={1} height={1} />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export function Boot() {
   return (
     <Screen id="top" title="VITAMIN BOB">
@@ -17,21 +47,36 @@ export function Boot() {
         </div>
 
         <div className="flex justify-center">
-          <div className="ring px-box w-full max-w-[380px] bg-lcd">
-            <div className="flex items-center justify-between bg-px px-4 py-2 font-mono text-[13px] font-medium text-lcd">
-              <span>1 MISSED CALL</span>
-              <span>02:14</span>
+          <div
+            className="px-box w-full max-w-[380px] bg-lcd"
+            role="img"
+            aria-label="A phone screen: incoming call from Vitamin Bob, calling you back for free"
+          >
+            <div className="flex items-center justify-between bg-px px-4 py-2 font-mono text-[13px] font-medium tracking-wider text-lcd">
+              <span>INCOMING CALL</span>
+              <span className="border border-lcd px-1.5">FREE</span>
             </div>
-            <div className="flex flex-col items-center gap-5 px-6 py-8">
-              <Sprite role="bob" mood="happy" px={11} label="Bob, the character, as pixels on a phone screen" />
-              <div className="text-center">
-                <div className="text-xl font-semibold">Calling you back</div>
-                <div className="font-mono text-lg">+91 ••••••0021<span className="cursor">█</span></div>
+
+            <div className="flex flex-col items-center gap-6 bg-lcd-2/60 px-6 pt-9 pb-8">
+              <div className="flex items-center gap-2">
+                <RingWaves flip />
+                <Sprite role="bob" mood="happy" px={8} />
+                <RingWaves />
+              </div>
+              <div className="flex flex-col items-center gap-1.5 text-center">
+                <div className="text-[34px] leading-none font-bold tracking-tight">Vitamin Bob</div>
+                <div className="text-lg">Calling you back…</div>
+              </div>
+              <div className="flex gap-2 font-mono text-[12px] font-medium">
+                <span className="border-2 border-px px-2 py-0.5">हिंदी</span>
+                <span className="border-2 border-px px-2 py-0.5">ગુજરાતી</span>
+                <span className="bg-px px-2 py-0.5 text-lcd">₹0 FOR YOU</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 border-t-4 border-px font-mono text-[13px] font-medium">
-              <span className="border-r-4 border-px py-2.5 text-center">IGNORE</span>
-              <span className="bg-px py-2.5 text-center text-lcd">ANSWER</span>
+
+            <div className="grid grid-cols-2 border-t-4 border-px font-mono text-[13px] font-medium tracking-wider">
+              <span className="border-r-4 border-px py-3 text-center">IGNORE</span>
+              <span className="bg-px py-3 text-center text-lcd">ANSWER</span>
             </div>
           </div>
         </div>
