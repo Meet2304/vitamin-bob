@@ -2,7 +2,8 @@
 
 The whole site is a feature phone's screen: a pastel-green LCD, pixel sprites of one simple character, and a
 voice-menu navigation ("Press 1 for the problem"). It tells the problem (scarce clinicians, one queue for
-everyone, paperwork), then the fix in eight phone screens, the proof, a live call, and how to try it.
+everyone, paperwork), then the fix in eight phone screens, the proof, a live call, and how to try it. `/team` is
+the phone's contacts: the four people who built it.
 
 **Stack:** Next.js 16 (App Router, static export), React 19, Tailwind CSS 4. No server needed.
 
@@ -12,6 +13,15 @@ npm install
 npm run dev          # http://localhost:3000
 npm run build        # public copy in ./out, served at the domain root (Vercel, any static host)
 npm run build:bob    # Bob's copy, served at /website; then: python ../bob/tools/import_website.py
+```
+
+Before pushing, run what CI runs (`.github/workflows/site-ci.yml`, on every PR that touches `site/`):
+
+```bash
+npm run format:check # Prettier (npm run format to fix)
+npm run lint         # ESLint
+npm run typecheck    # next typegen + tsc
+npm run build        # and npm run build:bob
 ```
 
 ## Deploying to Vercel
@@ -31,14 +41,18 @@ call" screen embeds `/dashboard/live` from the same origin.
 
 ## Where things are
 
-| Path | What |
-|---|---|
-| `src/components/lcd/Sprite.tsx` | The character as LCD pixels: `bob`, `patient`, `child`, `clinician` |
-| `src/components/lcd/Phone.tsx` | Screens, the status bar that follows the story, voice-menu navigation, soft keys |
-| `src/components/lcd/Boot.tsx` | Opening screen |
-| `src/components/lcd/Problem.tsx` | Scarcity, the queue, paperwork, the turn |
-| `src/components/lcd/Fix.tsx` | Eight fix screens, proof, try it, call ended |
-| `src/components/lcd/Live.tsx` | Live call: embed on Bob, explanation elsewhere |
+| Path                             | What                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `src/components/lcd/Sprite.tsx`  | The character as LCD pixels: `bob`, `patient`, `child`, `clinician`              |
+| `src/components/lcd/Phone.tsx`   | Screens, the status bar that follows the story, voice-menu navigation, soft keys |
+| `src/components/lcd/Boot.tsx`    | Opening screen                                                                   |
+| `src/components/lcd/Problem.tsx` | Scarcity, the queue, paperwork, the turn                                         |
+| `src/components/lcd/Fix.tsx`     | Eight fix screens, proof, try it, call ended                                     |
+| `src/components/lcd/Live.tsx`    | Live call: embed on Bob, explanation elsewhere                                   |
+| `src/app/team/page.tsx`          | The team page: group call, then one speed-dial card per person                   |
+| `src/components/team/`           | Team page components; names, emails and links are in `members.ts`                |
+| `public/images/team/`            | Colour portraits and their LCD-dithered versions                                 |
+| `public/images/logos/`           | Gmail, LinkedIn and X logos (svglogos.dev)                                       |
 
 ## Facts on the page, and their sources
 

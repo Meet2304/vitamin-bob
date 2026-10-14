@@ -5,7 +5,8 @@ import { Sprite } from "./Sprite";
 function arc(r: number, cy: number): [number, number][] {
   const span = Math.round(r * 0.7);
   const out: [number, number][] = [];
-  for (let dy = -span; dy <= span; dy++) out.push([Math.round(Math.sqrt(r * r - dy * dy)) - Math.round(r * 0.7), cy + dy]);
+  for (let dy = -span; dy <= span; dy++)
+    out.push([Math.round(Math.sqrt(r * r - dy * dy)) - Math.round(r * 0.7), cy + dy]);
   return out;
 }
 
@@ -40,8 +41,8 @@ export function Boot() {
             Care that starts with a missed call<span className="cursor">_</span>
           </h1>
           <p className="max-w-[600px] text-xl leading-snug md:text-2xl">
-            Any phone. No internet. Free for the patient. Bob calls back, listens in Hindi or Gujarati, and sends
-            you to the clinic that is actually open. Not sure? A person decides.
+            Any phone. No internet. Free for the patient. Bob calls back, listens in Hindi or Gujarati, and sends you to
+            the clinic that is actually open. Not sure? A person decides.
           </p>
           <IvrMenu />
         </div>

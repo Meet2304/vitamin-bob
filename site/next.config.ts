@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   output: "export",
   basePath,
   trailingSlash: true,
+  // Plain <img> paths into public/ are not prefixed by Next, so components read the base path from here.
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
 };
 
 export default nextConfig;

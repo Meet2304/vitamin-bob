@@ -24,7 +24,9 @@ export function Scarcity() {
   return (
     <Screen id="problem" title="THE PROBLEM" signal={2} data={false}>
       <div className="mx-auto w-full max-w-[1280px]">
-        <Kicker n={1} total={3}>Clinicians are scarce</Kicker>
+        <Kicker n={1} total={3}>
+          Clinicians are scarce
+        </Kicker>
         <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
           <div className="text-[120px] leading-none font-bold tracking-tighter md:text-[220px]">36.7</div>
           <div className="max-w-[440px] pb-6 text-2xl leading-snug">
@@ -33,7 +35,10 @@ export function Scarcity() {
         </div>
         <div className="mt-6 flex flex-wrap gap-[6px]" aria-label="36.7 of the 44.5 needed">
           {Array.from({ length: need }).map((_, i) => (
-            <span key={i} className={`h-9 w-[18px] ${i < have ? "bg-px" : "flicker border-2 border-dashed border-px"}`} />
+            <span
+              key={i}
+              className={`h-9 w-[18px] ${i < have ? "bg-px" : "flicker border-2 border-dashed border-px"}`}
+            />
           ))}
         </div>
 
@@ -54,7 +59,10 @@ export function Scarcity() {
             today it goes to whoever arrives first.
           </p>
         </div>
-        <Src>WHO Global Health Observatory, India 2024 (doctors, nurses and midwives); WHO SDG threshold 44.5 (2016). 270 = 10,000 ÷ 36.7.</Src>
+        <Src>
+          WHO Global Health Observatory, India 2024 (doctors, nurses and midwives); WHO SDG threshold 44.5 (2016). 270 =
+          10,000 ÷ 36.7.
+        </Src>
       </div>
     </Screen>
   );
@@ -65,13 +73,15 @@ export function Queue() {
   return (
     <Screen id="queue" title="THE PROBLEM" signal={2} data={false} clock="16:00">
       <div className="mx-auto w-full max-w-[1280px]">
-        <Kicker n={2} total={3}>One line for everyone</Kicker>
+        <Kicker n={2} total={3}>
+          One line for everyone
+        </Kicker>
         <h2 className="max-w-[900px] text-[40px] leading-[1.05] font-bold tracking-tight md:text-[60px]">
           The urgent wait with the routine.
         </h2>
         <p className="mt-5 max-w-[640px] text-2xl leading-snug">
-          Without a way to sort people before they travel, the clinic sees whoever came first. Somewhere in the line,
-          a child has had a fit. Nobody at the door knows.
+          Without a way to sort people before they travel, the clinic sees whoever came first. Somewhere in the line, a
+          child has had a fit. Nobody at the door knows.
         </p>
         <div className="mt-12 flex items-end gap-3 overflow-hidden border-b-4 border-px pb-3">
           <div className="mr-3 flex flex-col items-center gap-1">
@@ -94,7 +104,10 @@ export function Queue() {
           <span>12:30 still waiting</span>
           <span className="bg-px px-1.5 text-lcd">16:00 the child is seen</span>
         </div>
-        <Src>Illustrative. First-come queues, long travel and little time per case are described in the World Bank brief, Annex A (2026).</Src>
+        <Src>
+          Illustrative. First-come queues, long travel and little time per case are described in the World Bank brief,
+          Annex A (2026).
+        </Src>
       </div>
     </Screen>
   );
@@ -106,11 +119,13 @@ export function Paperwork() {
     <Screen id="paperwork" title="THE PROBLEM" signal={2} data={false}>
       <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 md:grid-cols-2">
         <div>
-          <Kicker n={3} total={3}>And half the visit is paperwork</Kicker>
+          <Kicker n={3} total={3}>
+            And half the visit is paperwork
+          </Kicker>
           <div className="text-[96px] leading-none font-bold tracking-tighter md:text-[150px]">26–53%</div>
           <p className="mt-4 max-w-[520px] text-2xl leading-snug">
-            of every consultation goes to writing in registers. A clinic can keep up to <b>48</b> of them, and the
-            same details are written again and again.
+            of every consultation goes to writing in registers. A clinic can keep up to <b>48</b> of them, and the same
+            details are written again and again.
           </p>
           <div className="mt-8 max-w-[520px]">
             <div className="mb-2 font-mono text-[12px] font-medium">ONE CONSULTATION</div>
@@ -129,7 +144,10 @@ export function Paperwork() {
             {Array.from({ length: 16 }).map((_, i) => (
               <div key={i} className="flex gap-1">
                 {[0, 1, 2].map((j) => (
-                  <span key={j} className={`h-4 w-14 border-2 border-px ${(i + j) % 3 === 0 ? "bg-px" : (i + j) % 3 === 1 ? "dith-50" : ""}`} />
+                  <span
+                    key={j}
+                    className={`h-4 w-14 border-2 border-px ${(i + j) % 3 === 0 ? "bg-px" : (i + j) % 3 === 1 ? "dith-50" : ""}`}
+                  />
                 ))}
               </div>
             ))}

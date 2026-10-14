@@ -30,7 +30,10 @@ body {
     radial-gradient(ellipse at center, transparent 55%, rgb(34 50 42 / 0.12) 100%),
     linear-gradient(rgb(34 50 42 / 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgb(34 50 42 / 0.045) 1px, transparent 1px);
-  background-size: 100% 100%, 4px 4px, 4px 4px;
+  background-size:
+    100% 100%,
+    4px 4px,
+    4px 4px;
   background-attachment: fixed;
 }
 
@@ -44,7 +47,10 @@ body {
 }
 
 /* Bayer-ish dithers: 25%, 50%, 75% of lit pixels. */
-.dith-25 { background-image: radial-gradient(var(--color-px) 0.9px, transparent 1.1px); background-size: 4px 4px; }
+.dith-25 {
+  background-image: radial-gradient(var(--color-px) 0.9px, transparent 1.1px);
+  background-size: 4px 4px;
+}
 .dith-50 {
   background-image: conic-gradient(var(--color-px) 25%, transparent 0 50%, var(--color-px) 0 75%, transparent 0);
   background-size: 4px 4px;
@@ -61,29 +67,472 @@ body {
   box-shadow: 4px 4px 0 0 var(--color-px);
 }
 
-@keyframes px-blink { 0%, 92%, 100% { opacity: 0; } 94%, 98% { opacity: 1; } }
-@keyframes cursor { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-@keyframes flicker { 0%, 40%, 100% { opacity: 1; } 45%, 60% { opacity: 0.08; } 62%, 70% { opacity: 1; } 72%, 95% { opacity: 0.08; } }
-@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-@keyframes ring { 0%, 50%, 100% { transform: translateX(0); } 55% { transform: translateX(-4px); } 60% { transform: translateX(4px); } 65% { transform: translateX(-4px); } 70% { transform: translateX(4px); } }
-@keyframes step-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes wave { 0%, 75%, 100% { opacity: 0.15; } 15%, 60% { opacity: 1; } }
+@keyframes px-blink {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+  }
+  94%,
+  98% {
+    opacity: 1;
+  }
+}
+@keyframes cursor {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes flicker {
+  0%,
+  40%,
+  100% {
+    opacity: 1;
+  }
+  45%,
+  60% {
+    opacity: 0.08;
+  }
+  62%,
+  70% {
+    opacity: 1;
+  }
+  72%,
+  95% {
+    opacity: 0.08;
+  }
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+@keyframes ring {
+  0%,
+  50%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+  65% {
+    transform: translateX(-4px);
+  }
+  70% {
+    transform: translateX(4px);
+  }
+}
+@keyframes step-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes wave {
+  0%,
+  75%,
+  100% {
+    opacity: 0.15;
+  }
+  15%,
+  60% {
+    opacity: 1;
+  }
+}
 
 /* Lids are hidden except for the instant of a blink, so with motion off the eyes stay open. */
-.blink-lids { opacity: 0; animation: px-blink 4.5s steps(1) infinite; }
-.cursor { animation: cursor 1s steps(1) infinite; }
-.flicker { animation: flicker 3.2s steps(1) infinite; }
-.marquee { animation: marquee 22s linear infinite; }
-.ring { animation: ring 1.6s steps(1) infinite; }
+.blink-lids {
+  opacity: 0;
+  animation: px-blink 4.5s steps(1) infinite;
+}
+.cursor {
+  animation: cursor 1s steps(1) infinite;
+}
+.flicker {
+  animation: flicker 3.2s steps(1) infinite;
+}
+.marquee {
+  animation: marquee 22s linear infinite;
+}
+.ring {
+  animation: ring 1.6s steps(1) infinite;
+}
 /* Ringing signal beside Bob in the hero; arcs light up outwards in turn. */
-.wave { animation: wave 1.8s steps(1) infinite; }
+.wave {
+  animation: wave 1.8s steps(1) infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .blink-lids, .cursor, .flicker, .marquee, .ring, .wave { animation: none !important; }
+  html {
+    scroll-behavior: auto;
+  }
+  .blink-lids,
+  .cursor,
+  .flicker,
+  .marquee,
+  .ring,
+  .wave {
+    animation: none !important;
+  }
 }
 
 /* Voice bars while Bob listens. */
-@keyframes eq { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
-.eq { transform-origin: bottom; animation: eq 1s steps(4) infinite; }
-@media (prefers-reduced-motion: reduce) { .eq { animation: none !important; } }
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.eq {
+  transform-origin: bottom;
+  animation: eq 1s steps(4) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eq {
+    animation: none !important;
+  }
+}
+
+/* ---------- Team page ---------- */
+/* The green the copy button turns when an email is on the clipboard: the one colour that isn't the LCD's. */
+:root {
+  --color-ok: #138a3e;
+}
+
+/* Photos are LCD pixels; hovering or focusing anywhere on the card (or tapping the photo) scans the colour in
+   line by line, like a refresh. */
+.lcd-photo {
+  image-rendering: pixelated;
+}
+.photo-colour {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.55s steps(11);
+}
+.contact-card:hover .photo-colour,
+.contact-card:focus-within .photo-colour,
+.photo[aria-pressed="true"] .photo-colour {
+  clip-path: inset(0 0 0 0);
+}
+.scanline {
+  top: 0;
+  opacity: 0;
+}
+.contact-card:hover .scanline,
+.contact-card:focus-within .scanline,
+.photo[aria-pressed="true"] .scanline {
+  animation: scan 0.55s steps(11) forwards;
+}
+@keyframes scan {
+  0% {
+    top: 0;
+    opacity: 1;
+  }
+  99% {
+    top: calc(100% - 6px);
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 6px);
+    opacity: 0;
+  }
+}
+.photo:focus-visible {
+  outline: 4px dashed var(--color-px);
+  outline-offset: -10px;
+}
+.photo .tag-colour,
+.photo .tap-word {
+  display: none;
+}
+@media (hover: none) {
+  .photo .hover-word {
+    display: none;
+  }
+  .photo .tap-word {
+    display: inline;
+  }
+}
+.contact-card:hover .tag-lcd,
+.contact-card:focus-within .tag-lcd,
+.photo[aria-pressed="true"] .tag-lcd {
+  display: none;
+}
+.contact-card:hover .tag-colour,
+.contact-card:focus-within .tag-colour,
+.photo[aria-pressed="true"] .tag-colour {
+  display: inline;
+}
+
+/* Cards lift off the glass a step at a time, ring when dialled, and boot in one after another. */
+.contact-card {
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2);
+}
+.contact-card:hover,
+.contact-card:focus-within {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 0 var(--color-px);
+}
+@keyframes nudge {
+  0%,
+  60%,
+  100% {
+    translate: 0;
+  }
+  10%,
+  30%,
+  50% {
+    translate: -5px 0;
+  }
+  20%,
+  40% {
+    translate: 5px 0;
+  }
+}
+.contact-card.ringing {
+  animation: nudge 0.7s steps(1) 2;
+}
+@media (scripting: enabled) {
+  .contacts-grid:not([data-seen]) .contact-card {
+    opacity: 0;
+  }
+}
+.contacts-grid[data-seen] .contact-card {
+  animation: boot-in 0.48s steps(4) both;
+  animation-delay: calc(var(--i) * 140ms - 140ms);
+}
+.contacts-grid[data-seen] .contact-card.ringing {
+  animation: nudge 0.7s steps(1) 2;
+  opacity: 1;
+}
+@keyframes boot-in {
+  0% {
+    opacity: 0;
+    translate: 0 16px;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Contact rows: the row inverts like a selected menu item, the logo lights up in colour and hops. */
+.social {
+  transition:
+    background-color 0.1s steps(1),
+    color 0.1s steps(1);
+}
+.social:hover,
+.social:focus-visible {
+  background: var(--color-px);
+  color: var(--color-lcd);
+  outline: none;
+}
+.logo-chip img {
+  filter: grayscale(1) contrast(1.4);
+  opacity: 0.8;
+  transition:
+    filter 0.2s steps(2),
+    opacity 0.2s steps(2);
+}
+.social:hover .logo-chip img,
+.social:focus-visible .logo-chip img {
+  filter: none;
+  opacity: 1;
+}
+.social:hover .logo-chip,
+.social:focus-visible .logo-chip {
+  border-color: var(--color-lcd);
+  animation: hop 0.5s steps(1);
+}
+@keyframes hop {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: translateY(-4px) rotate(-10deg);
+  }
+  45% {
+    transform: translateY(-2px) rotate(8deg);
+  }
+  70% {
+    transform: translateY(0) rotate(-4deg);
+  }
+}
+.social-cursor {
+  display: none;
+}
+.social:hover .social-cursor,
+.social:focus-visible .social-cursor {
+  display: inline;
+}
+.fly-arrow svg {
+  transition: transform 0.24s steps(3);
+}
+.fly-arrow .a2 {
+  transform: translate(-100%, 100%);
+}
+.social:hover .fly-arrow .a1,
+.social:focus-visible .fly-arrow .a1 {
+  transform: translate(100%, -100%);
+}
+.social:hover .fly-arrow .a2,
+.social:focus-visible .fly-arrow .a2 {
+  transform: translate(0, 0);
+}
+
+/* Copy → check: the icon morphs (morphicons), the button turns green, a pixel bubble and a burst pop out. */
+.copy-btn {
+  transition:
+    background-color 0.12s steps(1),
+    color 0.12s steps(1);
+}
+.copy-btn:hover,
+.copy-btn:focus-visible {
+  background: var(--color-px);
+  color: var(--color-lcd);
+  outline: none;
+}
+.copy-btn[data-state="copied"] {
+  background: #e9f8e4;
+  color: var(--color-ok);
+}
+.copy-btn:active {
+  transform: translate(1px, 1px);
+}
+.copied-bubble {
+  background: var(--color-px);
+  color: var(--color-lcd);
+  padding: 4px 8px;
+  box-shadow: 3px 3px 0 0 var(--color-ok);
+  animation: bubble 1.8s steps(1) forwards;
+}
+.copied-bubble::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: var(--color-px);
+  border-right-color: var(--color-px);
+}
+@keyframes bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.7);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.08);
+  }
+  16%,
+  82% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  90% {
+    opacity: 0.4;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.burst {
+  background: var(--color-ok);
+  animation: burst 0.6s steps(5) forwards;
+}
+.burst:nth-child(3n) {
+  background: var(--color-px);
+}
+@keyframes burst {
+  from {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Group call: whoever is speaking gets an inverted name tag and live voice bars. */
+.tile img {
+  transition: filter 0.2s steps(2);
+}
+.tile:not(.speaking) img {
+  filter: contrast(0.85) brightness(1.08);
+}
+.tile .tile-name {
+  background: var(--color-lcd);
+  border: 4px solid var(--color-px);
+  border-top-width: 0;
+}
+.tile.speaking .tile-name {
+  background: var(--color-px);
+  color: var(--color-lcd);
+}
+.tile.speaking {
+  outline: 4px solid var(--color-px);
+  outline-offset: 3px;
+}
+.tile:focus-visible {
+  outline: 4px dashed var(--color-px);
+  outline-offset: 3px;
+}
+.eq-mini {
+  transform: scaleY(0.25);
+  transform-origin: bottom;
+}
+.tile.speaking .eq-mini {
+  animation: eq 0.9s steps(4) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-colour,
+  .contact-card,
+  .social,
+  .logo-chip img,
+  .fly-arrow svg,
+  .copy-btn,
+  .tile img {
+    transition: none !important;
+  }
+  .scanline,
+  .burst {
+    display: none;
+  }
+  .contact-card.ringing,
+  .contacts-grid[data-seen] .contact-card,
+  .logo-chip,
+  .copied-bubble,
+  .eq-mini {
+    animation: none !important;
+  }
+  .contacts-grid .contact-card {
+    opacity: 1 !important;
+  }
+}
