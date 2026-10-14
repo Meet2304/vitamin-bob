@@ -536,3 +536,70 @@ body {
     opacity: 1 !important;
   }
 }
+
+/* ---------- The wins ---------- */
+/* The trophy's shine is a hole in the bowl: it shows the dark strip the trophy always sits on. */
+.trophy-shine {
+  fill: var(--color-px);
+}
+
+/* Hero badge: inverts like a selected menu item, the trophy hops and the arrow points the way down. */
+.wins-badge {
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2),
+    background-color 0.1s steps(1),
+    color 0.1s steps(1);
+}
+.wins-badge:hover,
+.wins-badge:focus-visible {
+  background: var(--color-px);
+  color: var(--color-lcd);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--color-px);
+  outline: none;
+}
+.wins-badge:hover .trophy,
+.wins-badge:focus-visible .trophy,
+.award-card:hover .award-head .trophy {
+  animation: hop 0.5s steps(1);
+}
+.wins-badge:hover .wins-badge-arrow {
+  border-color: var(--color-lcd);
+  animation: drop 0.8s steps(2) infinite;
+}
+@keyframes drop {
+  0%,
+  100% {
+    translate: 0 -2px;
+  }
+  50% {
+    translate: 0 3px;
+  }
+}
+
+/* Award cards lift off the glass like the contact cards; the rest of the hover comes from .social. */
+.award-card {
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2),
+    background-color 0.1s steps(1),
+    color 0.1s steps(1);
+}
+.award-card:hover,
+.award-card:focus-visible {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 0 var(--color-px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wins-badge,
+  .award-card {
+    transition: none !important;
+  }
+  .wins-badge .trophy,
+  .wins-badge-arrow,
+  .award-card .trophy {
+    animation: none !important;
+  }
+}

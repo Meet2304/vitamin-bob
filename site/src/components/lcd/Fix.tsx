@@ -54,7 +54,7 @@ function Step({
 }) {
   return (
     <Screen id={id ?? `fix-${n}`} title="THE FIX" signal={4} data={false} clock={clock}>
-      <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.1fr_1fr]">
+      <div className="mx-auto grid grid-cols-1 w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.1fr_1fr]">
         <div>
           <Kicker n={n} total={8}>
             How Bob helps
@@ -313,7 +313,7 @@ export function Proof() {
         <h2 className="text-[40px] leading-[1.05] font-bold tracking-tight md:text-[60px]">
           Does it work? We measured it.
         </h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
           {[
             ["0", "urgent cases missed, in every test set and both languages"],
             ["½", "the “not sure” rate when Gemma listens, compared with keyword matching"],
@@ -375,7 +375,7 @@ export function TryIt() {
           Everything runs offline on a Windows laptop. A built-in simulator plays the patients, so you can watch full
           calls in Hindi and Gujarati without a phone.
         </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
           {steps.map(([t, c], i) => (
             <div key={t} className="px-box p-5">
               <div className="flex items-center gap-3">
@@ -403,7 +403,7 @@ export function TryIt() {
 export function CallEnded() {
   return (
     <Screen id="end" title="CALL ENDED" signal={4} data={false} className="bg-px text-lcd">
-      <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.3fr_1fr]">
+      <div className="mx-auto grid grid-cols-1 w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.3fr_1fr]">
         <div>
           <div className="font-mono text-lg">CALL ENDED · 03:12 · ₹0</div>
           <h2 className="mt-4 text-[40px] leading-[1.05] font-bold tracking-tight md:text-[64px]">

@@ -64,7 +64,7 @@ export function Live() {
             />
           </div>
         ) : (
-          <div className="px-box mt-8 grid gap-8 p-6 md:grid-cols-[1fr_1.1fr]">
+          <div className="px-box mt-8 grid grid-cols-1 gap-8 p-6 md:grid-cols-[1fr_1.1fr]">
             <div>
               <div className="font-mono text-[13px] font-medium">
                 {where === "checking"

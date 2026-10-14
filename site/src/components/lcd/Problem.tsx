@@ -42,7 +42,7 @@ export function Scarcity() {
           ))}
         </div>
 
-        <div className="mt-12 grid items-center gap-8 md:grid-cols-[auto_1fr]">
+        <div className="mt-12 grid grid-cols-1 items-center gap-8 md:grid-cols-[auto_1fr]">
           <div className="flex items-end gap-6">
             <div className="flex flex-col items-center gap-2">
               <Sprite role="clinician" mood="worried" px={8} />
@@ -117,7 +117,7 @@ export function Queue() {
 export function Paperwork() {
   return (
     <Screen id="paperwork" title="THE PROBLEM" signal={2} data={false}>
-      <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 md:grid-cols-2">
+      <div className="mx-auto grid grid-cols-1 w-full max-w-[1280px] items-center gap-12 md:grid-cols-2">
         <div>
           <Kicker n={3} total={3}>
             And half the visit is paperwork
@@ -162,7 +162,7 @@ export function Paperwork() {
 export function Turn() {
   return (
     <Screen id="turn" title="WHAT IF" signal={4} data={false} className="bg-px text-lcd">
-      <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.4fr_1fr]">
+      <div className="mx-auto grid grid-cols-1 w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.4fr_1fr]">
         <div>
           <h2 className="text-[44px] leading-[1.02] font-bold tracking-tight md:text-[76px]">
             What if the clinic’s front desk lived inside a missed call?

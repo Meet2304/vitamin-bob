@@ -1,5 +1,6 @@
 import { IvrMenu, Screen } from "./Phone";
 import { Sprite } from "./Sprite";
+import { WinsBadge } from "./Wins";
 
 /** Pixels of a ")" arc: part of a circle of radius r centred left of the grid, like a ringing signal. */
 function arc(r: number, cy: number): [number, number][] {
@@ -35,8 +36,9 @@ function RingWaves({ flip = false }: { flip?: boolean }) {
 export function Boot() {
   return (
     <Screen id="top" title="VITAMIN BOB">
-      <div className="mx-auto grid w-full max-w-[1280px] items-center gap-14 md:grid-cols-[1.25fr_1fr]">
+      <div className="mx-auto grid grid-cols-1 w-full max-w-[1280px] items-center gap-14 md:grid-cols-[1.25fr_1fr]">
         <div className="flex flex-col gap-8">
+          <WinsBadge />
           <h1 className="text-[44px] leading-[1.02] font-bold tracking-tight md:text-[76px]">
             Care that starts with a missed call<span className="cursor">_</span>
           </h1>
