@@ -35,14 +35,18 @@ export function Live() {
           <div>
             <h2 className="text-[40px] leading-[1.05] font-bold tracking-tight md:text-[60px]">Watch a real call.</h2>
             <p className="mt-4 max-w-[680px] text-xl leading-snug md:text-2xl">
-              Give a missed call to the district line and follow it: received, called back, connected, in
-              conversation, and the record Bob keeps at the end. Everything runs on one laptop.
+              Give a missed call to the district line and follow it: received, called back, connected, in conversation,
+              and the record Bob keeps at the end. Everything runs on one laptop.
             </p>
           </div>
           {where === "local" && (
             <div className="flex flex-wrap gap-3 font-mono text-[13px] font-medium">
-              <a href="/dashboard/live" className="px-box px-4 py-2 hover:bg-px hover:text-lcd">Full screen</a>
-              <a href="/dashboard/details" className="px-box px-4 py-2 hover:bg-px hover:text-lcd">Operations dashboard</a>
+              <a href="/dashboard/live" className="px-box px-4 py-2 hover:bg-px hover:text-lcd">
+                Full screen
+              </a>
+              <a href="/dashboard/details" className="px-box px-4 py-2 hover:bg-px hover:text-lcd">
+                Operations dashboard
+              </a>
             </div>
           )}
         </div>
@@ -53,25 +57,35 @@ export function Live() {
               <span>LIVE · /dashboard/live</span>
               <span>local Bob server</span>
             </div>
-            <iframe title="Vitamin Bob live call" src="/dashboard/live" className="block h-[72vh] w-full border-0 bg-white" />
+            <iframe
+              title="Vitamin Bob live call"
+              src="/dashboard/live"
+              className="block h-[72vh] w-full border-0 bg-white"
+            />
           </div>
         ) : (
           <div className="px-box mt-8 grid gap-8 p-6 md:grid-cols-[1fr_1.1fr]">
             <div>
               <div className="font-mono text-[13px] font-medium">
-                {where === "checking" ? "LOOKING FOR THE LOCAL BOB SERVER…" : "THE LIVE CALL RUNS ON THE PRESENTER’S LAPTOP"}
+                {where === "checking"
+                  ? "LOOKING FOR THE LOCAL BOB SERVER…"
+                  : "THE LIVE CALL RUNS ON THE PRESENTER’S LAPTOP"}
               </div>
               <p className="mt-3 text-xl leading-snug">
-                The phone line, Gemma and every patient’s data stay on one laptop at the district hub, with no
-                internet. This public copy of the site cannot reach it, by design. Run it yourself to watch calls
-                live, or see the demo video.
+                The phone line, Gemma and every patient’s data stay on one laptop at the district hub, with no internet.
+                This public copy of the site cannot reach it, by design. Run it yourself to watch calls live, or see the
+                demo video.
               </p>
-              <a href="#try" className="mt-5 inline-block bg-px px-5 py-3 font-mono text-[13px] text-lcd">How to run it →</a>
+              <a href="#try" className="mt-5 inline-block bg-px px-5 py-3 font-mono text-[13px] text-lcd">
+                How to run it →
+              </a>
             </div>
             <ol className="flex flex-col gap-2">
               {STAGES.map((s, i) => (
                 <li key={s} className="flex items-center gap-3 border-b-2 border-dotted border-px-2 py-2 last:border-0">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-px font-mono text-[13px] text-lcd">{i + 1}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-px font-mono text-[13px] text-lcd">
+                    {i + 1}
+                  </span>
                   <span className="text-lg">{s}</span>
                 </li>
               ))}

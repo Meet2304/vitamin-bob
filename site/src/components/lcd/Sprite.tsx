@@ -77,18 +77,50 @@ export function Sprite({
   const top = role === "bob" ? 4 : 0; // room for the antenna
   const ey = child ? 5 : 7; // eye row
   const eyes: Px[] = child
-    ? [[2, ey], [2, ey + 1], [7, ey], [7, ey + 1]]
-    : [[3, ey], [3, ey + 1], [3, ey + 2], [8, ey], [8, ey + 1], [8, ey + 2]];
+    ? [
+        [2, ey],
+        [2, ey + 1],
+        [7, ey],
+        [7, ey + 1],
+      ]
+    : [
+        [3, ey],
+        [3, ey + 1],
+        [3, ey + 2],
+        [8, ey],
+        [8, ey + 1],
+        [8, ey + 2],
+      ];
   const my = child ? 9 : 12;
   const mouth: Px[] =
     mood === "happy"
-      ? [[child ? 3 : 4, my], [child ? 4 : 5, my + 1], [child ? 5 : 6, my + 1], [child ? 6 : 7, my]]
+      ? [
+          [child ? 3 : 4, my],
+          [child ? 4 : 5, my + 1],
+          [child ? 5 : 6, my + 1],
+          [child ? 6 : 7, my],
+        ]
       : mood === "worried"
-        ? [[child ? 3 : 4, my + 1], [child ? 4 : 5, my], [child ? 5 : 6, my], [child ? 6 : 7, my + 1]]
-        : [[child ? 4 : 5, my], [child ? 5 : 6, my]];
+        ? [
+            [child ? 3 : 4, my + 1],
+            [child ? 4 : 5, my],
+            [child ? 5 : 6, my],
+            [child ? 6 : 7, my + 1],
+          ]
+        : [
+            [child ? 4 : 5, my],
+            [child ? 5 : 6, my],
+          ];
   const holes = new Set([...eyes, ...mouth].map(([x, y]) => `${x},${y}`));
   if (role === "clinician") {
-    for (const [x, y] of [[8, 16], [7, 17], [8, 17], [9, 17], [8, 18]] as Px[]) holes.add(`${x},${y}`);
+    for (const [x, y] of [
+      [8, 16],
+      [7, 17],
+      [8, 17],
+      [9, 17],
+      [8, 18],
+    ] as Px[])
+      holes.add(`${x},${y}`);
   }
   const body = capsule(W, H).filter(([x, y]) => {
     if (holes.has(`${x},${y}`)) return false;

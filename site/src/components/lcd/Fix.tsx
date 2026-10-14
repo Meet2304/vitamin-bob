@@ -1,10 +1,21 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Screen } from "./Phone";
 import { Kicker, Src } from "./Problem";
 import { Sprite } from "./Sprite";
 
 /** A little handset UI: a header strip, a body, optional soft keys. */
-function Handset({ head, right, children, keys }: { head: string; right?: string; children: ReactNode; keys?: [string, string] }) {
+function Handset({
+  head,
+  right,
+  children,
+  keys,
+}: {
+  head: string;
+  right?: string;
+  children: ReactNode;
+  keys?: [string, string];
+}) {
   return (
     <div className="px-box w-full max-w-[420px] bg-lcd">
       <div className="flex items-center justify-between bg-px px-4 py-2 font-mono text-[13px] font-medium text-lcd">
@@ -45,7 +56,9 @@ function Step({
     <Screen id={id ?? `fix-${n}`} title="THE FIX" signal={4} data={false} clock={clock}>
       <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 md:grid-cols-[1.1fr_1fr]">
         <div>
-          <Kicker n={n} total={8}>How Bob helps</Kicker>
+          <Kicker n={n} total={8}>
+            How Bob helps
+          </Kicker>
           <h2 className="text-[36px] leading-[1.05] font-bold tracking-tight md:text-[56px]">{title}</h2>
           <div className="mt-5 max-w-[580px] text-xl leading-snug md:text-2xl">{children}</div>
           <ul className="mt-6 flex flex-col gap-2 font-mono text-[14px]">
@@ -67,7 +80,9 @@ function Step({
 function Tick({ on, label, quote }: { on: boolean | null; label: string; quote?: string }) {
   return (
     <div className="flex items-center gap-3 border-b-2 border-dotted border-px-2 py-2 last:border-0">
-      <span className={`flex h-6 w-6 items-center justify-center border-2 border-px font-mono text-[13px] ${on ? "bg-px text-lcd" : ""}`}>
+      <span
+        className={`flex h-6 w-6 items-center justify-center border-2 border-px font-mono text-[13px] ${on ? "bg-px text-lcd" : ""}`}
+      >
         {on ? "✓" : on === null ? "?" : ""}
       </span>
       <span className="flex-1 text-lg">{label}</span>
@@ -98,14 +113,17 @@ export function Fix() {
           </Handset>
         }
       >
-        A missed call never connects, so the caller pays nothing. A laptop at the district hub sees it within
-        seconds and queues a callback.
+        A missed call never connects, so the caller pays nothing. A laptop at the district hub sees it within seconds
+        and queues a callback.
       </Step>
 
       <Step
         n={2}
         title="Bob calls back, in her language."
-        proof={["Hindi or Gujarati; another language is data and audio files, not code", "Every sentence is a fixed recording: the AI never speaks"]}
+        proof={[
+          "Hindi or Gujarati; another language is data and audio files, not code",
+          "Every sentence is a fixed recording: the AI never speaks",
+        ]}
         screen={
           <Handset head="BOB CALLING" right="00:04">
             <div className="flex items-center gap-5">
@@ -126,22 +144,29 @@ export function Fix() {
       <Step
         n={3}
         title="She describes the problem once, in her own words."
-        proof={["Gemma 4 runs on the district laptop: no internet", "A 25-second clip is understood in under 20 seconds"]}
+        proof={[
+          "Gemma 4 runs on the district laptop: no internet",
+          "A 25-second clip is understood in under 20 seconds",
+        ]}
         source="Measured on the demo laptop (RTX 3050 Ti, 4 GB). Gemma 4 E2B, 8-bit, via llama.cpp."
         screen={
           <Handset head="LISTENING" right="00:21">
             <div className="text-xl leading-snug">“મારી દીકરીને ખૂબ તાવ આવે છે અને હમણાં જ ખેંચ આવી છે.”</div>
             <div className="mt-4 flex h-12 items-end gap-1" aria-hidden>
               {Array.from({ length: 28 }).map((_, i) => (
-                <span key={i} className="eq w-2 bg-px" style={{ height: `${20 + ((i * 37) % 80)}%`, animationDelay: `${(i % 7) * 0.12}s` }} />
+                <span
+                  key={i}
+                  className="eq w-2 bg-px"
+                  style={{ height: `${20 + ((i * 37) % 80)}%`, animationDelay: `${(i % 7) * 0.12}s` }}
+                />
               ))}
             </div>
             <div className="mt-3 font-mono text-[12px]">Gemma 4 · on this laptop · offline</div>
           </Handset>
         }
       >
-        Up to 25 seconds of speech. A small model on one laptop turns it into text, then into a fixed form of
-        symptoms and danger signs.
+        Up to 25 seconds of speech. A small model on one laptop turns it into text, then into a fixed form of symptoms
+        and danger signs.
       </Step>
 
       <Step
@@ -158,14 +183,17 @@ export function Fix() {
           </Handset>
         }
       >
-        The model only fills the form. If it cannot point to the words she used, the answer stays unknown, and Bob
-        asks a simple yes-or-no question on the keypad.
+        The model only fills the form. If it cannot point to the words she used, the answer stays unknown, and Bob asks
+        a simple yes-or-no question on the keypad.
       </Step>
 
       <Step
         n={5}
         title="Written rules decide. Not sure? Ask a person."
-        proof={["Five levels of urgency, each with its reasons", "Anything that could hide an emergency goes to a clinician"]}
+        proof={[
+          "Five levels of urgency, each with its reasons",
+          "Anything that could hide an emergency goes to a clinician",
+        ]}
         screen={
           <Handset head="DECISION" right="rules v0.3">
             {[
@@ -175,7 +203,10 @@ export function Fix() {
               ["MEDIUM", "booked today or tomorrow", false],
               ["LOW", "next free slot", false],
             ].map(([t, d, on]) => (
-              <div key={t as string} className={`flex items-center justify-between px-3 py-2 ${on ? "bg-px text-lcd" : "border-b-2 border-dotted border-px-2"}`}>
+              <div
+                key={t as string}
+                className={`flex items-center justify-between px-3 py-2 ${on ? "bg-px text-lcd" : "border-b-2 border-dotted border-px-2"}`}
+              >
                 <span className="font-mono text-[14px] font-medium">{t}</span>
                 <span className="text-lg">{d}</span>
               </div>
@@ -184,8 +215,8 @@ export function Fix() {
           </Handset>
         }
       >
-        The level comes from transparent rules drafted from WHO danger signs, never from the model’s opinion. When
-        an answer is missing, the case becomes UNCERTAIN and a clinician decides.
+        The level comes from transparent rules drafted from WHO danger signs, never from the model’s opinion. When an
+        answer is missing, the case becomes UNCERTAIN and a clinician decides.
       </Step>
 
       <Step
@@ -199,7 +230,10 @@ export function Fix() {
               ["Devgaon PHC", "25 min", "open · sent here", true],
               ["Lakhpur CHC", "40 min", "open", false],
             ].map(([c, m, s, on]) => (
-              <div key={c as string} className={`flex items-center gap-3 px-3 py-2.5 ${on ? "bg-px text-lcd" : "border-b-2 border-dotted border-px-2"}`}>
+              <div
+                key={c as string}
+                className={`flex items-center gap-3 px-3 py-2.5 ${on ? "bg-px text-lcd" : "border-b-2 border-dotted border-px-2"}`}
+              >
                 <span className="flex-1 text-lg">{c}</span>
                 <span className="font-mono text-[12px]">{m}</span>
                 <span className={`font-mono text-[12px] ${s === "closed by SMS" ? "line-through" : ""}`}>{s}</span>
@@ -209,8 +243,8 @@ export function Fix() {
           </Handset>
         }
       >
-        Each village has its clinics in order of travel time. Bob picks the first that is open and has room, and
-        tells her which one, by name.
+        Each village has its clinics in order of travel time. Bob picks the first that is open and has room, and tells
+        her which one, by name.
       </Step>
 
       <Step
@@ -236,14 +270,21 @@ export function Fix() {
       <Step
         n={8}
         title="The record writes itself."
-        proof={["Every case: urgency, reasons, rules and model version", "Sent to the state over SMS, 200 bytes, no names or numbers"]}
+        proof={[
+          "Every case: urgency, reasons, rules and model version",
+          "Sent to the state over SMS, 200 bytes, no names or numbers",
+        ]}
         screen={
           <Handset head="RECORD 1203" right="→ CENTRAL">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-lg">
-              <span>urgency</span><b>EMERGENCY</b>
-              <span>patient</span><b>child under 5</b>
-              <span>heard</span><b>fever, fits</b>
-              <span>sent to</span><b>108 + clinic alert</b>
+              <span>urgency</span>
+              <b>EMERGENCY</b>
+              <span>patient</span>
+              <b>child under 5</b>
+              <span>heard</span>
+              <b>fever, fits</b>
+              <span>sent to</span>
+              <b>108 + clinic alert</b>
             </div>
             <div className="mt-4 border-2 border-dashed border-px p-2 font-mono text-[11px] leading-relaxed break-all">
               {'{"h":"HUB-D1","r":"E","a":"c","s":"F1","f":"CV","q":0,"l":"gu","o":"108","pk":"5bwd3d4tnail6"}'}
@@ -252,8 +293,8 @@ export function Fix() {
           </Handset>
         }
       >
-        The paperwork is done before she arrives: a complete record at the district, and a privacy-safe summary for
-        the state, sent by SMS so it works with no internet anywhere.
+        The paperwork is done before she arrives: a complete record at the district, and a privacy-safe summary for the
+        state, sent by SMS so it works with no internet anywhere.
       </Step>
     </>
   );
@@ -269,7 +310,9 @@ export function Proof() {
   return (
     <Screen id="proof" title="THE PROOF" signal={4} data={false}>
       <div className="mx-auto w-full max-w-[1280px]">
-        <h2 className="text-[40px] leading-[1.05] font-bold tracking-tight md:text-[60px]">Does it work? We measured it.</h2>
+        <h2 className="text-[40px] leading-[1.05] font-bold tracking-tight md:text-[60px]">
+          Does it work? We measured it.
+        </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
             ["0", "urgent cases missed, in every test set and both languages"],
@@ -302,7 +345,10 @@ export function Proof() {
             </tbody>
           </table>
         </div>
-        <Src>Bob’s own evaluation: 54 synthetic cases written by the team and 10 recordings of team members’ voices; not real patients. Labels not yet reviewed by a clinician.</Src>
+        <Src>
+          Bob’s own evaluation: 54 synthetic cases written by the team and 10 recordings of team members’ voices; not
+          real patients. Labels not yet reviewed by a clinician.
+        </Src>
       </div>
     </Screen>
   );
@@ -311,9 +357,15 @@ export function Proof() {
 /* Try it */
 export function TryIt() {
   const steps = [
-    ["Get the code and models", "git clone https://github.com/Meet2304/vitamin-bob\n# + llama.cpp and Gemma 4 E2B (see README)"],
+    [
+      "Get the code and models",
+      "git clone https://github.com/Meet2304/vitamin-bob\n# + llama.cpp and Gemma 4 E2B (see README)",
+    ],
     ["Start the model and Bob", "cd bob\ntools\\start_model.cmd\n.venv\\Scripts\\python -m vitamin_bob.server"],
-    ["Watch calls, no phone needed", ".venv\\Scripts\\python -m fake_stuart run --pace 1.5\n# open http://127.0.0.1:8100/dashboard"],
+    [
+      "Watch calls, no phone needed",
+      ".venv\\Scripts\\python -m fake_stuart run --pace 1.5\n# open http://127.0.0.1:8100/dashboard",
+    ],
   ];
   return (
     <Screen id="try" title="TRY IT" signal={4} data={false}>
@@ -336,7 +388,10 @@ export function TryIt() {
             </div>
           ))}
         </div>
-        <a href="https://github.com/Meet2304/vitamin-bob" className="mt-8 inline-block bg-px px-5 py-3 font-mono text-lcd hover:bg-px-2">
+        <a
+          href="https://github.com/Meet2304/vitamin-bob"
+          className="mt-8 inline-block bg-px px-5 py-3 font-mono text-lcd hover:bg-px-2"
+        >
           Open the repository →
         </a>
       </div>
@@ -352,12 +407,18 @@ export function CallEnded() {
         <div>
           <div className="font-mono text-lg">CALL ENDED · 03:12 · ₹0</div>
           <h2 className="mt-4 text-[40px] leading-[1.05] font-bold tracking-tight md:text-[64px]">
-            Localizing AI means meeting people on the phone they have, in the language they think in, and knowing
-            when to step aside.
+            Localizing AI means meeting people on the phone they have, in the language they think in, and knowing when
+            to step aside.
           </h2>
           <p className="mt-6 max-w-[620px] text-xl leading-snug">
             A small model on one laptop is enough to listen and sort. The decisions that matter stay with people.
           </p>
+          <Link
+            href="/team"
+            className="mt-8 inline-block border-4 border-lcd px-5 py-3 font-mono text-[13px] font-medium hover:bg-lcd hover:text-px"
+          >
+            Meet the four of us who built it →
+          </Link>
           <p className="mt-10 max-w-[760px] font-mono text-[12px] leading-relaxed opacity-80">
             Built for the World Bank × Hack-Nation Small AI for Development hackathon, health track, October 2026.
             Sources: World Bank concept note (2026), WHO Global Health Observatory, Siyam et al. (2021). Not a
