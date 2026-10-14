@@ -2,8 +2,8 @@
 
 The whole site is a feature phone's screen: a pastel-green LCD, pixel sprites of one simple character, and a
 voice-menu navigation ("Press 1 for the problem"). It tells the problem (scarce clinicians, one queue for
-everyone, paperwork), then the fix in eight phone screens, the proof, a live call, and how to try it. `/team` is
-the phone's contacts: the four people who built it.
+everyone, paperwork), then the fix as one scroll-driven story (Kevin's call, start to finish), the proof, the
+hackathon wins, a live call, and how to try it. `/team` is the phone's contacts: the four people who built it.
 
 **Stack:** Next.js 16 (App Router, static export), React 19, Tailwind CSS 4. No server needed.
 
@@ -47,7 +47,9 @@ call" screen embeds `/dashboard/live` from the same origin.
 | `src/components/lcd/Phone.tsx`   | Screens, the status bar that follows the story, voice-menu navigation, soft keys |
 | `src/components/lcd/Boot.tsx`    | Opening screen                                                                   |
 | `src/components/lcd/Problem.tsx` | Scarcity, the queue, paperwork, the turn                                         |
-| `src/components/lcd/Fix.tsx`     | Eight fix screens, proof, try it, call ended                                     |
+| `src/components/lcd/Story.tsx`   | The fix: one pinned diagram that four chapters move on as you scroll             |
+| `src/components/lcd/Fix.tsx`     | Proof, try it, call ended                                                        |
+| `src/components/lcd/Wins.tsx`    | Hero badge and the wins section (LinkedIn embed in `LinkedInEmbed.tsx`)          |
 | `src/components/lcd/Live.tsx`    | Live call: embed on Bob, explanation elsewhere                                   |
 | `src/app/team/page.tsx`          | The team page: group call, then one speed-dial card per person                   |
 | `src/components/team/`           | Team page components; names, emails and links are in `members.ts`                |

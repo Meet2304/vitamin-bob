@@ -603,3 +603,208 @@ body {
     animation: none !important;
   }
 }
+
+/* ---------- How Bob helps: one diagram, moved on by scrolling ---------- */
+/* Pieces fade or pop in a step at a time, like segments on an LCD. `.on` is set from the scroll state. */
+.dg-fade {
+  opacity: 0;
+  transition: opacity 0.3s steps(3);
+}
+.dg-fade.on {
+  opacity: 1;
+}
+.dg-pop {
+  opacity: 0;
+  transform: scale(0.6);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 0.25s steps(3),
+    transform 0.25s steps(3);
+}
+.dg-pop.on {
+  opacity: 1;
+  transform: scale(1);
+}
+.dg-late.on {
+  transition-delay: 0.9s;
+}
+/* Lines draw themselves (pathLength="100"). */
+.dg-draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset 0.6s steps(10);
+}
+.dg-draw.on {
+  stroke-dashoffset: 0;
+}
+/* The missed call: a dotted signal marching towards the computer. */
+.dg-march {
+  stroke-dasharray: 6 8;
+  animation: march 0.7s steps(4) infinite;
+}
+@keyframes march {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+.dg-wire {
+  stroke: var(--color-px-2);
+  stroke-dasharray: 3 5;
+  transition: stroke 0.2s steps(2);
+}
+.dg-wire.hot {
+  stroke: var(--color-px);
+  stroke-dasharray: none;
+  stroke-width: 4;
+}
+/* Phone lines: the free one is picked a beat after the missed call arrives. */
+.dg-node-box {
+  fill: var(--color-lcd);
+  stroke: var(--color-px-2);
+  stroke-width: 2;
+  transition: fill 0.2s steps(2);
+}
+.dg-node-ink {
+  fill: var(--color-px-2);
+}
+.dg-node.on .dg-node-box {
+  fill: var(--color-px);
+  stroke: var(--color-px);
+  transition-delay: 0.8s;
+}
+.dg-node.on .dg-node-ink {
+  fill: var(--color-lcd);
+}
+.dg-node .dg-pop.on {
+  transition-delay: 0.8s;
+}
+/* Kevin's phone: the screen lights up during the call, the key he presses lights up too. */
+.dg-screen,
+.dg-key {
+  fill: var(--color-px-2);
+  transition: fill 0.2s steps(2);
+}
+.dg-screen.on,
+.dg-key.on {
+  fill: var(--color-lcd);
+}
+.dg-key.on {
+  transition-delay: 0.9s;
+}
+/* Keypad answers travel down the line to the computer. */
+.dg-packet {
+  animation: packet 1.35s steps(12) infinite;
+}
+@keyframes packet {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(204px);
+    opacity: 0;
+  }
+}
+/* Voice bars on the computer's screen while Bob listens: each bar grows from its own foot. */
+.dg-eq {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: eq 1s steps(4) infinite;
+}
+/* The urgency gauge's needle swings a step at a time. */
+.dg-needle {
+  transform-box: view-box;
+  transform-origin: 440px 170px;
+  transition: transform 0.7s steps(7);
+}
+.dg-blink {
+  animation: cursor 1s steps(1) infinite;
+}
+/* Where Kevin is sent: idle boxes are dashed outlines; an alert inverts, a booking fills in. */
+.dg-outcome {
+  color: var(--color-px-2);
+  --hole: var(--color-lcd);
+}
+.dg-outcome-box {
+  fill: var(--color-lcd);
+  stroke: var(--color-px-2);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+  transition:
+    fill 0.2s steps(2),
+    stroke 0.2s steps(2);
+}
+.dg-outcome-ink {
+  fill: currentColor;
+}
+.dg-hole {
+  fill: var(--hole);
+}
+.dg-urgent.on {
+  color: var(--color-lcd);
+  --hole: var(--color-px);
+}
+.dg-urgent.on .dg-outcome-box {
+  fill: var(--color-px);
+  stroke: var(--color-px);
+  stroke-dasharray: none;
+}
+.dg-booked.on {
+  color: var(--color-px);
+  --hole: var(--color-lcd-2);
+}
+.dg-booked.on .dg-outcome-box {
+  fill: var(--color-lcd-2);
+  stroke: var(--color-px);
+  stroke-width: 4;
+  stroke-dasharray: none;
+}
+/* Small print in the diagram is left to the caption on phones. */
+@media (max-width: 639px) {
+  .dg-sub {
+    display: none;
+  }
+}
+
+/* The chapter being told is full strength; the others wait faded. */
+.story-chapter {
+  opacity: 0.32;
+  transition: opacity 0.3s steps(3);
+}
+.story-chapter.on {
+  opacity: 1;
+}
+/* On phones the diagram pins under the status bar; the glass behind it hides the text scrolling up. */
+.story-pin {
+  background: linear-gradient(var(--color-lcd) 88%, transparent);
+}
+@media (min-width: 1024px) {
+  .story-pin {
+    background: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-fade,
+  .dg-pop,
+  .dg-draw,
+  .dg-wire,
+  .dg-node-box,
+  .dg-screen,
+  .dg-key,
+  .dg-needle,
+  .dg-outcome-box,
+  .story-chapter {
+    transition: none !important;
+  }
+  .dg-march,
+  .dg-packet,
+  .dg-eq,
+  .dg-blink {
+    animation: none !important;
+  }
+}
