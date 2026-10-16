@@ -5,11 +5,11 @@ import { Screen } from "./Phone";
 import { Sprite } from "./Sprite";
 
 /**
- * How Bob helps, as one story on one screen. A diagram stays pinned while four short chapters scroll past,
- * and each chapter moves the diagram on: Kevin's missed call, the call back in Hindi, the keypad answers,
- * and the decision (clinic alerted, or an appointment booked). Same cast as the pitch deck's slides.
+ * How Bob helps, as one story on one pinned screen. Scrolling moves through six steps, one screen of scroll each,
+ * and each step moves the diagram on while its words swap in: Kevin's missed call, the call back in Hindi, the
+ * keypad answers, and the decision (clinic alerted, or an appointment booked). Same cast as the pitch deck.
  *
- * Scroll states (the chapter text that crosses a line ~62% down the viewport sets the state):
+ * States:
  *   0 missed call, free line found   1 call back in Hindi   2 Kevin explains, keypad answers
  *   3 emergency: clinic alerted      4 not urgent: appointment booked   5 summary
  */
@@ -23,8 +23,6 @@ const CAPTIONS: Record<State, string> = {
   4: "Not urgent? An appointment is booked instead.",
   5: "Free for patients. In their language. No internet.",
 };
-
-const chapterOf = (s: State) => Math.min(s, 3) + 1;
 
 /* ---------- the diagram ---------- */
 
@@ -374,188 +372,116 @@ function Diagram({ s }: { s: State }) {
   );
 }
 
-/* ---------- the chapters ---------- */
+/* ---------- the steps ---------- */
 
-function Chapter({
-  step,
-  active,
-  n,
-  kicker,
-  title,
-  children,
-  notes,
-}: {
-  step: State;
-  active: boolean;
-  n: number;
-  kicker: string;
-  title: string;
-  children: ReactNode;
-  notes?: string[];
-}) {
-  return (
-    <div data-step={step} className={`story-chapter flex min-h-[64vh] flex-col justify-center py-10${on(active)}`}>
-      <div className="mb-5 flex items-center gap-4 font-mono text-sm font-medium">
-        <span className="bg-px px-2 py-1 text-lcd">{n}/4</span>
-        <span>{kicker}</span>
-      </div>
-      <h3 className="text-[32px] leading-[1.05] font-bold tracking-tight md:text-[48px]">{title}</h3>
-      <div className="mt-4 max-w-[560px] text-lg leading-snug md:text-2xl">{children}</div>
-      {notes && (
-        <ul className="mt-5 flex flex-col gap-2 font-mono text-[13px] md:text-[14px]">
-          {notes.map((t) => (
-            <li key={t} className="flex gap-3">
-              <span aria-hidden>▸</span>
-              {t}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
+/** What each step says beside the diagram: a short title and one or two plain sentences. */
+const STEPS: Record<State, { kicker: string; title: string; body: string }> = {
+  0: {
+    kicker: "The missed call",
+    title: "Ring once. It costs nothing.",
+    body: "Kevin has a fever and a basic phone. He rings Bob’s number and hangs up before it connects, so he pays nothing.",
+  },
+  1: {
+    kicker: "The call back",
+    title: "Bob calls back in Hindi.",
+    body: "A computer at the district office picks a free phone line and calls Kevin back in his own language.",
+  },
+  2: {
+    kicker: "The conversation",
+    title: "Kevin explains. Bob listens.",
+    body: "Kevin says what is wrong in his own words. Bob’s AI runs on that one computer, with no internet, and asks only what it still needs to know.",
+  },
+  3: {
+    kicker: "The decision",
+    title: "An emergency goes to a clinic now.",
+    body: "If it is urgent, Bob tells Kevin where to go right away, and the nearest open clinic is alerted.",
+  },
+  4: {
+    kicker: "The decision",
+    title: "Everything else gets a booked time.",
+    body: "If it can wait, Bob books Kevin an appointment, so he does not lose a day waiting in line.",
+  },
+  5: {
+    kicker: "The safeguard",
+    title: "Rules decide. People have the final say.",
+    body: "Simple written rules decide how urgent a case is, not the AI. Whenever anything is unclear, a clinician makes the call.",
+  },
+};
+const ORDER: State[] = [0, 1, 2, 3, 4, 5];
 
-/** One beat of the last chapter: each moves the diagram on by one state. */
-function Beat({ step, active, children }: { step: State; active: boolean; children: ReactNode }) {
-  return (
-    <div data-step={step} className={`story-chapter flex min-h-[44vh] flex-col justify-center py-6${on(active)}`}>
-      {children}
-    </div>
-  );
-}
-
+/**
+ * One snap step per state. Each step is an empty, screen-tall block; the one crossing the middle of the viewport
+ * sets the state, and the direction of travel decides which way the words move in.
+ */
 function useStoryState(root: RefObject<HTMLElement | null>) {
-  const [s, setS] = useState<State>(0);
+  const [st, setSt] = useState<{ s: State; dir: "fwd" | "back" }>({ s: 0, dir: "fwd" });
   useEffect(() => {
     const els = Array.from(root.current?.querySelectorAll<HTMLElement>("[data-step]") ?? []);
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) setS(Number((e.target as HTMLElement).dataset.step) as State);
+        for (const e of entries)
+          if (e.isIntersecting) {
+            const s = Number((e.target as HTMLElement).dataset.step) as State;
+            setSt((prev) => (prev.s === s ? prev : { s, dir: s > prev.s ? "fwd" : "back" }));
+          }
       },
-      // a thin line about 62% down the viewport: below the pinned diagram on phones, mid-text on desktop
-      { rootMargin: "-62% 0px -37% 0px" },
+      { rootMargin: "-50% 0px -50% 0px" },
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, [root]);
-  return s;
+  return st;
 }
 
 export function Story() {
   const root = useRef<HTMLDivElement>(null);
-  const s = useStoryState(root);
-  const chapter = chapterOf(s);
+  const { s, dir } = useStoryState(root);
+  const step = STEPS[s];
 
   return (
-    <Screen id="fix" title="THE FIX" signal={4} data={false}>
-      <div className="mx-auto w-full max-w-[1280px]">
-        <div className="max-w-[820px]">
-          <div className="mb-5 flex items-center gap-4 font-mono text-sm font-medium">
-            <span className="bg-px px-2 py-1 text-lcd">THE FIX</span>
-            <span>How Bob helps</span>
-          </div>
-          <h2 className="text-[40px] leading-[1.02] font-bold tracking-tight md:text-[68px]">
-            One computer in every district.
-          </h2>
-          <p className="mt-4 max-w-[640px] text-xl leading-snug md:text-2xl">
-            It calls patients back, free, in their own language, and sends them to the right care. Here is one call,
-            from start to finish.
-          </p>
-        </div>
+    <Screen id="fix" title="THE FIX" signal={4} data={false} tall>
+      <div ref={root} className="relative">
+        {/* the snap steps: they make the scroll room, and moving through them moves the story on */}
+        {ORDER.map((i) => (
+          <div key={i} data-step={i} className="snap-step h-[100svh]" aria-hidden />
+        ))}
 
-        <div ref={root} className="mt-8 grid grid-cols-1 gap-x-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          {/* the pinned diagram: on top on phones, on the right on desktop */}
-          <div className="story-pin sticky top-[48px] z-10 -mx-6 self-start px-3 pt-3 pb-5 lg:top-24 lg:order-2 lg:mx-0 lg:px-0 lg:pt-0 lg:pb-0">
-            <div className="px-box bg-lcd">
-              <div className="flex items-center justify-between bg-px px-4 py-2 font-mono text-[12px] font-medium tracking-wider text-lcd md:text-[13px]">
-                <span>DISTRICT LINE · LIVE</span>
-                <span className="flex items-center gap-1.5" aria-label={`chapter ${chapter} of 4`}>
-                  {[1, 2, 3, 4].map((i) => (
-                    <span key={i} className={`h-2.5 w-2.5 ${i <= chapter ? "bg-lcd" : "border border-lcd"}`} />
-                  ))}
-                </span>
+        {/* the pinned screen: everything you see while the steps scroll underneath */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-auto sticky top-0 flex h-[100svh] flex-col justify-center px-6 pt-[68px] pb-6 md:px-12">
+            <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center gap-[clamp(16px,3svh,40px)] lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-14">
+              <div className="lg:order-2">
+                <div className="story-figure px-box mx-auto bg-lcd">
+                  <div className="flex items-center justify-between bg-px px-4 py-2 font-mono text-[12px] font-medium tracking-wider text-lcd md:text-[13px]">
+                    <span>DISTRICT LINE · LIVE</span>
+                    <span className="flex items-center gap-1.5" aria-label={`step ${s + 1} of ${ORDER.length}`}>
+                      {ORDER.map((i) => (
+                        <span key={i} className={`h-2.5 w-2.5 ${i <= s ? "bg-accent-hi" : "border border-lcd"}`} />
+                      ))}
+                    </span>
+                  </div>
+                  <div className="bg-lcd px-1 pt-2 md:px-4 md:pt-4">
+                    <Diagram s={s} />
+                  </div>
+                </div>
               </div>
-              <div className="bg-lcd px-1 pt-2 md:px-4 md:pt-4">
-                <Diagram s={s} />
+
+              <div className="lg:order-1" aria-live="polite">
+                <div className="mb-[clamp(10px,2svh,20px)] flex items-center gap-4 font-mono text-sm font-medium">
+                  <span className="bg-accent px-2 py-1 text-lcd">
+                    {s + 1}/{ORDER.length}
+                  </span>
+                  <span>How Bob helps · {step.kicker}</span>
+                </div>
+                <div key={s} data-dir={dir} className="swap-in">
+                  <h2 className="t-h2">{step.title}</h2>
+                  <p className="t-lead mt-[clamp(10px,2svh,20px)] max-w-[560px]">{step.body}</p>
+                </div>
+                <p className="mt-[clamp(14px,3svh,32px)] hidden font-mono text-[12px] opacity-70 lg:block">
+                  {s < ORDER.length - 1 ? "scroll ▼ for the next step" : "scroll ▼ for what came next"}
+                </p>
               </div>
-              <p
-                className="min-h-[3.4em] border-t-4 border-px px-4 py-2.5 font-mono text-[13px] leading-snug font-medium md:text-[15px]"
-                aria-live="polite"
-              >
-                <span className="mr-2 bg-px px-1.5 text-lcd">{chapter}/4</span>
-                {CAPTIONS[s]}
-              </p>
             </div>
-          </div>
-
-          <div className="lg:order-1">
-            <Chapter
-              step={0}
-              active={s === 0}
-              n={1}
-              kicker="The missed call"
-              title="Ring once. Hang up. It’s free."
-              notes={["Works on any phone: no app, no data plan", "The district pays for the call back"]}
-            >
-              Kevin has a fever and a basic phone. He rings Bob’s number and hangs up before it connects, so it costs
-              him nothing. A computer at the district office notices within seconds and picks a free phone line.
-            </Chapter>
-
-            <Chapter
-              step={1}
-              active={s === 1}
-              n={2}
-              kicker="The call back"
-              title="Bob calls back, in Kevin’s language."
-              notes={[
-                "Hindi or Gujarati today; a new language is new recordings, not new code",
-                "Every sentence is a recording made by a person",
-              ]}
-            >
-              Kevin picks Hindi with one key. Everything Bob says was recorded by a real person, so it is always clear
-              and always the same.
-            </Chapter>
-
-            <Chapter
-              step={2}
-              active={s === 2}
-              n={3}
-              kicker="The conversation"
-              title="Kevin explains. Bob listens."
-              notes={["Gemma 4 runs on the district computer, offline", "Only the missing questions are asked"]}
-            >
-              Kevin says what’s wrong in his own words. Bob’s own AI, running on that one computer with no internet,
-              understands him. Then Bob asks only what it still needs to know: press 1 for yes, 2 for no.
-            </Chapter>
-
-            <div className={`story-chapter pt-10${on(s >= 3)}`}>
-              <div className="mb-5 flex items-center gap-4 font-mono text-sm font-medium">
-                <span className="bg-px px-2 py-1 text-lcd">4/4</span>
-                <span>The decision</span>
-              </div>
-              <h3 className="text-[32px] leading-[1.05] font-bold tracking-tight md:text-[48px]">
-                The right care, at the right time.
-              </h3>
-            </div>
-            <Beat step={3} active={s === 3}>
-              <p className="max-w-[560px] text-lg leading-snug md:text-2xl">
-                <b>Emergency?</b> Bob tells Kevin where to go right now, and the nearest open clinic is alerted at once.
-              </p>
-            </Beat>
-            <Beat step={4} active={s === 4}>
-              <p className="max-w-[560px] text-lg leading-snug md:text-2xl">
-                <b>Not urgent?</b> Bob books Kevin a time instead, so he doesn’t spend a day waiting in the queue.
-              </p>
-            </Beat>
-            <Beat step={5} active={s === 5}>
-              <p className="max-w-[560px] text-lg leading-snug md:text-2xl">
-                Simple written rules decide how urgent it is, not the AI. If anything is unclear, a clinician makes the
-                call.
-              </p>
-              <p className="mt-6 text-[28px] leading-tight font-bold tracking-tight md:text-[40px]">
-                Free for patients. In their language. No internet.
-              </p>
-            </Beat>
           </div>
         </div>
       </div>

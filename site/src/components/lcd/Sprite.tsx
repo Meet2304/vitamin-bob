@@ -11,7 +11,7 @@ export type SpriteMood = "calm" | "happy" | "worried";
 
 type Px = [number, number];
 
-function capsule(w: number, h: number): Px[] {
+export function capsule(w: number, h: number): Px[] {
   // Slightly squarer than a true semicircle, so the shoulders read as a body, not a bullet.
   const r = w / 2 - 1;
   const half = w / 2;
@@ -29,7 +29,7 @@ function capsule(w: number, h: number): Px[] {
 }
 
 /** Pixels as one path: each horizontal run of lit pixels becomes one rectangle segment. */
-function runsPath(px: Px[]): string {
+export function runsPath(px: Px[]): string {
   const rows = new Map<number, number[]>();
   for (const [x, y] of px) rows.set(y, [...(rows.get(y) ?? []), x]);
   let d = "";

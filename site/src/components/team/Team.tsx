@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { asset, FlyArrow, LogoChip } from "../lcd/Links";
 import { Screen } from "../lcd/Phone";
-import { MEMBERS, linkedinHandle, xHandle, type Member } from "./members";
+import { MEMBERS, linkedinHandle, siteHandle, xHandle, type Member } from "./members";
 
 /**
  * The team, as the phone's contacts: a group call in the hero, then one speed-dial card per person.
@@ -371,7 +371,7 @@ function ContactCard({ member, n }: { member: Member; n: number }) {
         </button>
 
         <div className="flex min-w-0 flex-col justify-center gap-2 border-b-4 border-px p-4 sm:justify-start sm:border-b-0">
-          <h3 className="truncate text-[24px] leading-none min-[380px]:text-[28px] font-bold tracking-tight sm:text-[34px]">
+          <h3 className="truncate pb-[0.12em] text-[24px] leading-[1.1] min-[380px]:text-[28px] font-bold tracking-tight sm:text-[34px]">
             {member.name}
           </h3>
           <span className="font-mono text-[11px] font-medium sm:hidden">tap for colour ▸</span>
@@ -388,6 +388,14 @@ function ContactCard({ member, n }: { member: Member; n: number }) {
             >
               <CopyEmail member={member} />
             </SocialRow>
+            {member.website && (
+              <SocialRow
+                href={member.website}
+                label={`${member.name}'s website, ${siteHandle(member.website)} (opens in a new tab)`}
+                text={siteHandle(member.website)}
+                logo={<LogoChip src={member.websiteLogo ?? "/images/logos/globe.svg"} alt="" />}
+              />
+            )}
             <SocialRow
               href={member.linkedin}
               label={`${member.name} on LinkedIn (opens in a new tab)`}

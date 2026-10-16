@@ -1,10 +1,10 @@
 import { Boot } from "@/components/lcd/Boot";
-import { CallEnded, Proof, TryIt } from "@/components/lcd/Fix";
-import { Live } from "@/components/lcd/Live";
-import { SoftKeys, StatusBar } from "@/components/lcd/Phone";
+import { Footer } from "@/components/lcd/Footer";
+import { People } from "@/components/lcd/People";
+import { StatusBar } from "@/components/lcd/Phone";
+import { India, Journey, OutOfReach, Turn } from "@/components/lcd/Problem";
 import { Story } from "@/components/lcd/Story";
 import { Wins } from "@/components/lcd/Wins";
-import { Paperwork, Queue, Scarcity, Turn } from "@/components/lcd/Problem";
 
 export default function Home() {
   return (
@@ -12,18 +12,15 @@ export default function Home() {
       <StatusBar />
       <main>
         <Boot />
-        <Scarcity />
-        <Queue />
-        <Paperwork />
+        <OutOfReach />
+        <India />
+        <Journey />
         <Turn />
         <Story />
-        <Proof />
         <Wins />
-        <Live />
-        <TryIt />
-        <CallEnded />
+        <People />
       </main>
-      <SoftKeys />
+      <Footer />
     </>
   );
 }
