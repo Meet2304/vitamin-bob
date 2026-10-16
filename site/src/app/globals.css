@@ -4,6 +4,12 @@
  * The whole site is a feature phone's screen: pastel green LCD, two pixel tones and dithering.
  * --lcd   the glass          --ghost  "off" pixels (faint)
  * --px    lit pixels (ink)   --px-2   half tone, used through dithering only
+ *
+ * Accent: the World Bank Group's purple from the summit deck. Green is Vitamin Bob; purple only marks what to
+ * look at (a key phrase, a step number, a lifted card's shadow), never whole surfaces.
+ * --accent     text and small fills on the glass (5.7:1 on --lcd)
+ * --accent-2   lilac: shadows and decoration only, too light for text on the glass
+ * --accent-hi  text on dark (inverted) screens (7.4:1 on --px)
  */
 @theme {
   --color-lcd: #c9e6c1;
@@ -11,14 +17,51 @@
   --color-ghost: #b2d1a9;
   --color-px: #22322a;
   --color-px-2: #4e6a55;
+  --color-accent: #72419b;
+  --color-accent-2: #ad76d1;
+  --color-accent-hi: #d2b6ea;
+  /* paper: the white panel partner logos sit on, so their own colours stay true */
+  --color-paper: #fbfdf9;
 
   --font-display: var(--font-space-grotesk), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
+/*
+ * Type that fits the screen: each size follows the smaller of the width and the height, so a section always fits
+ * below the status bar, from a phone to a short laptop screen.
+ */
+@utility t-display {
+  font-size: clamp(34px, min(6.2vw, 7.6svh), 80px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+@utility t-h2 {
+  font-size: clamp(30px, min(5vw, 6.4svh), 66px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+@utility t-h3 {
+  font-size: clamp(22px, min(2.6vw, 3.6svh), 36px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility t-lead {
+  font-size: clamp(17px, min(1.8vw, 2.7svh), 25px);
+  line-height: 1.38;
+}
+@utility t-body {
+  font-size: clamp(15px, min(1.3vw, 2.1svh), 19px);
+  line-height: 1.4;
+}
+
+/* One section per screen: scrolling moves a whole screen at a time. */
 html {
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
+  scroll-snap-type: y mandatory;
 }
 
 body {
@@ -38,12 +81,56 @@ body {
 }
 
 ::selection {
-  background: var(--color-px);
+  background: var(--color-accent);
   color: var(--color-lcd);
 }
 
-.screen {
+/* Snap points. No forced stops, so a fast flick on a phone can carry past several of them. */
+.screen,
+.snap-step {
   scroll-snap-align: start;
+}
+
+/*
+ * Moving between screens. The status bar marks the screen under the middle of the viewport `data-active`. Pieces
+ * marked `.rise` fade in and settle up a little when their screen arrives (in order of --d), and fade out as it
+ * leaves. One soft curve throughout. The `js` class is set before first paint, so without scripts nothing hides.
+ */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.js .rise {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+html.js [data-active] .rise {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 55ms);
+}
+.fade-in {
+  animation: fade-in 0.35s ease both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .rise {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .fade-in {
+    animation: none;
+  }
 }
 
 /* Bayer-ish dithers: 25%, 50%, 75% of lit pixels. */
@@ -160,6 +247,7 @@ body {
   animation: px-blink 4.5s steps(1) infinite;
 }
 .cursor {
+  color: var(--color-accent);
   animation: cursor 1s steps(1) infinite;
 }
 .flicker {
@@ -289,7 +377,7 @@ body {
 .contact-card:hover,
 .contact-card:focus-within {
   transform: translate(-4px, -4px);
-  box-shadow: 8px 8px 0 0 var(--color-px);
+  box-shadow: 8px 8px 0 0 var(--color-accent);
 }
 @keyframes nudge {
   0%,
@@ -534,5 +622,880 @@ body {
   }
   .contacts-grid .contact-card {
     opacity: 1 !important;
+  }
+}
+
+/* ---------- The wins ---------- */
+/* The trophy's shine is a hole in the bowl: it shows the dark strip the trophy always sits on. */
+.trophy-shine {
+  fill: var(--color-px);
+}
+
+@keyframes drop {
+  0%,
+  100% {
+    translate: 0 -2px;
+  }
+  50% {
+    translate: 0 3px;
+  }
+}
+
+/* Award cards lift off the glass like the contact cards; the rest of the hover comes from .social. */
+.award-card {
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2),
+    background-color 0.1s steps(1),
+    color 0.1s steps(1);
+}
+.award-card:hover,
+.award-card:focus-visible {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 0 var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .award-card {
+    transition: none !important;
+  }
+  .award-card .trophy,
+  .on-air {
+    animation: none !important;
+  }
+}
+
+/* The summit card's ON AIR lamp. */
+.on-air {
+  animation: px-onair 1.4s steps(1) infinite;
+}
+@keyframes px-onair {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  61%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+/* ---------- How Bob helps: one diagram, moved on by scrolling ---------- */
+/* Pieces fade or pop in a step at a time, like segments on an LCD. `.on` is set from the scroll state. */
+.dg-fade {
+  opacity: 0;
+  transition: opacity 0.3s steps(3);
+}
+.dg-fade.on {
+  opacity: 1;
+}
+.dg-pop {
+  opacity: 0;
+  transform: scale(0.6);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 0.25s steps(3),
+    transform 0.25s steps(3);
+}
+.dg-pop.on {
+  opacity: 1;
+  transform: scale(1);
+}
+.dg-late.on {
+  transition-delay: 0.9s;
+}
+/* Lines draw themselves (pathLength="100"). */
+.dg-draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset 0.6s steps(10);
+}
+.dg-draw.on {
+  stroke-dashoffset: 0;
+}
+/* The missed call: a dotted signal marching towards the computer. */
+.dg-march {
+  stroke-dasharray: 6 8;
+  animation: march 0.7s steps(4) infinite;
+}
+@keyframes march {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+.dg-wire {
+  stroke: var(--color-px-2);
+  stroke-dasharray: 3 5;
+  transition: stroke 0.2s steps(2);
+}
+.dg-wire.hot {
+  stroke: var(--color-px);
+  stroke-dasharray: none;
+  stroke-width: 4;
+}
+/* Phone lines: the free one is picked a beat after the missed call arrives. */
+.dg-node-box {
+  fill: var(--color-lcd);
+  stroke: var(--color-px-2);
+  stroke-width: 2;
+  transition: fill 0.2s steps(2);
+}
+.dg-node-ink {
+  fill: var(--color-px-2);
+}
+.dg-node.on .dg-node-box {
+  fill: var(--color-px);
+  stroke: var(--color-px);
+  transition-delay: 0.8s;
+}
+.dg-node.on .dg-node-ink {
+  fill: var(--color-lcd);
+}
+.dg-node .dg-pop.on {
+  transition-delay: 0.8s;
+}
+/* Kevin's phone: the screen lights up during the call, the key he presses lights up too. */
+.dg-screen,
+.dg-key {
+  fill: var(--color-px-2);
+  transition: fill 0.2s steps(2);
+}
+.dg-screen.on,
+.dg-key.on {
+  fill: var(--color-lcd);
+}
+.dg-key.on {
+  transition-delay: 0.9s;
+}
+/* Keypad answers travel down the line to the computer. */
+.dg-packet {
+  animation: packet 1.35s steps(12) infinite;
+}
+@keyframes packet {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(204px);
+    opacity: 0;
+  }
+}
+/* Voice bars on the computer's screen while Bob listens: each bar grows from its own foot. */
+.dg-eq {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: eq 1s steps(4) infinite;
+}
+/* The urgency gauge's needle swings a step at a time. */
+.dg-needle {
+  transform-box: view-box;
+  transform-origin: 440px 170px;
+  transition: transform 0.7s steps(7);
+}
+.dg-blink {
+  animation: cursor 1s steps(1) infinite;
+}
+/* Where Kevin is sent: idle boxes are dashed outlines; an alert inverts, a booking fills in. */
+.dg-outcome {
+  color: var(--color-px-2);
+  --hole: var(--color-lcd);
+}
+.dg-outcome-box {
+  fill: var(--color-lcd);
+  stroke: var(--color-px-2);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+  transition:
+    fill 0.2s steps(2),
+    stroke 0.2s steps(2);
+}
+.dg-outcome-ink {
+  fill: currentColor;
+}
+.dg-hole {
+  fill: var(--hole);
+}
+.dg-urgent.on {
+  color: var(--color-lcd);
+  --hole: var(--color-px);
+}
+.dg-urgent.on .dg-outcome-box {
+  fill: var(--color-px);
+  stroke: var(--color-px);
+  stroke-dasharray: none;
+}
+.dg-booked.on {
+  color: var(--color-px);
+  --hole: var(--color-lcd-2);
+}
+.dg-booked.on .dg-outcome-box {
+  fill: var(--color-lcd-2);
+  stroke: var(--color-px);
+  stroke-width: 4;
+  stroke-dasharray: none;
+}
+/* Small print in the diagram is left to the caption on phones. */
+@media (max-width: 639px) {
+  .dg-sub {
+    display: none;
+  }
+}
+
+/* The chapter being told is full strength; the others wait faded. */
+/* Each step's words come in from the direction you scrolled: up from below going forward, down going back. */
+.swap-in {
+  animation: swap-fwd 0.5s var(--ease-out) both;
+}
+.swap-in[data-dir="back"] {
+  animation-name: swap-back;
+}
+@keyframes swap-fwd {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes swap-back {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* The diagram is sized by the screen's height as well as its width, so it never pushes the words off screen. */
+.story-figure {
+  width: min(100%, calc((100svh - 330px) * 1.5));
+}
+@media (max-width: 1023px) {
+  .story-figure {
+    width: min(100%, calc((100svh - 470px) * 1.5));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-fade,
+  .dg-pop,
+  .dg-draw,
+  .dg-wire,
+  .dg-node-box,
+  .dg-screen,
+  .dg-key,
+  .dg-needle,
+  .dg-outcome-box,
+  .swap-in {
+    transition: none !important;
+  }
+  .dg-march,
+  .dg-packet,
+  .dg-eq,
+  .dg-blink {
+    animation: none !important;
+  }
+}
+
+.award-card:hover .award-head .trophy {
+  animation: hop 0.5s steps(1);
+}
+
+/* ---------- Accent interactions ---------- */
+/* Cards that lift off the glass a step at a time and cast an accent shadow (journey, impact, summit). */
+.lift {
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2);
+}
+.lift:hover,
+.lift:focus-within {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 0 var(--color-accent);
+}
+.lift:hover .lift-n,
+.lift:focus-within .lift-n {
+  background: var(--color-accent);
+}
+
+/* Keypad keys: the key presses in and lights up in the accent. */
+.key {
+  transition:
+    transform 0.08s steps(1),
+    box-shadow 0.08s steps(1),
+    background-color 0.08s steps(1),
+    color 0.08s steps(1);
+}
+.key:hover .key-cap,
+.key:focus-visible .key-cap {
+  background: var(--color-accent);
+  color: var(--color-lcd);
+}
+.key:focus-visible {
+  outline: none;
+}
+.key:active .key-cap {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+/* ---------- Hero: Listen. Guide. Connect. ---------- */
+/* The three words drive the phone, and the phone lights the word it is on. */
+/* Listen / Guide / Connect: one segmented switch, like the phone's own soft keys. */
+.verbs {
+  display: inline-flex;
+  border: 4px solid var(--color-px);
+  box-shadow: 4px 4px 0 0 var(--color-px);
+  background: var(--color-lcd);
+}
+.verb {
+  cursor: pointer;
+  padding: 0.3em 0.75em;
+  font-size: clamp(17px, min(1.8vw, 2.7svh), 24px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.verb + .verb {
+  border-left: 4px solid var(--color-px);
+}
+.verb:hover,
+.verb:focus-visible {
+  background: var(--color-lcd-2);
+  outline: none;
+}
+.verb[aria-pressed="true"] {
+  background: var(--color-accent);
+  color: var(--color-lcd);
+}
+
+/* The hero's one next step. */
+.hero-cta {
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-bottom: 2px solid currentColor;
+  transition: color 0.15s ease;
+}
+.hero-cta:hover,
+.hero-cta:focus-visible {
+  color: var(--color-accent);
+  outline: none;
+}
+.hero-cta span {
+  transition: transform 0.2s var(--ease-out);
+}
+.hero-cta:hover span {
+  transform: translateY(3px);
+}
+
+/* The recognition strip: pointing at it lifts the logo tiles and nudges the arrow. */
+.recognition-strip .award-logo {
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.recognition-strip:hover .award-logo,
+.recognition-strip:focus-visible .award-logo {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 0 var(--color-accent);
+}
+.recognition-strip:focus-visible {
+  outline: 4px dashed var(--color-accent);
+  outline-offset: 4px;
+}
+.recognition-arrow {
+  transition: transform 0.2s var(--ease-out);
+}
+.recognition-strip:hover .recognition-arrow {
+  transform: translateY(3px);
+}
+
+/* The phone: each new screen draws in a few steps, the ANSWER key blinks a frame, the shadow is the accent. */
+.hero-phone {
+  box-shadow: 8px 8px 0 0 var(--color-accent);
+}
+.stage-in {
+  animation: fade-in 0.3s ease both;
+}
+.answer-btn {
+  animation: answer-blink 1.2s steps(1) infinite;
+}
+@keyframes answer-blink {
+  0%,
+  49% {
+    box-shadow: inset 0 0 0 0 var(--color-lcd);
+  }
+  50%,
+  100% {
+    box-shadow: inset 0 0 0 4px var(--color-lcd);
+  }
+}
+.press {
+  animation: press 1.6s steps(1) infinite;
+}
+@keyframes press {
+  0%,
+  55%,
+  100% {
+    background: transparent;
+    color: var(--color-px);
+  }
+  60%,
+  80% {
+    background: var(--color-accent);
+    color: var(--color-lcd);
+  }
+}
+.typing::after {
+  content: "▍";
+  margin-left: 2px;
+  color: var(--color-accent);
+  animation: cursor 1s steps(1) infinite;
+}
+
+/* The journey: a dotted road under the four steps; the walker steps along it when you point at a step. */
+.walker {
+  left: calc(var(--step, 0) * 25% + 12.5% - 20px);
+  transition: left 0.6s steps(6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift,
+  .key,
+  .verb,
+  .walker {
+    transition: none !important;
+  }
+  .stage-in,
+  .answer-btn,
+  .press,
+  .typing::after {
+    animation: none !important;
+  }
+}
+.journey:has([data-step="1"]:hover) .walker {
+  --step: 1;
+}
+.journey:has([data-step="2"]:hover) .walker {
+  --step: 2;
+}
+.journey:has([data-step="3"]:hover) .walker {
+  --step: 3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap-in {
+    animation: none !important;
+  }
+}
+
+/* ---------- Team call to action and footer ---------- */
+.cta {
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2),
+    background-color 0.1s steps(1);
+}
+.cta:hover,
+.cta:focus-visible {
+  background: var(--color-accent);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--color-px);
+  outline: none;
+}
+.cta:hover .fly-arrow .a1,
+.cta:focus-visible .fly-arrow .a1 {
+  transform: translate(100%, -100%);
+}
+.cta:hover .fly-arrow .a2,
+.cta:focus-visible .fly-arrow .a2 {
+  transform: translate(0, 0);
+}
+
+/* The footer is the last stop and snaps to the bottom of the screen. Links stay quiet until pointed at. */
+.site-footer {
+  scroll-snap-align: end;
+}
+.foot-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.85;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+.foot-link:hover,
+.foot-link:focus-visible {
+  color: var(--color-accent-hi);
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .foot-link {
+    transition: none !important;
+  }
+}
+
+/* ---------- Fitting the screen ---------- */
+/* The hero phone scales down with the screen's height (and on phones, where it sits under the words). */
+@media (max-height: 860px) {
+  .hero-phone-fit {
+    zoom: 0.88;
+  }
+}
+@media (max-height: 760px) {
+  .hero-phone-fit {
+    zoom: 0.76;
+  }
+}
+@media (max-height: 680px) {
+  .hero-phone-fit {
+    zoom: 0.68;
+  }
+}
+@media (max-width: 767px) {
+  .hero-phone-fit {
+    zoom: 0.6;
+  }
+}
+@media (max-width: 767px) and (max-height: 720px) {
+  .hero-phone-fit {
+    zoom: 0.45;
+  }
+}
+/* Pixel art drawn at a fixed pixel size shrinks on phones. */
+@media (max-width: 1023px) {
+  .art-fit {
+    zoom: 0.62;
+  }
+}
+
+/* ---------- The turn: moving into a dark screen ---------- */
+/*
+ * A dark screen is a turn in the story, so it arrives differently: the glass dims, the way a phone's backlight
+ * fades down, and only then do the words come into focus, slower, from a soft blur, one after another. Leaving,
+ * the light comes back. Without scripts the screen is simply dark.
+ */
+.dark-veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-px);
+}
+html.js .dark-veil {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+html.js [data-active] > .dark-veil {
+  opacity: 1;
+  transition: opacity 0.9s cubic-bezier(0.45, 0, 0.55, 1);
+}
+html.js [data-tone="dark"] .rise {
+  transform: translateY(22px);
+  filter: blur(6px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+html.js [data-tone="dark"][data-active] .rise {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1.2s var(--ease-out),
+    filter 1s var(--ease-out);
+  transition-delay: calc(520ms + var(--d, 0) * 130ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .dark-veil {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  html.js [data-tone="dark"] .rise {
+    filter: none !important;
+  }
+}
+
+/* Header links invert like a selected menu row. */
+.nav-link {
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.nav-link:hover,
+.nav-link:focus-visible {
+  background: var(--color-accent);
+  color: var(--color-lcd);
+  outline: none;
+}
+
+/* Award plaques: the partner's logo on paper, lifted on hover; the logo comes forward a touch and the arrow flies. */
+.plaque-logo {
+  transition: transform 0.3s var(--ease-out);
+}
+.plaque:hover .plaque-logo,
+.plaque:focus-visible .plaque-logo {
+  transform: scale(1.05);
+}
+.plaque:hover .fly-arrow .a1,
+.plaque:focus-visible .fly-arrow .a1 {
+  transform: translate(100%, -100%);
+}
+.plaque:hover .fly-arrow .a2,
+.plaque:focus-visible .fly-arrow .a2 {
+  transform: translate(0, 0);
+}
+.plaque:focus-visible {
+  outline: 4px dashed var(--color-accent);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plaque-logo {
+    transition: none;
+  }
+}
+
+/* Footer Bob: he peeks over the divider (antenna and eyes showing) and pops up, with a little overshoot, when the
+   cursor comes into the footer. His line appears in a speech bubble in the phone's own style. */
+.footer-bob {
+  display: block;
+  transform: translateY(52px);
+  transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.footer-bob.up {
+  transform: translateY(0);
+}
+.footer-bob-eye {
+  transition:
+    x 0.15s ease,
+    y 0.15s ease;
+}
+.footer-bubble {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  pointer-events: none;
+  white-space: nowrap;
+  background: var(--color-lcd);
+  color: var(--color-px);
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 3px 3px 0 0 var(--color-accent-hi);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s ease;
+}
+.footer-bubble::after {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: var(--color-lcd);
+  border-right-color: var(--color-lcd);
+}
+.footer-bubble.on {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.12s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-bob,
+  .footer-bob-eye,
+  .footer-bubble {
+    transition: none;
+  }
+}
+
+/* Footer link logos sit in the same light chips as the team page; they come into colour on hover. */
+.foot-link .logo-chip {
+  border-color: var(--color-lcd);
+}
+.foot-link:hover .logo-chip img,
+.foot-link:focus-visible .logo-chip img {
+  filter: none;
+  opacity: 1;
+}
+
+/* The winner's seal on the hero phone: a sticker over the top-left corner. Its ring of text turns slowly; pointing
+   at it stops the turn and lifts the seal a little. */
+.winner-seal {
+  position: absolute;
+  z-index: 2;
+  left: -76px;
+  top: -76px;
+  width: 156px;
+  height: 156px;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(4px 4px 0 var(--color-px));
+  transition: transform 0.3s var(--ease-out);
+}
+.winner-seal > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.winner-seal-ring {
+  transform-origin: 50px 50px;
+  animation: seal-turn 24s linear infinite;
+}
+.winner-seal-cup {
+  position: relative;
+  color: var(--color-px);
+  margin-top: 4px;
+}
+.winner-seal:hover,
+.winner-seal:focus-visible {
+  transform: scale(1.08) rotate(-6deg);
+  outline: none;
+}
+.winner-seal:hover .winner-seal-ring,
+.winner-seal:focus-visible .winner-seal-ring {
+  animation-play-state: paused;
+}
+@keyframes seal-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .winner-seal-ring {
+    animation: none;
+  }
+  .winner-seal {
+    transition: none;
+  }
+}
+
+/* A tap makes Bob hop. */
+.footer-bob-hop {
+  transform-box: fill-box;
+  animation: bob-hop 0.45s var(--ease-out);
+}
+@keyframes bob-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+}
+.footer-bob-btn:focus-visible {
+  outline: 3px dashed var(--color-accent-hi);
+  outline-offset: 2px;
+}
+
+/* Phones: the Explore links become a row of keys, the Connect links full-width rows like a contact list. */
+@media (max-width: 767px) {
+  .foot-pills {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .foot-pills .foot-link {
+    border: 2px solid rgb(201 230 193 / 0.45);
+    padding: 5px 11px;
+    font-size: 14px;
+    opacity: 1;
+  }
+  .foot-pills .foot-link:hover,
+  .foot-pills .foot-link:active {
+    border-color: var(--color-accent-hi);
+  }
+  .foot-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .foot-tiles .foot-link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 4px;
+    border: 2px solid rgb(201 230 193 / 0.45);
+    font-size: 13px;
+    opacity: 1;
+  }
+  .foot-tiles .foot-link:active {
+    border-color: var(--color-accent-hi);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-bob-hop {
+    animation: none;
+  }
+}
+/* Phones: the seal hangs off the phone's left side, into the empty margin, instead of over the buttons above. */
+@media (max-width: 767px) {
+  .winner-seal {
+    left: -100px;
+    top: -24px;
+  }
+}
+
+/* ---------- Fitting a screen that runs over (data-tight, set in Phone.tsx) ---------- */
+/* Tier 1 hides .drop-1 (illustrations, secondary paragraphs), tier 2 also .drop-2 (kicker labels, side rows),
+   tier 3 also .drop-3 (lead sentences), tier 4 (the smallest phones) also .drop-4. On phones the hero's phone also shrinks a step each tier. */
+[data-tight] .drop-1,
+[data-tight="2"] .drop-2,
+[data-tight="3"] .drop-2,
+[data-tight="3"] .drop-3,
+[data-tight="4"] .drop-2,
+[data-tight="4"] .drop-3,
+[data-tight="4"] .drop-4 {
+  display: none !important;
+}
+[data-tight] .drop-1-tight {
+  margin-top: 0;
+}
+@media (max-width: 767px) {
+  [data-tight="1"] .hero-phone-fit {
+    zoom: 0.5;
+  }
+  [data-tight="2"] .hero-phone-fit {
+    zoom: 0.44;
+  }
+  [data-tight="3"] .hero-phone-fit,
+  [data-tight="4"] .hero-phone-fit {
+    zoom: 0.38;
+  }
+}
+
+/* Phones: Bob's bubble sits beside his head rather than above it, so it never covers the links. */
+@media (max-width: 767px) {
+  .footer-bubble {
+    right: 76px;
+    bottom: 46px;
+  }
+  .footer-bubble::after {
+    display: none;
   }
 }

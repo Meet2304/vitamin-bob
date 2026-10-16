@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { SoftKeys, StatusBar } from "@/components/lcd/Phone";
+import { Footer } from "@/components/lcd/Footer";
+import { StatusBar } from "@/components/lcd/Phone";
 import { Contacts, TeamHero } from "@/components/team/Team";
 
 const title = "The team · Vitamin Bob";
@@ -17,16 +18,12 @@ export const metadata: Metadata = {
 export default function TeamPage() {
   return (
     <>
-      <StatusBar />
+      <StatusBar page="team" />
       <main>
         <TeamHero />
         <Contacts />
       </main>
-      <SoftKeys
-        left={{ href: "/", label: "◀ BACK" }}
-        hint="press 1–4 to speed dial, 0 to go back"
-        right={{ href: "#contacts", label: "CONTACTS" }}
-      />
+      <Footer />
     </>
   );
 }

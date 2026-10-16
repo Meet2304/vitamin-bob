@@ -7,9 +7,9 @@ import "./globals.css";
 const display = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"] });
 const mono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
-const title = "Vitamin Bob · Press 1 for care";
+const title = "Vitamin Bob · Access to care begins before the clinic";
 const description =
-  "A free phone line to the right clinic. Any phone, no internet, Hindi and Gujarati. On-device Gemma 4 listens, transparent rules decide, and a person makes the call on anything unsure.";
+  "Listen. Guide. Connect. A free call in your own language, on any phone: no app, no internet. A small AI listens, gives a clear next step, and sends your story to the clinic before you arrive. Clinicians make the care decision.";
 
 // Icons and the share image come from the file conventions in this folder (favicon.ico, icon1/2.png,
 // apple-icon.png, opengraph-image.jpg, twitter-image.jpg, manifest.ts). Share images need absolute URLs.
@@ -27,7 +27,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable}`}>
+    // `js` is added before first paint so screens can hide their pieces until they move in (globals.css, `.rise`);
+    // without scripts nothing is hidden. React would flag the extra class, hence suppressHydrationWarning.
+    <html lang="en" className={`${display.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="min-h-screen">
         {children}
         <Script src="https://www.googletagmanager.com/gtag/js?id=G-E8QCZDYMWC" strategy="afterInteractive" />

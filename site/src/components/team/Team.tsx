@@ -5,16 +5,15 @@ import { MorphIcon } from "morphicons/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { asset, FlyArrow, LogoChip } from "../lcd/Links";
 import { Screen } from "../lcd/Phone";
-import { MEMBERS, linkedinHandle, xHandle, type Member } from "./members";
+import { MEMBERS, linkedinHandle, siteHandle, xHandle, type Member } from "./members";
 
 /**
  * The team, as the phone's contacts: a group call in the hero, then one speed-dial card per person.
  * Photos are dithered LCD pixels until you hover (or tap) them, then the colour scans in line by line.
  * Press 1–4 to dial someone (their card rings), 0 to go back to the story.
  */
-const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const asset = (path: string) => `${base}${path}`;
 
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
@@ -286,46 +285,6 @@ function CopyEmail({ member }: { member: Member }) {
   );
 }
 
-/** An arrow that flies out top-right on hover while its twin slides in from bottom-left. */
-function FlyArrow() {
-  const svg = (cls: string) => (
-    <svg
-      viewBox="0 0 24 24"
-      width={18}
-      height={18}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.5}
-      strokeLinecap="square"
-      className={cls}
-      aria-hidden
-    >
-      <path d="M7 17 17 7M8 7h9v9" />
-    </svg>
-  );
-  return (
-    <span className="fly-arrow relative block h-[18px] w-[18px] shrink-0 overflow-hidden">
-      {svg("a1 absolute inset-0")}
-      {svg("a2 absolute inset-0")}
-    </span>
-  );
-}
-
-function LogoChip({ src, alt }: { src: string; alt: string }) {
-  return (
-    <span className="logo-chip flex h-7 w-7 shrink-0 sm:h-8 sm:w-8 items-center justify-center border-2 border-px bg-lcd">
-      <Image
-        src={asset(src)}
-        alt={alt}
-        width={18}
-        height={18}
-        unoptimized
-        className="h-[18px] w-[18px] object-contain"
-      />
-    </span>
-  );
-}
-
 function SocialRow({
   href,
   logo,
@@ -412,7 +371,7 @@ function ContactCard({ member, n }: { member: Member; n: number }) {
         </button>
 
         <div className="flex min-w-0 flex-col justify-center gap-2 border-b-4 border-px p-4 sm:justify-start sm:border-b-0">
-          <h3 className="truncate text-[24px] leading-none min-[380px]:text-[28px] font-bold tracking-tight sm:text-[34px]">
+          <h3 className="truncate pb-[0.12em] text-[24px] leading-[1.1] min-[380px]:text-[28px] font-bold tracking-tight sm:text-[34px]">
             {member.name}
           </h3>
           <span className="font-mono text-[11px] font-medium sm:hidden">tap for colour ▸</span>
@@ -429,6 +388,14 @@ function ContactCard({ member, n }: { member: Member; n: number }) {
             >
               <CopyEmail member={member} />
             </SocialRow>
+            {member.website && (
+              <SocialRow
+                href={member.website}
+                label={`${member.name}'s website, ${siteHandle(member.website)} (opens in a new tab)`}
+                text={siteHandle(member.website)}
+                logo={<LogoChip src={member.websiteLogo ?? "/images/logos/globe.svg"} alt="" />}
+              />
+            )}
             <SocialRow
               href={member.linkedin}
               label={`${member.name} on LinkedIn (opens in a new tab)`}
