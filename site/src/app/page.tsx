@@ -4,6 +4,7 @@ import { People } from "@/components/lcd/People";
 import { StatusBar } from "@/components/lcd/Phone";
 import { India, Journey, OutOfReach, Turn } from "@/components/lcd/Problem";
 import { Story } from "@/components/lcd/Story";
+import { TryIt } from "@/components/lcd/TryIt";
 import { Wins } from "@/components/lcd/Wins";
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
         <Journey />
         <Turn />
         <Story />
+        <TryIt />
         <Wins />
         <People />
       </main>
