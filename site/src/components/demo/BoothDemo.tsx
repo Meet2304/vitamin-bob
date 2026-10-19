@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { asset } from "../lcd/Links";
 import { Sprite } from "../lcd/Sprite";
 
-// The booth demo is our teammate's page, kept exactly as designed: it lives in public/demo/booth.html and is
-// shown here in a window on the glass. It needs nothing from the internet once loaded (its voice clips are inside).
-const SRC = asset("/demo/booth.html");
+// The booth demo is our teammate's page, kept exactly as designed: it lives in public/booth/ and is shown here in a
+// window on the glass. It needs nothing from the internet once loaded (its voice clips are inside). It must not sit
+// under public/demo/: Vercel routes that folder to this page, so the file there 404s.
+const SRC = asset("/booth/vitamin-bob-booth-demo.html");
 
 /**
  * The demo page: one screen tall, a window bar in the phone's style (what this is, full screen, open on its own)
