@@ -64,8 +64,8 @@ export function Screen({
  * directly, rather than waiting for intersection reports, means no screen is ever skipped: a report could go
  * missing when leaving the tall, pinned fix, which left the next screen blank.
  */
-function useStatus(): Status {
-  const [s, setS] = useState<Status>({ title: "HOME", signal: 4, data: true });
+function useStatus(initial: Status): Status {
+  const [s, setS] = useState<Status>(initial);
   useEffect(() => {
     let raf = 0;
     const update = () => {
@@ -327,10 +327,14 @@ function NavLink({ href, current, children }: { href: string; current?: boolean;
 
 /**
  * The status bar is also the site's navigation. Left: the signal, and the way home (the brand on the home page,
- * "◀ HOME" anywhere else). Centre: the screen on display. Right: the overview (how it works), the team, the clock.
+ * "◀ HOME" anywhere else). Centre: the screen on display. Right: the overview (how it works), the booth demo, the
+ * team, the clock.
  */
-export function StatusBar({ page = "home" }: { page?: "home" | "team" }) {
-  const s = useStatus();
+export function StatusBar({ page = "home" }: { page?: "home" | "team" | "demo" }) {
+  // until a screen is under the middle of the viewport (arriving mid-scroll from another page)
+  const s = useStatus(
+    page === "demo" ? { title: "BOOTH DEMO", signal: 0, data: false } : { title: "HOME", signal: 4, data: true },
+  );
   useScreenSteps();
   useFitScreens();
   const now = useClock();
@@ -354,6 +358,12 @@ export function StatusBar({ page = "home" }: { page?: "home" | "team" }) {
           <span className="hidden sm:inline">
             <NavLink href="/#fix">OVERVIEW</NavLink>
           </span>
+          <NavLink href="/demo" current={page === "demo"}>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="nav-lamp h-1.5 w-1.5 bg-accent" aria-hidden />
+              DEMO
+            </span>
+          </NavLink>
           <NavLink href="/team" current={page === "team"}>
             TEAM
           </NavLink>
@@ -377,6 +387,7 @@ const MENU: { key: string; id: string; label: string; href?: string }[] = [
   { key: "1", id: "problem", label: "Why it matters" },
   { key: "2", id: "fix", label: "How it works" },
   { key: "3", id: "team", label: "The team" },
+  { key: "4", id: "demo", label: "Try the demo", href: "/demo" },
   { key: "0", id: "top", label: "The start" },
 ];
 

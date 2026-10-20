@@ -16,7 +16,7 @@ function arc(r: number, cy: number): [number, number][] {
 }
 
 /** Three arcs that light up one after another while the phone rings, on the same 8px grid as Bob. */
-function RingWaves({ flip = false }: { flip?: boolean }) {
+export function RingWaves({ flip = false }: { flip?: boolean }) {
   return (
     <svg
       viewBox="0 3 9 15"

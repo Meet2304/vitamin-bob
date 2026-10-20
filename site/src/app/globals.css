@@ -1499,3 +1499,190 @@ html.js [data-tone="dark"][data-active] .rise {
     display: none;
   }
 }
+
+/* ---------- Try it: the way into the booth demo ---------- */
+/* The little phone casts the accent shadow like the hero's, and lifts a step when pointed at. */
+.try-phone {
+  box-shadow: 8px 8px 0 0 var(--color-accent);
+  transition:
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2);
+}
+.try-phone-link:hover .try-phone,
+.try-phone-link:focus-visible .try-phone {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0 0 var(--color-accent);
+}
+.try-phone-link:focus-visible {
+  outline: 4px dashed var(--color-accent);
+  outline-offset: 8px;
+}
+/* Pointing at the call to action makes the phone ring, as if the demo were calling you. */
+.try-it:has(.try-cta:hover) .try-phone,
+.try-it:has(.try-cta:focus-visible) .try-phone {
+  animation: ring 0.8s steps(1) infinite;
+}
+/* Keys: the CALL key blinks while the phone rings; the key Kevin presses goes down and lights in the accent. */
+.try-key {
+  transition:
+    background-color 0.1s steps(1),
+    color 0.1s steps(1),
+    transform 0.1s steps(1);
+}
+.try-key.is-on {
+  animation: try-blink 0.9s steps(1) infinite;
+}
+.try-key.is-hint {
+  border-color: var(--color-accent);
+}
+.try-key.is-pressed {
+  animation: try-press 2.5s steps(1) both;
+}
+@keyframes try-blink {
+  0%,
+  49% {
+    background: var(--color-px);
+    color: var(--color-lcd);
+  }
+  50%,
+  100% {
+    background: transparent;
+    color: var(--color-px);
+  }
+}
+@keyframes try-press {
+  0%,
+  55% {
+    background: transparent;
+    color: var(--color-px);
+    transform: none;
+  }
+  56%,
+  72% {
+    background: var(--color-accent);
+    color: var(--color-lcd);
+    transform: translate(1px, 1px);
+  }
+  73%,
+  100% {
+    background: var(--color-px);
+    color: var(--color-lcd);
+    transform: none;
+  }
+}
+/* The sticker wobbles a step when the phone is pointed at. */
+.try-sticker {
+  transform: rotate(-4deg);
+  box-shadow: 3px 3px 0 0 var(--color-px);
+}
+.try-phone-link:hover .try-sticker {
+  animation: hop 0.5s steps(1);
+}
+/* The four steps: the one on the phone inverts like a selected menu row, with its progress filling in. */
+.try-step {
+  transition:
+    background-color 0.12s steps(1),
+    color 0.12s steps(1),
+    transform 0.16s steps(2),
+    box-shadow 0.16s steps(2);
+}
+.try-step:hover,
+.try-step:focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 0 var(--color-accent);
+  outline: none;
+}
+.try-step.is-on {
+  background: var(--color-px);
+  color: var(--color-lcd);
+}
+.try-step.is-on .try-step-n {
+  background: var(--color-accent);
+}
+.try-step.is-on .bg-ghost {
+  background: rgb(201 230 193 / 0.25);
+}
+.try-fill {
+  animation: try-fill linear both;
+}
+@keyframes try-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.try-cta-dot {
+  animation: px-onair 1.4s steps(1) infinite;
+}
+/* The header's DEMO link has a little lamp that stays lit on the demo page. */
+.nav-lamp {
+  animation: px-onair 1.4s steps(1) infinite;
+}
+
+/* ---------- The demo page: the booth demo in a window on the glass ---------- */
+.demo-window {
+  box-shadow: 8px 8px 0 0 var(--color-accent);
+}
+.demo-boot {
+  transition: opacity 0.4s steps(4);
+}
+.demo-boot.done {
+  opacity: 0;
+  pointer-events: none;
+}
+.demo-btn {
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.demo-btn:hover,
+.demo-btn:focus-visible {
+  background: var(--color-accent);
+  color: var(--color-lcd);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .try-phone,
+  .try-key,
+  .try-step,
+  .demo-boot {
+    transition: none !important;
+  }
+  .try-it .try-phone,
+  .try-key.is-on,
+  .try-key.is-pressed,
+  .try-sticker,
+  .try-fill,
+  .try-cta-dot,
+  .nav-lamp {
+    animation: none !important;
+  }
+}
+.nav-link:hover .nav-lamp,
+.nav-link:focus-visible .nav-lamp,
+.nav-link[aria-current="page"] .nav-lamp {
+  background: var(--color-lcd);
+}
+/* The little phone scales down with the screen, like the hero's. */
+@media (max-height: 760px) {
+  .try-phone-fit {
+    zoom: 0.86;
+  }
+}
+@media (max-width: 1023px) {
+  .try-phone-fit {
+    zoom: 0.8;
+  }
+}
+@media (max-width: 767px) {
+  .try-phone-fit {
+    zoom: 0.62;
+  }
+}
+@media (max-width: 767px) and (max-height: 720px) {
+  .try-phone-fit {
+    zoom: 0.5;
+  }
+}
