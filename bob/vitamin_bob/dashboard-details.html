@@ -3,433 +3,229 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vitamin Bob · Operations dashboard</title>
-<link rel="stylesheet" href="/static/fonts/fonts.css">
+<title>Vitamin Bob · Operations</title>
 <style>
-  /* Same screen as the website: pastel LCD glass, two pixel tones, dithering. Fully offline. */
-  :root {
-    --lcd: #c9e6c1; --lcd-2: #bddcb4; --ghost: #b2d1a9; --px: #22322a; --px-2: #4e6a55;
-    --display: 'Space Grotesk', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* Plain on purpose: data only, easy to scan. Red is used for urgent cases and nothing else. */
+  body { margin: 0; background: #fff; color: #1a1a1a; font: 15px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; }
+  header { display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid #ddd; }
+  header h1 { margin: 0; font-size: 20px; }
+  header .meta { color: #555; font-size: 14px; }
+  header nav { margin-left: auto; display: flex; gap: 14px; font-size: 14px; }
+  a { color: #1a4fa0; }
+  h2 { margin: 32px 0 8px; font-size: 16px; }
+  h2 small { font-weight: 400; color: #666; margin-left: 6px; }
+  .note { color: #666; font-size: 13px; margin: 4px 0 0; }
+  .warn { margin-top: 14px; padding: 10px 12px; background: #fff4f4; border: 1px solid #f0c4c4; color: #8a1020; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 600; font-size: 13px; color: #555; padding: 8px 10px; border-bottom: 1px solid #ccc; white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: #f7f7f7; }
+  tr.open td { background: #f7f7f7; }
+  .today { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid #ddd; }
+  .today div { padding: 12px 14px; border-right: 1px solid #ddd; }
+  .today div:last-child { border-right: 0; }
+  .today b { display: block; font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .today span { color: #555; font-size: 13px; }
+  .urgent { color: #b00020; font-weight: 600; }
+  .muted { color: #777; }
+  .details { padding: 4px 10px 14px; }
+  .details dl { display: grid; grid-template-columns: 170px 1fr; gap: 6px 16px; margin: 0; }
+  .details dt { color: #555; }
+  .details dd { margin: 0; }
+  .details ul { margin: 0; padding-left: 18px; }
+  .said { font-size: 16px; }
+  button { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid #999; background: #fff; border-radius: 4px; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  button.primary { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+  button.on { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .empty { color: #777; padding: 10px 0; }
+  .scroll { overflow-x: auto; }
+  @media (max-width: 760px) {
+    .today { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .today div { border-bottom: 1px solid #ddd; }
+    .details dl { grid-template-columns: 1fr; }
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; color: var(--px); font: 16px/1.4 var(--display); background-color: var(--lcd);
-    background-image:
-      linear-gradient(rgb(34 50 42 / .045) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(34 50 42 / .045) 1px, transparent 1px);
-    background-size: 4px 4px; padding-bottom: 40px;
-  }
-  button { font: inherit; color: inherit; cursor: pointer; }
-  a { color: inherit; }
-  .mono { font-family: var(--mono); }
-  .small { font-size: 13px; }
-  .muted { color: var(--px-2); }
-  .box { border: 3px solid var(--px); box-shadow: 4px 4px 0 var(--px); background: var(--lcd); }
-  .dith { background-image: conic-gradient(var(--px) 25%, transparent 0 50%, var(--px) 0 75%, transparent 0); background-size: 4px 4px; }
-  .dith-light { background-image: radial-gradient(var(--px) .8px, transparent 1px); background-size: 4px 4px; }
-
-  /* status bar */
-  .bar { position: sticky; top: 0; z-index: 10; border-bottom: 3px solid var(--px); background: rgb(201 230 193 / .96); }
-  .bar-in { max-width: 1440px; margin: 0 auto; padding: 10px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; font: 500 13px var(--mono); }
-  .bars { display: inline-flex; gap: 3px; align-items: flex-end; }
-  .bars i { display: inline-block; width: 5px; background: var(--px); }
-  .bars i.off { background: var(--ghost); }
-  .chip { padding: 2px 8px; border: 2px solid var(--px); }
-  .chip.on { background: var(--px); color: var(--lcd); }
-  .chip.bad { border-style: dashed; }
-  .title { margin: 0 auto; font: 700 15px var(--display); letter-spacing: .02em; }
-
-  main { max-width: 1440px; margin: 0 auto; padding: 22px 24px 0; }
-  .summary { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 18px; }
-  .summary h1 { margin: 0; font-size: 34px; line-height: 1.05; letter-spacing: -.01em; }
-  .summary p { margin: 0; font-size: 19px; max-width: 760px; }
-
-  /* the funnel */
-  .funnel { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
-  .stage { position: relative; padding: 14px 14px 12px; }
-  .stage .n { font: 700 46px/1 var(--display); letter-spacing: -.02em; }
-  .stage .l { margin-top: 6px; font-weight: 700; }
-  .stage .s { margin-top: 2px; font: 12px var(--mono); color: var(--px-2); }
-  .stage .k { position: absolute; top: 10px; right: 12px; font: 600 12px var(--mono); }
-  .stage:not(:last-child)::after { content: "▶"; position: absolute; right: -15px; top: 42%; font-size: 13px; z-index: 2; }
-  .tierbar { display: flex; height: 10px; margin-top: 8px; border: 2px solid var(--px); }
-  .tierbar span { height: 100%; }
-
-  /* three columns */
-  .cols { display: grid; grid-template-columns: 300px minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
-  h2 { margin: 0 0 10px; font: 600 13px var(--mono); letter-spacing: .06em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; }
-  h2 .count { background: var(--px); color: var(--lcd); padding: 0 6px; }
-  .panel { padding: 14px; }
-  .list { display: flex; flex-direction: column; gap: 6px; max-height: 640px; overflow: auto; }
-  .call { text-align: left; border: 2px solid var(--px); background: transparent; padding: 8px 10px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; }
-  .call:hover { background: var(--lcd-2); }
-  .call.sel { background: var(--px); color: var(--lcd); }
-  .call.sel .tier { border-color: var(--lcd); }
-  .call .meta { grid-column: 1 / -1; font: 12px var(--mono); opacity: .8; }
-  .live { animation: pulse 1.2s steps(1) infinite; }
-  @keyframes pulse { 50% { opacity: .35; } }
-
-  /* tiers: told apart by label and pattern, not colour */
-  .tier { display: inline-block; font: 600 11px var(--mono); padding: 2px 6px; border: 2px solid var(--px); letter-spacing: .04em; white-space: nowrap; }
-  .t-EMERGENCY { background: var(--px); color: var(--lcd); }
-  .t-HIGH { border-width: 3px; }
-  .t-UNCERTAIN { border-style: double; border-width: 4px; padding: 1px 5px; }
-  .t-MEDIUM { border-style: dashed; }
-  .t-LOW { border-style: dotted; }
-
-  /* the call story */
-  .story { padding: 18px 20px; }
-  .story-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-  .story-head .phone { font: 600 18px var(--mono); }
-  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
-  .step { position: relative; display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; padding: 10px 0; border-top: 2px dotted var(--px-2); }
-  .step:first-child { border-top: 0; }
-  .step .num { counter-increment: s; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--px); font: 600 13px var(--mono); }
-  .step .num::before { content: counter(s); }
-  .step.done .num { background: var(--px); color: var(--lcd); }
-  .step .what { font-weight: 700; font-size: 17px; }
-  .step .detail { margin-top: 3px; font-size: 15px; }
-  .step .time { font: 12px var(--mono); color: var(--px-2); padding-top: 4px; }
-  .said { margin-top: 6px; padding: 8px 12px; border-left: 4px solid var(--px); background: var(--lcd-2); font-size: 18px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .tag { font: 12px var(--mono); padding: 2px 7px; border: 2px solid var(--px); }
-  .tag.yes { background: var(--px); color: var(--lcd); }
-  .tag.key { border-style: dashed; }
-  .qa { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; margin-top: 6px; font-size: 14px; }
-  .qa .a { font: 600 13px var(--mono); }
-  .reasons { margin: 6px 0 0; padding-left: 18px; font-size: 15px; }
-  .empty { color: var(--px-2); font-style: italic; padding: 8px 0; }
-
-  /* right column */
-  .alert { border: 2px solid var(--px); padding: 10px; margin-bottom: 8px; }
-  .alert.open { border-width: 3px; box-shadow: 3px 3px 0 var(--px); }
-  .alert .top { display: flex; gap: 8px; align-items: center; }
-  .btn { border: 3px solid var(--px); background: var(--px); color: var(--lcd); padding: 7px 12px; font: 600 13px var(--mono); }
-  .btn:hover { background: var(--lcd); color: var(--px); }
-  .btn.ghost { background: transparent; color: var(--px); border-width: 2px; padding: 4px 9px; }
-  .btn.ghost.on { background: var(--px); color: var(--lcd); }
-  .clinic { border: 2px solid var(--px); padding: 10px; margin-bottom: 8px; }
-  .clinic.off { border-style: dashed; color: var(--px-2); }
-  .clinic .row1 { display: flex; align-items: center; gap: 8px; }
-  .clinic .name { font-weight: 700; flex: 1; }
-  .state { font: 600 11px var(--mono); padding: 1px 6px; border: 2px solid currentColor; }
-  .toggles { display: flex; gap: 6px; margin-top: 8px; }
-
-  /* proof row */
-  .proof { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 18px; margin-top: 18px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; padding: 5px 6px; border-bottom: 2px solid var(--px); }
-  td { padding: 5px 6px; border-bottom: 1px dotted var(--px-2); vertical-align: top; }
-  td.num { text-align: right; font-family: var(--mono); }
-  .big { font: 700 40px/1 var(--display); letter-spacing: -.02em; }
-  .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; font-size: 15px; margin-top: 10px; }
-  .kv b { font-family: var(--mono); }
-  .payload { font: 11px var(--mono); word-break: break-all; }
-  .banner { border: 3px dashed var(--px); padding: 10px 14px; margin-bottom: 14px; font-weight: 600; }
-
-  @media (max-width: 1150px) {
-    .cols { grid-template-columns: 1fr; }
-    .funnel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .stage:nth-child(3)::after { display: none; }
-    .proof { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 640px) {
-    .funnel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .stage::after { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) { .live { animation: none; } }
 </style>
 </head>
 <body>
-<header class="bar"><div class="bar-in" id="bar"></div></header>
 <main>
-  <div id="banners"></div>
-  <section class="summary"><h1 id="hub">District dashboard</h1><p id="sentence">Loading…</p></section>
-  <section class="funnel" id="funnel" aria-label="Today, stage by stage"></section>
-  <section class="cols">
-    <div class="box panel"><h2>Calls <span class="count" id="calls-count">0</span></h2><div class="list" id="calls"></div></div>
-    <div class="box story" id="story" aria-live="polite"></div>
-    <div>
-      <div class="box panel"><h2>Needs a person <span class="count" id="alerts-count">0</span></h2><div id="alerts"></div></div>
-      <div class="box panel" style="margin-top:18px"><h2>Clinics</h2><div id="clinics"></div></div>
-    </div>
-  </section>
-  <section class="proof">
-    <div class="box panel"><h2>Proof: tested before the demo</h2><div id="eval"></div></div>
-    <div class="box panel"><h2>Cost</h2><div id="costs"></div></div>
-    <div class="box panel"><h2>Sent to Central <span class="count" id="sync-count">0</span></h2><div id="sync"></div></div>
-  </section>
+  <header>
+    <h1 id="hub">Vitamin Bob</h1>
+    <span class="meta" id="meta"></span>
+    <nav><a href="/dashboard/live">Live call</a><a href="/dashboard/setup">Demo setup</a><a href="/website/">Website</a></nav>
+  </header>
+  <div id="warn"></div>
+
+  <h2>Today</h2>
+  <div class="today" id="today"></div>
+
+  <h2>Needs a person <small id="alerts-note"></small></h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Case</th><th>Urgency</th><th>Clinic</th><th>What was reported</th><th>Waiting</th><th></th></tr></thead>
+    <tbody id="alerts"></tbody>
+  </table></div>
+
+  <h2>Calls <small>click a row for details</small></h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Time</th><th>Caller</th><th>Language</th><th>Urgency</th><th>Sent to</th><th>Questions</th><th>Status</th></tr></thead>
+    <tbody id="calls"></tbody>
+  </table></div>
+
+  <h2>Clinics</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Clinic</th><th>Status</th><th>Why</th><th class="num">Waiting</th><th class="num">Booked today</th><th>Change</th></tr></thead>
+    <tbody id="clinics"></tbody>
+  </table></div>
+
+  <h2>Sent to Central <small>by SMS, no names or phone numbers</small></h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Time</th><th>Record</th><th class="num">Size</th><th>Status</th></tr></thead>
+    <tbody id="sync"></tbody>
+  </table></div>
+
+  <h2>Test results <small id="eval-note"></small></h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Test set</th><th class="num">Cases</th><th class="num">Urgent cases missed</th><th class="num">Correct urgency</th><th class="num">“Not sure”</th><th class="num">Questions per call</th></tr></thead>
+    <tbody id="eval"></tbody>
+  </table></div>
 </main>
 <script>
 const LANG = { hi: "Hindi", gu: "Gujarati" };
-const AGE = { "1": "infant under 2 months", "2": "child under 5", "3": "older child or adult" };
-const AGE_KEY = { infant_under_2m: "infant under 2 months", child_under_5: "child under 5", older_child_or_adult: "older child or adult" };
-const ITEM = {
-  fever: "fever", cough: "cough", diarrhea: "diarrhoea", convulsions: "fits or convulsions",
-  altered_consciousness: "very drowsy or confused", severe_breathing_difficulty: "struggling to breathe",
-  unable_to_drink: "cannot drink", vomits_everything: "vomits everything", stiff_neck: "stiff neck",
-  fast_breathing: "fast breathing", blood_in_stool: "blood in stool", dehydration_signs: "sunken eyes / little urine",
-};
-const STAGES = [
-  { k: "missed", l: "Missed calls", key: "1" },
-  { k: "called", l: "Called back", key: "2" },
-  { k: "understood", l: "Understood", key: "3" },
-  { k: "triaged", l: "Triaged", key: "4" },
-  { k: "routed", l: "Sent to a clinic or 108", key: "5" },
-  { k: "synced", l: "Reported to Central", key: "6" },
-];
-let S = null, selected = null, lastTop = null;
+const AGE = { infant_under_2m: "infant under 2 months", child_under_5: "child under 5", older_child_or_adult: "older child or adult" };
+const ITEM = { fever: "fever", cough: "cough", diarrhea: "diarrhoea", convulsions: "fits", altered_consciousness: "very drowsy or confused",
+  severe_breathing_difficulty: "struggling to breathe", unable_to_drink: "cannot drink", vomits_everything: "vomits everything",
+  stiff_neck: "stiff neck", fast_breathing: "fast breathing", blood_in_stool: "blood in stool", dehydration_signs: "sunken eyes or little urine" };
+const URGENT = new Set(["EMERGENCY", "HIGH", "UNCERTAIN"]);
+const LABEL = { EMERGENCY: "Emergency", HIGH: "High", UNCERTAIN: "Not sure", MEDIUM: "Medium", LOW: "Low" };
+let S = null, open = null;
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const hm = (iso) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) : "");
-const hms = (iso) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "");
-const tier = (t) => (t ? `<span class="tier t-${t}">${t}</span>` : "");
-const plural = (n, w) => `${n} ${n === 1 ? w : w === "person" ? "people" : w + "s"}`;
+const hm = (iso) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "");
+const tier = (t) => (t ? `<span class="${URGENT.has(t) ? "urgent" : ""}">${LABEL[t] || t}</span>` : '<span class="muted">–</span>');
+// Alert summaries come from Bob's compact SMS text; show them in plain words.
+const plain = (t) => String(t || "").replace(/Child <5/g, "Child under 5").replace(/Adult\/older child/g, "Adult or older child")
+  .replace(/RED: /g, "Danger signs: ").replace(/UNSURE: /g, "Not sure about: ").replace(/_/g, " ").replace(/ \| /g, " · ");
+const ago = (s) => (s < 60 ? `${s} s` : `${Math.round(s / 60)} min`);
 
 async function post(url, body) {
   try { await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); } catch (e) {}
   refresh();
 }
 
-/* ---------- status bar + summary ---------- */
-function renderBar(s) {
-  const st = s.stuart.reachable, m = s.model.available;
-  const sig = st ? 4 : 0;
-  document.getElementById("bar").innerHTML = `
-    <span class="bars" aria-label="Stuart ${st ? "connected" : "unreachable"}">${[1, 2, 3, 4].map((i) => `<i class="${i <= sig ? "" : "off"}" style="height:${4 + i * 4}px"></i>`).join("")}</span>
-    <span class="chip ${st ? "on" : "bad"}">${st ? "PHONE LINE ON" : "PHONE LINE OFF"}</span>
-    <span class="chip ${m ? "on" : "bad"}">${m ? "GEMMA 4 LISTENING" : "KEYWORD FALLBACK"}</span>
-    <span class="chip">NO INTERNET USED</span>
-    <span class="title">${esc(s.hub.name)}</span>
-    <a class="chip" href="/dashboard/live">LIVE DEMO</a>
-    <a class="chip" href="/dashboard/setup">DEMO SETUP</a>
-    <a class="chip" href="/website/">WEBSITE</a>
-    <span>${hm(s.now)}</span>`;
-  const b = [];
-  if (!s.prompts_ready) b.push("Prompt audio is missing: run tools/gen_prompts.py before taking calls.");
-  if (!st) b.push("Stuart (the phone line) is not reachable. Calls cannot arrive; messages wait safely in Bob's outbox.");
-  document.getElementById("banners").innerHTML = b.map((x) => `<div class="banner">${esc(x)}</div>`).join("");
+function header(s) {
+  document.getElementById("hub").textContent = s.hub.name;
+  document.getElementById("meta").textContent =
+    `Phone line ${s.stuart.reachable ? "connected" : "not connected"} · ${s.model.available ? "Gemma 4 listening" : "keyword matching (model off)"} · updated ${hm(s.now)}`;
+  const w = [];
+  if (!s.stuart.reachable) w.push("The phone line (Stuart) is not connected, so no calls can arrive. Messages wait safely in Bob's outbox.");
+  if (!s.prompts_ready) w.push("Prompt audio is missing: run tools/gen_prompts.py.");
+  document.getElementById("warn").innerHTML = w.map((x) => `<div class="warn">${esc(x)}</div>`).join("");
 }
 
-function renderSummary(s) {
+function today(s) {
   const t = s.stats;
-  const need = (t.tiers.EMERGENCY || 0) + (t.tiers.HIGH || 0) + (t.tiers.UNCERTAIN || 0);
-  document.getElementById("hub").textContent = "Today at " + s.hub.name;
-  let line = t.missed === 0
-    ? "No calls yet today. When someone gives a missed call, it appears below within seconds."
-    : `${plural(t.missed, "person")} gave a missed call. ${t.triaged} ${t.triaged === 1 ? "was" : "were"} triaged; ${need} needed a clinician's attention`;
-  if (t.missed) {
-    line += t.alerts_open ? `, and ${plural(t.alerts_open, "alert")} ${t.alerts_open === 1 ? "is" : "are"} still waiting for a person.` : ", and every alert has been acknowledged.";
-    if (t.live) line += ` ${plural(t.live, "call")} in progress now.`;
+  const cells = [
+    [t.missed, "missed calls"],
+    [t.called, "called back" + (t.live ? ` · ${t.live} live` : "")],
+    [t.triaged, "triaged"],
+    [t.alerts_open, "waiting for a person"],
+    [`${t.synced}/${t.sync_total}`, "records confirmed by Central"],
+  ];
+  document.getElementById("today").innerHTML = cells.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join("");
+}
+
+function alerts(s) {
+  const openAlerts = s.alerts.filter((a) => !a.acked_at);
+  document.getElementById("alerts-note").textContent = openAlerts.length ? `${openAlerts.length} open` : "";
+  document.getElementById("alerts").innerHTML = openAlerts.length
+    ? openAlerts.map((a) => `<tr>
+        <td>${esc(a.code)}</td><td>${tier(a.tier)}</td><td>${esc(a.clinic_name || "")}</td>
+        <td>${esc(plain(a.summary))}<div class="note">${esc(a.phone)}</div></td><td>${ago(a.age_s)}</td>
+        <td><button class="primary" onclick="post('/api/alerts/${a.alert_id}/ack',{by:'Dashboard'})">Acknowledge</button></td></tr>`).join("")
+    : `<tr><td colspan="6" class="empty">Nobody is waiting. Urgent and “not sure” cases appear here until a clinician acknowledges them.</td></tr>`;
+}
+
+function callStatus(c) {
+  if (c.live) return "<b>In progress</b>";
+  return { completed: "Done", caller_hung_up: "Caller hung up", failed: "Failed", no_answer: "No answer" }[c.end_reason] || "Done";
+}
+
+function details(c) {
+  const t = c.triage, rows = [];
+  const said = c.turns.find((x) => x.kind === "description");
+  if (said) rows.push(["They said", `<span class="said">“${esc(said.text)}”</span>`]);
+  if (t) {
+    const words = [], keys = [];
+    for (const [k, v] of Object.entries(t.answers.symptoms)) if (v.present === "yes") (t.answers.source[k] === "description" ? words : keys).push(ITEM[k] + (v.days ? ` (${v.days} days)` : ""));
+    for (const [k, v] of Object.entries(t.answers.flags)) if (v === "yes") (t.answers.source[k] === "description" ? words : keys).push(ITEM[k]);
+    rows.push(["Who is sick", esc(AGE[t.age_group] || "not given")]);
+    rows.push(["Heard in their words", words.length ? esc(words.join(", ")) : '<span class="muted">nothing certain</span>']);
+    if (keys.length) rows.push(["Confirmed on keypad", esc(keys.join(", "))]);
+    rows.push(["Decision", `${tier(t.tier)}<ul>${t.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`]);
+    let where = t.tier === "EMERGENCY" ? `Call 108 now · ${esc(t.clinic_name)} alerted`
+      : t.appointment && t.appointment.priority <= 2 ? `Go now to ${esc(t.clinic_name)}`
+      : `${esc(t.clinic_name)}${t.appointment ? ", " + new Date(t.appointment.slot_start).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : ""}`;
+    if ((t.skipped || []).length) where += `<ul>${t.skipped.map((k) => `<li>skipped ${esc(k.name)}: ${esc(k.reason)}</li>`).join("")}</ul>`;
+    rows.push(["Sent to", where]);
+    rows.push(["Case number", esc(t.code)]);
   }
-  document.getElementById("sentence").textContent = line;
+  const a = S.alerts.find((x) => x.call_id === c.call_id);
+  if (a) rows.push(["Clinician", a.acked_at ? `Acknowledged by ${esc(a.acked_by)} at ${hm(a.acked_at)}`
+    : `Waiting <button class="primary" onclick="post('/api/alerts/${a.alert_id}/ack',{by:'Dashboard'})">Acknowledge</button>`]);
+  if (!rows.length) rows.push(["Progress", c.live ? `In progress: ${esc(c.step)}` : "No details recorded"]);
+  return `<tr class="open"><td colspan="7"><div class="details"><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></div></td></tr>`;
 }
 
-function renderFunnel(s) {
-  const t = s.stats;
-  const sub = {
-    missed: t.checkins ? `+${plural(t.checkins, "clinician check-in")}` : "free for the caller",
-    called: t.live ? `${t.live} live now` : "Bob called them back",
-    understood: t.avg_understand_s ? `avg ${t.avg_understand_s} s to understand` : "from their own words",
-    triaged: t.avg_questions != null ? `avg ${t.avg_questions} keypad questions` : "by written rules",
-    routed: `${t.alerts_acked}/${t.alerts} alerts acknowledged`,
-    synced: `${t.synced} of ${t.sync_total} records acknowledged`,
-  };
-  const order = ["EMERGENCY", "HIGH", "UNCERTAIN", "MEDIUM", "LOW"];
-  const tb = t.triaged
-    ? `<div class="tierbar" title="${order.map((o) => `${o}: ${t.tiers[o] || 0}`).join(", ")}">${order
-        .map((o) => (t.tiers[o] ? `<span class="${o === "EMERGENCY" ? "" : o === "UNCERTAIN" ? "dith" : o === "HIGH" ? "dith" : "dith-light"}" style="width:${(t.tiers[o] / t.triaged) * 100}%;${o === "EMERGENCY" ? "background:var(--px)" : ""}"></span>` : ""))
-        .join("")}</div>`
-    : "";
-  document.getElementById("funnel").innerHTML = STAGES.map((st) => `
-    <div class="box stage">
-      <span class="k">${st.key}</span>
-      <div class="n">${t[st.k] ?? 0}</div>
-      <div class="l">${st.l}</div>
-      <div class="s">${esc(sub[st.k])}</div>
-      ${st.k === "triaged" ? tb : ""}
-    </div>`).join("");
-}
-
-/* ---------- calls ---------- */
-function renderCalls(s) {
-  const top = s.calls[0]?.call_id;
-  if (!selected || !s.calls.find((c) => c.call_id === selected) || (top !== lastTop && s.calls[0]?.live)) selected = top || null;
-  lastTop = top;
-  document.getElementById("calls-count").textContent = s.calls.length;
+function calls(s) {
   document.getElementById("calls").innerHTML = s.calls.length
-    ? s.calls.map((c) => `
-      <button class="call ${c.call_id === selected ? "sel" : ""}" onclick="pick('${c.call_id}')" aria-pressed="${c.call_id === selected}">
-        <span>${c.live ? '<span class="tier live">LIVE</span>' : tier(c.triage?.tier) || '<span class="tier">ENDED</span>'}</span>
-        <span class="mono">${esc(c.phone)}</span>
-        <span class="meta">${hm(c.started_at)} · ${esc(LANG[c.lang] || "choosing language")}${c.triage ? " · " + esc(c.triage.tier === "EMERGENCY" ? "108" : c.triage.clinic_name || "") : ""}</span>
-      </button>`).join("")
-    : `<div class="empty">No calls yet. Give a missed call to Kevin's line.</div>`;
+    ? s.calls.map((c) => {
+        const t = c.triage;
+        const to = !t ? "–" : t.tier === "EMERGENCY" ? "108" : esc(t.clinic_name || "");
+        const row = `<tr class="click ${open === c.call_id ? "open" : ""}" onclick="toggle('${c.call_id}')" tabindex="0" onkeydown="if(event.key==='Enter')toggle('${c.call_id}')">
+          <td>${hm(c.started_at)}</td><td>${esc(c.phone)}</td><td>${esc(LANG[c.lang] || "–")}</td><td>${tier(t?.tier)}</td>
+          <td>${to}</td><td class="num">${t ? t.questions : "–"}</td><td>${callStatus(c)}</td></tr>`;
+        return row + (open === c.call_id ? details(c) : "");
+      }).join("")
+    : `<tr><td colspan="7" class="empty">No calls yet. Give a missed call to Kevin's number.</td></tr>`;
 }
-function pick(id) { selected = id; renderCalls(S); renderStory(S); }
+function toggle(id) { open = open === id ? null : id; calls(S); }
 
-/* Turn the raw turn log into plain-language steps. */
-function storySteps(c, alert) {
-  const steps = [];
-  const turns = c.turns;
-  const add = (what, detail, at, done = true) => steps.push({ what, detail, at, done });
-  const nextKey = (i) => { for (let j = i + 1; j < turns.length && j < i + 3; j++) if (turns[j].who === "patient") return turns[j]; return null; };
-  const qa = [];
-  let menuTries = 0, said = null, understood = null;
-  turns.forEach((t, i) => {
-    if (t.kind === "call_started") add("Missed call received, Bob called back", "The call never connected, so it cost the caller nothing.", t.at);
-    if (t.kind === "known_caller") add("Known caller", esc(t.text), t.at);
-    if (t.kind === "language_menu") menuTries++;
-    if (t.kind === "keypad" && t.detail.step === "menu") add(`Chose ${LANG[c.lang] || "a language"}`, `Pressed ${esc(t.text)}${menuTries > 1 ? ` after ${menuTries - 1} repeat${menuTries > 2 ? "s" : ""} of the menu` : ""}.`, t.at);
-    if (t.kind === "keypad" && t.detail.step === "who") add("Who is sick", `${esc(AGE[t.text[0]] || "not given")} (pressed ${esc(t.text)})`, t.at);
-    if (t.kind === "description") said = t;
-    if (t.kind === "understood") understood = t;
-    if (t.kind === "ask_question") {
-      const key = (t.detail.clips || [])[0] || "";
-      const a = nextKey(i);
-      let label = key.replace(/^q_(symptom|flag)_/, "").replace(/^q_days_/, "days of ");
-      label = key.startsWith("q_days_") ? `How many days of ${ITEM[key.slice(7)] || key.slice(7)}?` : `${(ITEM[label] || label).replace(/^./, (x) => x.toUpperCase())}?`;
-      let ans = a ? (a.kind === "keypad" ? a.text : "no answer") : "…";
-      if (a && a.kind === "keypad" && !key.startsWith("q_days_")) ans = { 1: "yes", 2: "no", 3: "don't know" }[a.text[0]] || `pressed ${a.text}`;
-      if (a && a.kind === "keypad" && key.startsWith("q_days_")) ans = a.text.replace("#", "") ? `${a.text.replace("#", "")} days` : "don't know";
-      qa.push([label, ans]);
-    }
-  });
-  if (said) {
-    add("Described the problem in their own words",
-      `<div class="said">“${esc(said.text)}”</div><div class="small muted mono" style="margin-top:4px">${esc(said.detail.engine || "")}${said.detail.ms ? ` · ${(said.detail.ms / 1000).toFixed(1)} s` : ""} · recording deleted after processing</div>`, said.at);
-  }
-  if (understood || c.triage) {
-    const a = c.triage?.answers;
-    const fromWords = [], fromKeys = [];
-    if (a) {
-      for (const [k, v] of Object.entries(a.symptoms)) if (v.present !== "unknown") (a.source[k] === "description" ? fromWords : fromKeys).push([ITEM[k] || k, v.present + (v.days ? `, ${v.days} d` : "")]);
-      for (const [k, v] of Object.entries(a.flags)) if (v !== "unknown") (a.source[k] === "description" ? fromWords : fromKeys).push([ITEM[k] || k, v]);
-    }
-    const rej = understood?.detail?.rejected || [];
-    const notes = understood?.detail?.notes || [];
-    add("Understood from their words",
-      (fromWords.length ? `<div class="chips">${fromWords.map(([k, v]) => `<span class="tag ${v.startsWith("yes") ? "yes" : ""}">${esc(k)}: ${esc(v)}</span>`).join("")}</div>` : `<div class="detail">Nothing certain; Bob asked instead.</div>`) +
-      (rej.length ? `<div class="small muted" style="margin-top:4px">Ignored, not backed by their words: ${esc(rej.map((r) => ITEM[r] || r).join(", "))}</div>` : "") +
-      (notes.length ? `<div class="small muted">${esc(notes.join(" · "))}</div>` : ""), understood?.at);
-  }
-  if (qa.length) {
-    add(`Asked ${plural(qa.length, "keypad question")}`, `<div class="qa">${qa.map(([q, a]) => `<span>${esc(q)}</span><span class="a">${esc(a)}</span>`).join("")}</div>`);
-  } else if (c.triage) {
-    add("No keypad questions needed", "Everything that mattered was already in what they said.");
-  }
-  if (c.triage) {
-    const tr = c.triage;
-    add(`Decided: ${tr.tier}`, `${tier(tr.tier)}<ul class="reasons">${tr.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul><div class="small muted mono" style="margin-top:4px">written rules · protocol ${esc(tr.protocol_version)}</div>`, tr.created_at);
-    const where = tr.tier === "EMERGENCY" ? "Told to call 108 now" : tr.appointment && tr.appointment.priority <= 2 ? `Told to go now to ${tr.clinic_name}` : `Booked at ${tr.clinic_name}`;
-    const when = tr.tier !== "EMERGENCY" && tr.appointment && tr.appointment.priority > 2 ? ` · ${new Date(tr.appointment.slot_start).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}` : tr.tier === "EMERGENCY" ? "" : " · top of the queue";
-    const skipped = (tr.skipped || []).map((k) => `<li>Skipped ${esc(k.name)}: ${esc(k.reason)}</li>`).join("");
-    add(where + when, `Case number ${esc(tr.code)}${tr.tier === "EMERGENCY" ? ` · ${esc(tr.clinic_name)} alerted` : ""}${skipped ? `<ul class="reasons">${skipped}</ul>` : ""}`);
-  }
-  if (alert) {
-    add(alert.acked_at ? "A clinician acknowledged" : "Waiting for a clinician",
-      alert.acked_at ? `${esc(alert.acked_by)} at ${hm(alert.acked_at)}${alert.escalated_to.length ? ` · escalated to ${esc(alert.escalated_to.join(" → "))} first` : ""}`
-        : `Alert #${esc(alert.code)} sent to ${esc(alert.clinic_name || "the clinic")}. <button class="btn" style="margin-left:6px" onclick="post('/api/alerts/${alert.alert_id}/ack',{by:'Dashboard'})">Acknowledge</button>`,
-      alert.acked_at || alert.created_at, !!alert.acked_at);
-  }
-  if (c.ended_at) add("Call ended", { completed: "Bob finished the call.", caller_hung_up: "The caller hung up; a clinician was alerted.", failed: "The call failed; a clinician was alerted.", no_answer: "Not answered; Stuart will retry." }[c.end_reason] || esc(c.end_reason), c.ended_at);
-  else add("Call in progress", `<span class="live">Now: ${esc(c.step)}</span>`, null, false);
-  return steps;
+function clinics(s) {
+  document.getElementById("clinics").innerHTML = s.clinics.map((c) => `<tr>
+      <td>${esc(c.name)}</td><td>${c.effective_status === "open" ? "Open" : `<b>${esc(c.effective_status[0].toUpperCase() + c.effective_status.slice(1))}</b>`}</td>
+      <td class="muted">${esc(c.why)}</td><td class="num">${c.queue.length}</td><td class="num">${c.booked_today} of ${c.capacity_per_day}</td>
+      <td>${["open", "closed", "full"].map((x) => `<button class="${c.status === x ? "on" : ""}" aria-pressed="${c.status === x}" onclick="post('/api/clinics/${c.clinic_id}/status',{status:'${x}'})">${x}</button>`).join(" ")}</td></tr>`).join("");
 }
 
-function renderStory(s) {
-  const el = document.getElementById("story");
-  const c = s.calls.find((x) => x.call_id === selected);
-  if (!c) { el.innerHTML = `<h2>The call, step by step</h2><div class="empty">Select a call to see what happened at each stage.</div>`; return; }
-  const alert = s.alerts.find((a) => a.call_id === c.call_id);
-  const steps = storySteps(c, alert);
-  el.innerHTML = `
-    <h2>The call, step by step</h2>
-    <div class="story-head">
-      <span class="phone">${esc(c.phone)}</span>${c.live ? '<span class="tier live">LIVE</span>' : tier(c.triage?.tier)}
-      <span class="small muted mono">${esc(LANG[c.lang] || "")} · ${hms(c.started_at)}${c.triage?.age_group ? " · " + esc(AGE_KEY[c.triage.age_group]) : ""}</span>
-    </div>
-    <ol class="steps">${steps.map((x) => `
-      <li class="step ${x.done ? "done" : ""}"><span class="num"></span>
-        <div><div class="what">${x.what}</div>${x.detail ? `<div class="detail">${x.detail}</div>` : ""}</div>
-        <span class="time">${hms(x.at)}</span></li>`).join("")}</ol>`;
+function sync(s) {
+  const kind = { triage: "Case summary", clinic_status: "Clinic status", daily_summary: "Daily summary" };
+  document.getElementById("sync").innerHTML = s.sync.recent.length
+    ? s.sync.recent.slice(0, 8).map((r) => `<tr><td>${hm(r.created_at)}</td><td>${esc(kind[r.kind] || r.kind)}</td><td class="num">${r.bytes} bytes</td><td>${r.status === "acked" ? "Confirmed" : esc(r.status)}</td></tr>`).join("")
+    : `<tr><td colspan="4" class="empty">Nothing sent yet.</td></tr>`;
 }
 
-/* ---------- right column ---------- */
-function renderAlerts(s) {
-  const open = s.alerts.filter((a) => !a.acked_at);
-  document.getElementById("alerts-count").textContent = open.length;
-  const list = [...open, ...s.alerts.filter((a) => a.acked_at).slice(0, 3)];
-  document.getElementById("alerts").innerHTML = list.length ? list.map((a) => `
-    <div class="alert ${a.acked_at ? "" : "open"}">
-      <div class="top">${tier(a.tier)}<b class="mono">#${esc(a.code)}</b><span class="small muted" style="flex:1">${esc(a.clinic_name || "")}</span>
-        ${a.acked_at ? '<span class="small mono">acknowledged</span>' : `<button class="btn" onclick="post('/api/alerts/${a.alert_id}/ack',{by:'Dashboard'})">Acknowledge</button>`}</div>
-      <div class="small" style="margin-top:6px">${esc(a.summary)}</div>
-      <div class="small muted mono">${esc(a.phone)} · ${Math.round(a.age_s / 60)} min ago${a.escalated_to.length ? " · escalated to " + esc(a.escalated_to.join(" → ")) : ""}</div>
-    </div>`).join("") : `<div class="empty">Nobody is waiting. Urgent and unsure cases appear here until a clinician acknowledges them.</div>`;
-}
-
-function renderClinics(s) {
-  document.getElementById("clinics").innerHTML = s.clinics.map((c) => `
-    <div class="clinic ${c.effective_status === "open" ? "" : "off"}">
-      <div class="row1"><span class="name">${esc(c.name)}</span><span class="state">${c.effective_status.toUpperCase()}</span></div>
-      <div class="small muted">${esc(c.why)} · ${c.queue.length} waiting · ${c.booked_today}/${c.capacity_per_day} booked today</div>
-      <div class="toggles">${["open", "closed", "full"].map((x) => `<button class="btn ghost ${c.status === x ? "on" : ""}" aria-pressed="${c.status === x}" onclick="post('/api/clinics/${c.clinic_id}/status',{status:'${x}'})">${x}</button>`).join("")}</div>
-    </div>`).join("");
-}
-
-/* ---------- proof row ---------- */
-function renderEval(s) {
+function evalTable(s) {
   const e = s.eval;
-  if (!e) { document.getElementById("eval").innerHTML = `<div class="empty">Run eval/run_eval.py --mode all to show test results here.</div>`; return; }
-  const total = e.summaries.filter((x) => x.mode !== "keyword").reduce((a, x) => a + x.n, 0);
-  const missed = e.summaries.reduce((a, x) => a + x.missed_urgent, 0);
-  const g = (mode, lang) => e.summaries.find((x) => x.mode === mode && x.lang === lang);
-  const row = (label, mode, lang) => { const x = g(mode, lang); return x ? `<tr><td>${label}</td><td class="num">${x.n}</td><td class="num">${x.missed_urgent}</td><td class="num">${Math.round(x.accuracy * 100)}%</td><td class="num">${Math.round(x.uncertain_rate * 100)}%</td><td class="num">${x.avg_questions}</td></tr>` : ""; };
-  document.getElementById("eval").innerHTML = `
-    <div style="display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
-      <div><div class="big">${missed}</div><div class="small">urgent cases missed</div></div>
-      <div class="small" style="max-width:360px">across ${total} test calls with Gemma, in Hindi and Gujarati, including 10 real voices. Gemma halves the “not sure” rate compared with keyword matching.</div>
-    </div>
-    <table><tr><th>Set</th><th class="num">Cases</th><th class="num">Missed urgent</th><th class="num">Accuracy</th><th class="num">Not sure</th><th class="num">Questions</th></tr>
-      ${row("Hindi · Gemma", "gemma", "hi")}${row("Hindi · keywords only", "keyword", "hi")}
-      ${row("Gujarati · Gemma", "gemma", "gu")}${row("Gujarati · keywords only", "keyword", "gu")}
-      ${row("Real voices, Hindi", "audio", "hi")}${row("Real voices, Gujarati", "audio", "gu")}</table>
-    <div class="small muted" style="margin-top:8px">Synthetic cases written by the team plus team recordings; not real patients. Run ${esc(e.at)}.</div>`;
-}
-
-function renderCosts(s) {
-  const c = s.costs;
-  document.getElementById("costs").innerHTML = `
-    <div style="display:flex;gap:22px"><div><div class="big">₹0</div><div class="small">paid by patients</div></div>
-      <div><div class="big">${c.per_case_inr == null ? "–" : "₹" + c.per_case_inr.toFixed(2)}</div><div class="small">per case, paid by the district</div></div></div>
-    <div class="kv"><span>Cases today</span><b>${c.cases_today}</b><span>Callback minutes</span><b>${c.call_minutes_today}</b>
-      <span>SMS segments</span><b>${c.segments_today ?? "–"}</b><span>Price per segment / minute</span><b>₹${c.prices.sms_segment_inr} / ₹${c.prices.call_minute_inr}</b></div>
-    <div class="small muted" style="margin-top:8px">Estimates; counts come from Stuart.</div>`;
-}
-
-function renderSync(s) {
-  const k = s.sync.counts;
-  document.getElementById("sync-count").textContent = (k.acked || 0);
-  document.getElementById("sync").innerHTML = `
-    <div class="small mono" style="margin-bottom:8px">${["pending", "queued", "sent", "acked", "failed"].map((x) => `${x} ${k[x] || 0}`).join(" · ")}</div>
-    ${s.sync.recent.slice(0, 5).map((r) => `<div style="padding:6px 0;border-top:1px dotted var(--px-2)">
-      <div class="small"><b>${esc(r.kind.replace("_", " "))}</b> · ${hm(r.created_at)} · ${r.bytes} bytes · ${esc(r.status)}</div>
-      <div class="payload muted">${esc(r.payload)}</div></div>`).join("") || '<div class="empty">Nothing sent yet.</div>'}
-    <div class="small muted" style="margin-top:6px">Each record ≤ 200 bytes over SMS: no names, no phone numbers.</div>`;
+  if (!e) { document.getElementById("eval").innerHTML = `<tr><td colspan="6" class="empty">Run eval/run_eval.py --mode all to show results.</td></tr>`; return; }
+  document.getElementById("eval-note").textContent = `synthetic cases and team recordings, not real patients · run ${e.at}`;
+  const name = (x) => `${x.lang === "hi" ? "Hindi" : "Gujarati"}, ${x.mode === "audio" ? "real voices with Gemma" : x.mode === "gemma" ? "text with Gemma" : "text, keywords only"}`;
+  document.getElementById("eval").innerHTML = e.summaries.map((x) => `<tr><td>${esc(name(x))}</td><td class="num">${x.n}</td>
+      <td class="num">${x.missed_urgent}</td><td class="num">${Math.round(x.accuracy * 100)}%</td><td class="num">${Math.round(x.uncertain_rate * 100)}%</td><td class="num">${x.avg_questions}</td></tr>`).join("");
 }
 
 async function refresh() {
   try {
     S = await (await fetch("/api/state", { cache: "no-store" })).json();
-    renderBar(S); renderSummary(S); renderFunnel(S); renderCalls(S); renderStory(S);
-    renderAlerts(S); renderClinics(S); renderEval(S); renderCosts(S); renderSync(S);
+    header(S); today(S); alerts(S); calls(S); clinics(S); sync(S); evalTable(S);
   } catch (e) {
-    document.getElementById("banners").innerHTML = `<div class="banner">Bob is not responding. Retrying…</div>`;
+    document.getElementById("warn").innerHTML = `<div class="warn">Bob is not responding. Retrying…</div>`;
   }
 }
 refresh();
-setInterval(refresh, 1500);
+setInterval(refresh, 3000);
 </script>
 </body>
 </html>
