@@ -58,50 +58,7 @@ export function OutOfReach() {
   );
 }
 
-/* 2 · Closer to home: India's health workers */
-export function India() {
-  return (
-    <Screen id="india" title="THE PROBLEM" signal={2} data={false}>
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center gap-[clamp(20px,4svh,56px)] lg:grid-cols-[1fr_auto]">
-        <div>
-          <Kicker>
-            <Chip>INDIA</Chip>
-            <span>Closer to home</span>
-          </Kicker>
-          <h2 className="rise t-h2 max-w-[760px]" style={rise(1)}>
-            In India, one health worker cares for about <span className="text-accent">270 people.</span>
-          </h2>
-          <p className="rise t-lead mt-[clamp(12px,2.4svh,24px)] max-w-[600px]" style={rise(2)}>
-            There are 36.7 doctors, nurses and midwives for every 10,000 people, fewer than the 44.5 that WHO sets as a
-            minimum. Their time is the scarcest thing in the clinic.
-          </p>
-          <Src d={4}>
-            WHO Global Health Observatory, India 2024; WHO SDG threshold 44.5 (2016). 270 = 10,000 ÷ 36.7.
-          </Src>
-        </div>
-        <div
-          className="rise art-fit drop-1 flex items-end gap-5"
-          style={rise(3)}
-          aria-label="One health worker, many patients"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <Sprite role="clinician" mood="worried" px={6} />
-            <span className="font-mono text-[18px] font-medium lg:text-[12px]">1 health worker</span>
-          </div>
-          <div className="grid grid-cols-10 gap-1" aria-hidden>
-            {Array.from({ length: 40 }).map((_, i) => (
-              <span key={i} className={i >= 20 ? "max-lg:hidden" : ""}>
-                <Sprite role={i % 9 === 4 ? "child" : "patient"} px={2} blink={false} />
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Screen>
-  );
-}
-
-/* 3 · The journey to care, and why the clinician hears the story last */
+/* 2 · The journey to care, and why the clinician hears the story last */
 const JOURNEY: { title: string; body: string; art: ReactNode }[] = [
   {
     title: "Feels sick",
