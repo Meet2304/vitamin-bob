@@ -19,8 +19,8 @@ const COLUMNS: {
     links: [
       { label: "Why it matters", href: "/#problem", say: "4.6 billion reasons." },
       { label: "How it works", href: "/#fix", say: "Ring once. I call back." },
-      { label: "Try the demo", href: "/demo", say: "Be Kevin for a minute." },
       { label: "Recognition", href: "/#recognition", say: "Next stop: Seoul!" },
+      { label: "Try the demo", href: "/demo", say: "Be Kevin for a minute." },
       { label: "The team", href: "/team", say: "Meet my four humans." },
     ],
   },
